@@ -29,3 +29,12 @@ class TestTraining(unittest.TestCase):
             result.test['predictions'],
             np.array([5+6, 11+12]),
         ))
+
+        # Try using the pipeline to make some predictions.
+        pipeline_report = result.pipeline.run([[17, 18], [19, 20], [21, 22]])
+        self.assertTrue(np.allclose(
+            pipeline_report.predictions,
+            np.array([17+18, 19+20, 21+22]),
+        ))
+        self.assertIsNone(pipeline_report.probabilities)
+        self.assertEqual(pipeline_report.warnings, [])

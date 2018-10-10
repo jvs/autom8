@@ -3,8 +3,10 @@ import numpy as np
 import sklearn.metrics
 import scipy.sparse
 
+from .pipeline import Pipeline
 
-TrainingReport = namedtuple('TrainingReport', 'estimator, train, test')
+
+TrainingReport = namedtuple('TrainingReport', 'pipeline, train, test')
 
 
 def train(ctx, estimator):
@@ -14,7 +16,8 @@ def train(ctx, estimator):
     estimator.fit(X, y)
     train = _evaluate(ctx, estimator, is_train=True)
     test = _evaluate(ctx, estimator, is_train=False)
-    return TrainingReport(estimator, train, test)
+    pipeline = Pipeline(list(ctx.preprocessors), estimator, ctx.labels.encoder)
+    return TrainingReport(pipeline, train, test)
 
 
 def _evaluate(ctx, estimator, is_train):
