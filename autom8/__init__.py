@@ -1,6 +1,6 @@
 from .context import (
-    PredictingContext,
-    TrainingContext,
+    create_training_context,
+    create_predicting_context,
     playback,
 )
 
@@ -22,3 +22,5 @@ from .preprocessors import (
     square_columns,
     sqrt_columns,
 )
+
+from .training import train

@@ -2,60 +2,61 @@ from collections import namedtuple
 import functools
 import logging
 import numpy as np
+import sklearn.preprocessing
 from .exceptions import expected
 
 
-class _AbstractContext:
-    def __init__(self, matrix, preprocessors=None, reports=None):
-        self.matrix = matrix.copy()
-        self.preprocessors = list(preprocessors) if preprocessors else []
-        self.reports = dict(reports) if reports else {}
+def create_training_context(feature_matrix, label_array, test_indices, problem_type):
+    if problem_type not in ('regression', 'classification'):
+        raise expected(
+            'problem_type to be "regression" or "classification"', problem_type
+        )
 
-    @property
-    def is_predicting(self):
-        return not self.is_training
+    if problem_type == 'regression':
+        labels = LabelContext(label_array, label_array, None)
+    else:
+        assert problem_type == 'classification'
+        encoder = sklearn.preprocessing.LabelEncoder()
+        encoded = encoder.fit_transform(label_array)
+        labels = LabelContext(label_array, encoded, encoder)
 
+    return TrainingContext(feature_matrix, labels, test_indices, problem_type)
+
+
+def create_predicting_context(feature_matrix):
+    return PredictingContext(feature_matrix)
+
+
+class _ContextMixin:
     def require_training_context(self):
         if not self.is_training:
             raise expected('TrainingContext', type(self).__name__)
 
 
-class PredictingContext(_AbstractContext):
-    def copy(self):
-        return PredictingContext(
-            matrix=self.matrix,
-            preprocessors=self.preprocessors,
-            reports=self.reports,
-        )
+class PredictingContext(_ContextMixin):
+    def __init__(self, matrix):
+        self.matrix = matrix
 
     @property
     def is_training(self):
         return False
 
 
-class TrainingContext(_AbstractContext):
-    def __init__(
-        self,
-        feature_matrix,
-        label_array,
-        test_indices,
-        problem_type='regression',
-        preprocessors=None,
-        reports=None,
-    ):
-        _AbstractContext.__init__(self, feature_matrix, preprocessors, reports)
-        self.labels = label_array
+class TrainingContext(_ContextMixin):
+    def __init__(self, matrix, labels, test_indices, problem_type, preprocessors=None):
+        self.matrix = matrix.copy()
+        self.labels = labels
         self.test_indices = test_indices
         self.problem_type = problem_type
+        self.preprocessors = list(preprocessors) if preprocessors else []
 
     def copy(self):
         return TrainingContext(
-            feature_matrix=self.matrix,
-            label_array=self.labels,
+            matrix=self.matrix,
+            labels=self.labels,
             test_indices=self.test_indices,
             problem_type=self.problem_type,
             preprocessors=self.preprocessors,
-            reports=self.reports,
         )
 
     @property
@@ -72,13 +73,21 @@ class TrainingContext(_AbstractContext):
 
     def testing_data(self):
         feat = self.matrix.select_rows(self.test_indices)
-        lab = self.labels[self.test_indices]
+        lab = self.labels.encoded[self.test_indices]
         return (feat.stack_columns(), lab)
 
     def training_data(self):
         feat = self.matrix.exclude_rows(self.test_indices)
-        lab = np.delete(self.labels, self.test_indices)
+        lab = np.delete(self.labels.encoded, self.test_indices)
         return (feat.stack_columns(), lab)
+
+
+class LabelContext(namedtuple('LabelContext', 'original, encoded, encoder')):
+    def decode(self, encoded_labels):
+        if self.encoder is None:
+            return encoded_labels
+        else:
+            return self.encoder.inverse_transform(encoded_labels)
 
 
 def planner(f):
