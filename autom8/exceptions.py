@@ -1,4 +1,3 @@
-
 class AutoM8Exception(Exception):
     """Base class of all exceptions raised by autom8."""
 
