@@ -4,7 +4,7 @@ from .context import (
     preprocessor,
 )
 
-from .exceptions import AutoM8Exception
+from .exceptions import Autom8Exception, Autom8Warning
 from .matrix import create_matrix
 from .observer import Observer
 

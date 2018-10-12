@@ -1,4 +1,4 @@
-class AutoM8Exception(Exception):
+class Autom8Exception(Exception):
     """Class of all exceptions raised by autom8."""
 
 
@@ -7,4 +7,4 @@ class Autom8Warning(UserWarning):
 
 
 def expected(msg, received):
-    return AutoM8Exception(f'Expected {msg}. Received: {received}')
+    return Autom8Exception(f'Expected {msg}. Received: {received}')
