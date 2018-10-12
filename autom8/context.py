@@ -16,6 +16,9 @@ def create_training_context(
             'problem_type to be "regression" or "classification"', problem_type
         )
 
+    # Maybe create the matrix if the features are in a list.
+    # Similarly, create the array if the labels are in a list.
+
     if observer is None:
         observer = Observer()
 
