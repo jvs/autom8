@@ -2,10 +2,21 @@ from collections import namedtuple
 import functools
 import numpy as np
 
+from .observer import Observer
 from .exceptions import expected
 
 
-MatrixReport = namedtuple('MatrixReport', 'matrix, warnings')
+def create_matrix(data, observer=None):
+    if not isinstance(data, (dict, list, tuple)):
+        raise expected('dict, list, or tuple', type(data))
+
+    if observer is None:
+        observer = Observer()
+
+    if isinstance(data, dict):
+        return _create_matrix_from_dict(data, observer)
+    else:
+        return _create_matrix_from_iterable(data, observer)
 
 
 class Matrix:
@@ -20,6 +31,9 @@ class Matrix:
 
     def __len__(self):
         return len(self.columns[0]) if self.columns else 0
+
+    def __repr__(self):
+        return f'Matrix({repr(self.tolist())})'
 
     def copy(self):
         return Matrix([i.copy() for i in self.columns])
@@ -157,18 +171,7 @@ class Column:
         return self.copy_with(np.delete(self.values, indices))
 
 
-def create_matrix(data):
-    if not isinstance(data, (dict, list, tuple)):
-        raise expected('dict, list, or tuple', type(data))
-
-    method = (_create_matrix_from_dict
-        if isinstance(data, dict)
-        else _create_matrix_from_iterable)
-
-    return method(data)
-
-
-def _create_matrix_from_dict(data):
+def _create_matrix_from_dict(data, observer):
     assert isinstance(data, dict)
 
     if 'rows' not in data:
@@ -190,24 +193,21 @@ def _create_matrix_from_dict(data):
         raise expected('schema items to contain "name" and "role" entries.', schema[0])
 
     # Create the matrix and then update the columns.
-    report = create_matrix(rows)
-    for col, details in zip(report.matrix.columns, schema):
+    matrix = create_matrix(rows, observer)
+    for col, details in zip(matrix.columns, schema):
         col.name = details['name']
         col.role = details['role']
-    return report
+    return matrix
 
 
-def _create_matrix_from_iterable(data):
+def _create_matrix_from_iterable(data, observer):
     if len(data) > 0 and isinstance(data[0], Column):
         # In this case, require each element to be a Column object.
         if not all(isinstance(i, Column) for i in data):
             raise expected('list of Column objects', [type(i) for i in data])
 
-        # Make a copy of the columns and return the report.
-        return MatrixReport(Matrix([i.copy() for i in data]), [])
-
-    # Accumulate our warnings in this list.
-    warnings = []
+        # Make a copy of the columns and return the matrix.
+        return Matrix([i.copy() for i in data])
 
     # Drop empty rows.
     rows = [row for row in data if row]
@@ -216,11 +216,11 @@ def _create_matrix_from_iterable(data):
     # Warn the users if we dropped some rows.
     if num_dropped:
         suffix = '' if num_dropped == 1 else 's'
-        warnings.append(f'Dropped {num_dropped} empty row{suffix} from dataset.')
+        observer.warn(f'Dropped {num_dropped} empty row{suffix} from dataset.')
 
     # If we don't have any rows, then just return an empty matrix.
     if not rows:
-        return MatrixReport(Matrix([]), warnings)
+        return Matrix([])
 
     # Figure out how many columns we need.
     mincols = min(len(row) for row in rows)
@@ -231,7 +231,7 @@ def _create_matrix_from_iterable(data):
         num_extra = maxcols - mincols
         suffix1 = '' if num_extra == 1 else 's'
         suffix2 = '' if mincols == 1 else 's'
-        warnings.append(
+        observer.warn(
             f'Dropped {num_extra} extra column{suffix1} from dataset.'
             f' Keeping first {mincols} column{suffix2}.'
             ' To avoid this behavior, ensure that each row in the dataset has'
@@ -239,7 +239,7 @@ def _create_matrix_from_iterable(data):
         )
 
     columns = [_make_column(rows, i) for i in range(mincols)]
-    return MatrixReport(Matrix(columns), warnings)
+    return Matrix(columns)
 
 
 def _make_column(rows, index):

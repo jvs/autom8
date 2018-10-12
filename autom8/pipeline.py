@@ -1,14 +1,13 @@
 from collections import namedtuple
 import numpy as np
 
-from .context import create_predicting_context, playback
+from .context import PredictingContext, playback
 from .matrix import create_matrix, Matrix
+from .observer import Observer
 from .exceptions import expected
 
 
-PredictionReport = namedtuple('PredictionReport',
-    'predictions, probabilities, warnings'
-)
+PredictionReport = namedtuple('PredictionReport', 'predictions, probabilities')
 
 
 class Pipeline:
@@ -17,18 +16,17 @@ class Pipeline:
         self.estimator = estimator
         self.label_encoder = label_encoder
 
-    def run(self, features):
+    def run(self, features, observer=None):
         if not isinstance(features, (list, Matrix)):
             raise expected('list or Matrix', type(features).__name__)
 
-        if isinstance(features, list):
-            report = create_matrix(features)
-            features = report.matrix
-            warnings = list(report.warnings)
-        else:
-            warnings = []
+        if observer is None:
+            observer = Observer()
 
-        ctx = create_predicting_context(features)
+        if isinstance(features, list):
+            features = create_matrix(features, observer)
+
+        ctx = PredictingContext(features, observer)
         playback(self.preprocessors, ctx)
 
         X = ctx.matrix.stack_columns()
@@ -44,4 +42,4 @@ class Pipeline:
         if self.label_encoder is not None:
             predictions = self.label_encoder.inverse_transform(predictions)
 
-        return PredictionReport(predictions, probabilities, warnings)
+        return PredictionReport(predictions, probabilities)

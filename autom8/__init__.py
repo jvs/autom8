@@ -1,11 +1,12 @@
 from .context import (
     create_training_context,
-    create_predicting_context,
-    playback,
+    planner,
+    preprocessor,
 )
 
 from .exceptions import AutoM8Exception
 from .matrix import create_matrix
+from .observer import Observer
 
 from .preprocessors import (
     add_column_of_ones,
