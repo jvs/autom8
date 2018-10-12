@@ -20,7 +20,7 @@ class TestContext(unittest.TestCase):
         c1.require_training_context()
 
         # But this should raise one.
-        with self.assertRaisesRegex(autom8.AutoM8Exception, 'Expected.*TrainingContext'):
+        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*TrainingContext'):
             c2.require_training_context()
 
 

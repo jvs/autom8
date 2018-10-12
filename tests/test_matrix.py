@@ -5,46 +5,46 @@ from context import autom8, Accumulator
 
 class TestMatrix(unittest.TestCase):
     def test_invalid_arguments(self):
-        with self.assertRaisesRegex(autom8.AutoM8Exception, 'Expected.*list'):
+        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*list'):
             autom8.create_matrix(0)
 
-        with self.assertRaisesRegex(autom8.AutoM8Exception, 'Expected.*list'):
+        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*list'):
             autom8.create_matrix('')
 
-        with self.assertRaisesRegex(autom8.AutoM8Exception, 'Expected.*rows'):
+        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*rows'):
             autom8.create_matrix({})
 
-        with self.assertRaisesRegex(autom8.AutoM8Exception, 'Expected.*schema'):
+        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*schema'):
             autom8.create_matrix({'rows': []})
 
-        with self.assertRaisesRegex(autom8.AutoM8Exception, 'Expected.*rows'):
+        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*rows'):
             autom8.create_matrix({'schema': []})
 
-        with self.assertRaisesRegex(autom8.AutoM8Exception, 'Expected.*rows'):
+        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*rows'):
             autom8.create_matrix({'metadata': None})
 
-        with self.assertRaisesRegex(autom8.AutoM8Exception, 'Expected.*schema.*dict'):
+        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*schema.*dict'):
             autom8.create_matrix({'rows': [[1]], 'schema': ['']})
 
-        with self.assertRaisesRegex(autom8.AutoM8Exception, 'Expected.*schema.*name'):
+        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*schema.*name'):
             autom8.create_matrix({'rows': [[1]], 'schema': [{}]})
 
-        with self.assertRaisesRegex(autom8.AutoM8Exception, 'Expected.*schema.*role'):
+        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*schema.*role'):
             autom8.create_matrix({'rows': [[1]], 'schema': [{}]})
 
-        with self.assertRaisesRegex(autom8.AutoM8Exception, 'Expected.*schema.*name'):
+        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*schema.*name'):
             autom8.create_matrix({'rows': [[1]], 'schema': [{'role': None}]})
 
-        with self.assertRaisesRegex(autom8.AutoM8Exception, 'Expected.*schema.*role'):
+        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*schema.*role'):
             autom8.create_matrix({'rows': [[1]], 'schema': [{'name': 'count'}]})
 
-        with self.assertRaisesRegex(autom8.AutoM8Exception, 'Expected.*list'):
+        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*list'):
             autom8.create_matrix({
                 'rows': 'hi',
                 'schema': [{'name': 'msg', 'role': 'textual'}],
             })
 
-        with self.assertRaisesRegex(autom8.AutoM8Exception, 'Expected.*role in'):
+        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*role in'):
             autom8.create_matrix({
                 'rows': [['hi']],
                 'schema': [{'name': 'msg', 'role': 'str'}],
@@ -226,7 +226,7 @@ class TestMatrix(unittest.TestCase):
         m1 = autom8.create_matrix([[1], [2], [3], [4]])
         m2 = autom8.create_matrix([[1, 2], [3, 4], [5, 6]])
         self.assertTrue(np.array_equal(m1.to_array(), np.array([1, 2, 3, 4])))
-        with self.assertRaisesRegex(autom8.AutoM8Exception, 'Expected.*one column'):
+        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*one column'):
             m2.to_array()
 
     def test_append_column(self):
@@ -337,7 +337,7 @@ class TestColumn(unittest.TestCase):
     def test_setting_an_invalid_role(self):
         matrix = autom8.create_matrix([[1], [2], [3]])
         col = matrix.columns[0]
-        with self.assertRaisesRegex(autom8.AutoM8Exception, 'Expected.*role in'):
+        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*role in'):
             col.role = 'foo'
 
 
