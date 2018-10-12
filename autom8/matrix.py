@@ -1,7 +1,4 @@
-from collections import namedtuple
-import functools
 import numpy as np
-
 from .observer import Observer
 from .exceptions import expected
 

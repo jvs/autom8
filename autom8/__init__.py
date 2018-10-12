@@ -1,9 +1,5 @@
-from .context import (
-    create_training_context,
-    planner,
-    preprocessor,
-)
-
+from .training import create_training_context
+from .evaluate import evaluate_pipeline
 from .exceptions import Autom8Exception, Autom8Warning
 from .matrix import create_matrix
 from .observer import Observer
@@ -19,9 +15,9 @@ from .preprocessors import (
     encode_text,
     logarithm_columns,
     multiply_columns,
+    planner,
+    preprocessor,
     scale_columns,
     square_columns,
     sqrt_columns,
 )
-
-from .training import train

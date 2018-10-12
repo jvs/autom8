@@ -1,3 +1,4 @@
+import functools
 import itertools
 import logging
 
@@ -6,7 +7,40 @@ import numpy as np
 import sklearn.feature_extraction.text
 import sklearn.preprocessing
 
-from .context import planner, preprocessor
+from .exceptions import expected
+
+
+def planner(f):
+    @functools.wraps(f)
+    def wrapper(ctx, *a, **k):
+        if not ctx.is_training:
+            raise expected('TrainingContext', type(ctx).__name__)
+        try:
+            f(ctx, *a, **k)
+        except Exception:
+            msg = f'Planning step "{f.__name__}" failed'
+            logging.exception(msg)
+            ctx.observer.warn(msg)
+    return wrapper
+
+
+def preprocessor(f):
+    @functools.wraps(f)
+    def wrapper(ctx, *a, **k):
+        f(ctx, *a, **k)
+        ctx.preprocessors.append({'func': f, 'args': a, 'kwargs': k})
+    return wrapper
+
+
+def playback(preprocessors, ctx):
+    for item in preprocessors:
+        f, a, k = item['func'], item['args'], item['kwargs']
+        try:
+            f(ctx, *a, **k)
+        except Exception:
+            msg = f'Playback failed on step {f.__name__}'
+            logging.exception(msg)
+            ctx.observer.warn(msg)
 
 
 @preprocessor
