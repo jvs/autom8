@@ -1,4 +1,5 @@
 from collections import namedtuple
+from contextlib import contextmanager
 import functools
 import logging
 import numpy as np
@@ -84,6 +85,14 @@ class TrainingContext(_ContextMixin):
         feat = self.matrix.exclude_rows(self.test_indices)
         lab = np.delete(self.labels.encoded, self.test_indices)
         return (feat.stack_columns(), lab)
+
+    @contextmanager
+    def sandbox(self):
+        saved_matrix = self.matrix.copy()
+        saved_preprocessors = list(self.preprocessors)
+        yield
+        self.matrix = saved_matrix
+        self.preprocessors = saved_preprocessors
 
 
 class LabelContext(namedtuple('LabelContext', 'original, encoded, encoder')):
