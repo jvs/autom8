@@ -41,35 +41,32 @@ def _evaluate(ctx, estimator, is_train):
     predictions = np.array(predictions)
 
     if ctx.is_regression:
-        return _evaluate_regressor(ctx, y, predictions)
+        result = _evaluate_regressor(ctx, y, predictions)
     else:
-        return _evaluate_classifier(ctx, y, predictions)
+        result = _evaluate_classifier(ctx, y, predictions)
+
+    result['predictions'] = predictions
+    return result
 
 
 def _evaluate_regressor(ctx, actual_labels, predicted_labels):
-    result = {'predictions': predicted_labels}
-    funcs = [
+    return {f.__name__: f(actual_labels, predicted_labels) for f in [
         sklearn.metrics.explained_variance_score,
         sklearn.metrics.mean_absolute_error,
         sklearn.metrics.mean_squared_error,
         sklearn.metrics.mean_squared_log_error,
         sklearn.metrics.median_absolute_error,
         sklearn.metrics.r2_score,
-    ]
-    for f in funcs:
-        result[f.__name__] = f(actual_labels, predicted_labels)
-    return result
+    ]}
 
 
 def _evaluate_classifier(ctx, actual_labels, predicted_labels):
-    result = {'predictions': predicted_labels}
-    funcs = [
-        sklearn.metrics.precision_score,
-        sklearn.metrics.recall_score,
-        sklearn.metrics.f1_score,
-    ]
-    for f in funcs:
-        result[f.__name__] = f(actual_labels, predicted_labels, average='weighted')
-
     # TODO: Add the confusion matrix and the classification report.
-    return result
+    return {
+        f.__name__: f(actual_labels, predicted_labels, average='weighted')
+        for f in [
+            sklearn.metrics.precision_score,
+            sklearn.metrics.recall_score,
+            sklearn.metrics.f1_score,
+        ]
+    }
