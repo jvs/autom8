@@ -3,6 +3,7 @@ import numpy as np
 from context import autom8, Accumulator
 from autom8.context import PredictingContext, create_training_context
 
+
 class TestContext(unittest.TestCase):
     def test_is_training_property(self):
         matrix = autom8.create_matrix([[1]])
@@ -46,3 +47,52 @@ class TestTrainingContext(unittest.TestCase):
             [1, 5, True, 9],
             [3, 7, False, 11],
         ]))
+
+    def test_sandbox(self):
+        matrix = autom8.create_matrix({
+            'rows': [
+                [1, 5, True, 9],
+                [2, 6, False, 10],
+                [3, 7, False, 11],
+                [4, 8, True, 12],
+            ],
+            'schema': [
+                {'name': 'A', 'role': 'numerical'},
+                {'name': 'B', 'role': 'numerical'},
+                {'name': 'C', 'role': 'encoded'},
+                {'name': 'D', 'role': 'numerical'},
+            ]
+        })
+
+        ctx = autom8.create_training_context(matrix, [], [], 'regression')
+        autom8.add_column_of_ones(ctx)
+
+        self.assertEqual(len(ctx.preprocessors), 1)
+        self.assertEqual(len(ctx.matrix.columns), 4+1)
+        self.assertEqual(ctx.matrix.tolist()[1:], [
+            [1, 5, True, 9, 1],
+            [2, 6, False, 10, 1],
+            [3, 7, False, 11, 1],
+            [4, 8, True, 12, 1],
+        ])
+
+        with ctx.sandbox():
+            autom8.multiply_columns(ctx)
+            self.assertEqual(len(ctx.preprocessors), 2)
+            self.assertEqual(len(ctx.matrix.columns), 4+1+3)
+            self.assertEqual(ctx.matrix.tolist()[1:], [
+                [1, 5, True, 9, 1, 1*5, 1*9, 5*9],
+                [2, 6, False, 10, 1, 2*6, 2*10, 6*10],
+                [3, 7, False, 11, 1, 3*7, 3*11, 7*11],
+                [4, 8, True, 12, 1, 4*8, 4*12, 8*12],
+            ])
+
+        # Now check that the context has been restored to its previous state.
+        self.assertEqual(len(ctx.preprocessors), 1)
+        self.assertEqual(len(ctx.matrix.columns), 4+1)
+        self.assertEqual(ctx.matrix.tolist()[1:], [
+            [1, 5, True, 9, 1],
+            [2, 6, False, 10, 1],
+            [3, 7, False, 11, 1],
+            [4, 8, True, 12, 1],
+        ])
