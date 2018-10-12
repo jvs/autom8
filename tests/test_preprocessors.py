@@ -3,7 +3,8 @@ import math
 import numpy as np
 
 from context import autom8, Accumulator
-from autom8.context import PredictingContext, playback
+from autom8.pipeline import PipelineContext
+from autom8.preprocessors import playback
 
 
 class TestPreprocessors(unittest.TestCase):
@@ -274,7 +275,7 @@ class TestPreprocessors(unittest.TestCase):
             [12, 22, 32, 42, 52],
         ])
         acc = Accumulator()
-        ctx = PredictingContext(matrix, observer=acc)
+        ctx = PipelineContext(matrix, observer=acc)
 
         # For now, just monkey-patch in a preprocessors list.
         # (This is pretty terrible.)
@@ -583,6 +584,6 @@ def _playback(training_context, schema, rows, observer=None):
     if observer is None:
         observer = Accumulator()
     matrix = autom8.create_matrix({'rows': rows, 'schema': schema})
-    ctx = PredictingContext(matrix, observer=observer)
+    ctx = PipelineContext(matrix, observer=observer)
     playback(training_context.preprocessors, ctx)
     return ctx.matrix.tolist()

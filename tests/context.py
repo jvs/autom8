@@ -9,6 +9,10 @@ import autom8
 class Accumulator(autom8.Observer):
     def __init__(self):
         self.warnings = []
+        self.pipelines = []
+
+    def receive_pipeline(self, pipeline):
+        self.pipelines.append(pipeline)
 
     def warn(self, message):
         self.warnings.append(message)

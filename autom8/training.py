@@ -1,72 +1,138 @@
 from collections import namedtuple
+from contextlib import contextmanager
+import logging
 import numpy as np
-import sklearn.metrics
 import scipy.sparse
+import sklearn.preprocessing
 
+from .exceptions import expected
+from .observer import Observer
 from .pipeline import Pipeline
 
 
-TrainingReport = namedtuple('TrainingReport', 'pipeline, train, test')
+def create_training_context(
+    feature_matrix, label_array, test_indices, problem_type, observer=None
+):
+    if problem_type not in ('regression', 'classification'):
+        raise expected(
+            'problem_type to be "regression" or "classification"', problem_type
+        )
 
+    # Maybe create the matrix if the features are in a list.
+    # Similarly, create the array if the labels are in a list.
 
-def train(ctx, estimator):
-    ctx.require_training_context()
-    X, y = ctx.training_data()
-    X = scipy.sparse.csr_matrix(X.astype(float))
-    estimator.fit(X, y)
-    train = _evaluate(ctx, estimator, is_train=True)
-    test = _evaluate(ctx, estimator, is_train=False)
-    pipeline = Pipeline(list(ctx.preprocessors), estimator, ctx.labels.encoder)
-    return TrainingReport(pipeline, train, test)
+    if observer is None:
+        observer = Observer()
 
-
-def _evaluate(ctx, estimator, is_train):
-    if is_train:
-        X, y = ctx.training_data()
+    if problem_type == 'regression':
+        labels = LabelContext(label_array, label_array, None)
     else:
-        X, y = ctx.testing_data()
+        assert problem_type == 'classification'
+        encoder = sklearn.preprocessing.LabelEncoder()
+        encoded = encoder.fit_transform(label_array)
+        labels = LabelContext(label_array, encoded, encoder)
 
-    X = X.astype(float)
-    predictions = []
-
-    # TODO: Calculate an appropriate window size.
-    for i in range(0, len(X), 1000):
-        window = X[i : i + 1000]
-        matrix = scipy.sparse.csr_matrix(window)
-        encoded = estimator.predict(matrix)
-        decoded = ctx.labels.decode(encoded)
-        predictions.extend(decoded)
-
-    # Convert the predictions list to a numpy array.
-    predictions = np.array(predictions)
-
-    if ctx.is_regression:
-        result = _evaluate_regressor(ctx, y, predictions)
-    else:
-        result = _evaluate_classifier(ctx, y, predictions)
-
-    result['predictions'] = predictions
-    return result
+    return TrainingContext(
+        feature_matrix, labels, test_indices, problem_type, observer
+    )
 
 
-def _evaluate_regressor(ctx, actual_labels, predicted_labels):
-    return {f.__name__: f(actual_labels, predicted_labels) for f in [
-        sklearn.metrics.explained_variance_score,
-        sklearn.metrics.mean_absolute_error,
-        sklearn.metrics.mean_squared_error,
-        sklearn.metrics.mean_squared_log_error,
-        sklearn.metrics.median_absolute_error,
-        sklearn.metrics.r2_score,
-    ]}
+class TrainingContext:
+    def __init__(
+            self, matrix, labels, test_indices,
+            problem_type, observer, preprocessors=None
+        ):
+        self.matrix = matrix.copy()
+        self.labels = labels
+        self.test_indices = test_indices
+        self.problem_type = problem_type
+        self.observer = observer
+        self.preprocessors = list(preprocessors) if preprocessors else []
+        self.pool = None
+
+    @property
+    def is_training(self):
+        return True
+
+    @property
+    def is_classification(self):
+        return self.problem_type == 'classification'
+
+    @property
+    def is_regression(self):
+        return self.problem_type == 'regression'
+
+    def __lshift__(self, estimator):
+        if self.pool is None:
+            self.fit(estimator)
+        elif hasattr(self.pool, 'fit'):
+            self.pool.fit(self, estimator)
+        else:
+            self.pool.submit(self.fit, estimator)
+
+    def fit(self, estimator):
+        X, y = self.training_data()
+        try:
+            X = scipy.sparse.csr_matrix(X.astype(float))
+            estimator.fit(X, y)
+        except Exception:
+            logging.exception('Training failed')
+            return
+
+        pl = Pipeline(list(self.preprocessors), estimator, self.labels.encoder)
+        self.observer.receive_pipeline(pl)
+
+    def submit(self, func, *args, **kwargs):
+        if self.pool is None:
+            func(*args, **kwargs)
+        else:
+            self.pool.submit(f, *args, **kwargs)
+
+    def testing_data(self):
+        feat = self.matrix.select_rows(self.test_indices)
+        lab = self.labels.encoded[self.test_indices]
+        return (feat.stack_columns(), lab)
+
+    def training_data(self):
+        feat = self.matrix.exclude_rows(self.test_indices)
+        lab = np.delete(self.labels.encoded, self.test_indices)
+        return (feat.stack_columns(), lab)
+
+    @contextmanager
+    def sandbox(self):
+        saved_matrix = self.matrix.copy()
+        saved_preprocessors = list(self.preprocessors)
+        yield
+        self.matrix = saved_matrix
+        self.preprocessors = saved_preprocessors
+
+    @contextmanager
+    def parallel(self):
+        if self.pool is not None:
+            yield
+            return
+
+        num_preprocessors = len(self.preprocessors)
+        self.pool = self.observer.create_executor()
+        yield
+
+        try:
+            self.pool.shutdown(wait=True)
+        finally:
+            self.pool = None
+
+        if len(self.preprocessors) != num_preprocessors:
+            self.observer.warn(
+                'Potential race condition: The TrainingContext was updated'
+                ' within a `parallel` context. To avoid any race conditions,'
+                ' create a copy of the TrainingContext before applying any'
+                ' preprocessing functions to it.'
+            )
 
 
-def _evaluate_classifier(ctx, actual_labels, predicted_labels):
-    # TODO: Add the confusion matrix and the classification report.
-    return {
-        f.__name__: f(actual_labels, predicted_labels, average='weighted')
-        for f in [
-            sklearn.metrics.precision_score,
-            sklearn.metrics.recall_score,
-            sklearn.metrics.f1_score,
-        ]
-    }
+class LabelContext(namedtuple('LabelContext', 'original, encoded, encoder')):
+    def decode(self, encoded_labels):
+        if self.encoder is None:
+            return encoded_labels
+        else:
+            return self.encoder.inverse_transform(encoded_labels)

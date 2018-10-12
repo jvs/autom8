@@ -1,10 +1,10 @@
 from collections import namedtuple
 import numpy as np
 
-from .context import PredictingContext, playback
 from .matrix import create_matrix, Matrix
 from .observer import Observer
 from .exceptions import expected
+from .preprocessors import playback
 
 
 PredictionReport = namedtuple('PredictionReport', 'predictions, probabilities')
@@ -26,7 +26,7 @@ class Pipeline:
         if isinstance(features, list):
             features = create_matrix(features, observer)
 
-        ctx = PredictingContext(features, observer)
+        ctx = PipelineContext(features, observer)
         playback(self.preprocessors, ctx)
 
         X = ctx.matrix.stack_columns()
@@ -43,3 +43,13 @@ class Pipeline:
             predictions = self.label_encoder.inverse_transform(predictions)
 
         return PredictionReport(predictions, probabilities)
+
+
+class PipelineContext:
+    def __init__(self, matrix, observer):
+        self.matrix = matrix
+        self.observer = observer
+
+    @property
+    def is_training(self):
+        return False
