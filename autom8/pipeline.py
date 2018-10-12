@@ -6,7 +6,9 @@ from .matrix import create_matrix, Matrix
 from .exceptions import expected
 
 
-PipelineReport = namedtuple('PipelineReport', 'predictions, probabilities, warnings')
+PredictionReport = namedtuple('PredictionReport',
+    'predictions, probabilities, warnings'
+)
 
 
 class Pipeline:
@@ -42,4 +44,4 @@ class Pipeline:
         if self.label_encoder is not None:
             predictions = self.label_encoder.inverse_transform(predictions)
 
-        return PipelineReport(predictions, probabilities, warnings)
+        return PredictionReport(predictions, probabilities, warnings)
