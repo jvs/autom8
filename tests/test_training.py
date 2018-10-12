@@ -28,6 +28,15 @@ class TestContextInterface(unittest.TestCase):
 
 
 class TestTrainingContext(unittest.TestCase):
+    def test_copy_method(self):
+        # TODO: Make sure that the copied context actually works.
+        matrix = autom8.create_matrix([])
+        c1 = autom8.create_training_context(matrix, [], [], 'regression')
+        c2 = c1.copy()
+        self.assertIsNot(c1, c2)
+        self.assertIsNot(c1.matrix, c2.matrix)
+        self.assertIsNot(c1.preprocessors, c2.preprocessors)
+
     def test_training_and_testing_data(self):
         matrix = autom8.create_matrix([
             [1, 5, True, 9],

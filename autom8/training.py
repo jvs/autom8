@@ -50,6 +50,16 @@ class TrainingContext:
         self.preprocessors = list(preprocessors) if preprocessors else []
         self.pool = None
 
+    def copy(self):
+        return TrainingContext(
+            matrix=self.matrix,
+            labels=self.labels,
+            test_indices=self.test_indices,
+            problem_type=self.problem_type,
+            observer=self.observer,
+            preprocessors=self.preprocessors,
+        )
+
     @property
     def is_training(self):
         return True
