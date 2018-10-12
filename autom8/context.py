@@ -3,14 +3,21 @@ import functools
 import logging
 import numpy as np
 import sklearn.preprocessing
+
 from .exceptions import expected
+from .observer import Observer
 
 
-def create_training_context(feature_matrix, label_array, test_indices, problem_type):
+def create_training_context(
+    feature_matrix, label_array, test_indices, problem_type, observer=None
+):
     if problem_type not in ('regression', 'classification'):
         raise expected(
             'problem_type to be "regression" or "classification"', problem_type
         )
+
+    if observer is None:
+        observer = Observer()
 
     if problem_type == 'regression':
         labels = LabelContext(label_array, label_array, None)
@@ -20,11 +27,9 @@ def create_training_context(feature_matrix, label_array, test_indices, problem_t
         encoded = encoder.fit_transform(label_array)
         labels = LabelContext(label_array, encoded, encoder)
 
-    return TrainingContext(feature_matrix, labels, test_indices, problem_type)
-
-
-def create_predicting_context(feature_matrix):
-    return PredictingContext(feature_matrix)
+    return TrainingContext(
+        feature_matrix, labels, test_indices, problem_type, observer
+    )
 
 
 class _ContextMixin:
@@ -34,8 +39,9 @@ class _ContextMixin:
 
 
 class PredictingContext(_ContextMixin):
-    def __init__(self, matrix):
+    def __init__(self, matrix, observer):
         self.matrix = matrix
+        self.observer = observer
 
     @property
     def is_training(self):
@@ -43,11 +49,15 @@ class PredictingContext(_ContextMixin):
 
 
 class TrainingContext(_ContextMixin):
-    def __init__(self, matrix, labels, test_indices, problem_type, preprocessors=None):
+    def __init__(
+            self, matrix, labels, test_indices,
+            problem_type, observer, preprocessors=None
+        ):
         self.matrix = matrix.copy()
         self.labels = labels
         self.test_indices = test_indices
         self.problem_type = problem_type
+        self.observer = observer
         self.preprocessors = list(preprocessors) if preprocessors else []
 
     def copy(self):
@@ -56,6 +66,7 @@ class TrainingContext(_ContextMixin):
             labels=self.labels,
             test_indices=self.test_indices,
             problem_type=self.problem_type,
+            observer=self.observer,
             preprocessors=self.preprocessors,
         )
 
@@ -97,7 +108,9 @@ def planner(f):
         try:
             f(ctx, *a, **k)
         except Exception:
-            logging.exception('Planner "%s" failed', f.__name__)
+            msg = f'Planning step "{f.__name__}" failed'
+            logging.exception(msg)
+            ctx.observer.warn(msg)
     return wrapper
 
 
@@ -115,4 +128,6 @@ def playback(preprocessors, ctx):
         try:
             f(ctx, *a, **k)
         except Exception:
-            logging.exception('playback failed on step %r', f)
+            msg = f'Playback failed on step {f.__name__}'
+            logging.exception(msg)
+            ctx.observer.warn(msg)

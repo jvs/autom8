@@ -1,7 +1,9 @@
 import unittest
 import math
 import numpy as np
-from context import autom8
+
+from context import autom8, Accumulator
+from autom8.context import PredictingContext, playback
 
 
 class TestPreprocessors(unittest.TestCase):
@@ -12,8 +14,8 @@ class TestPreprocessors(unittest.TestCase):
             {'name': 'B', 'role': 'categorical'},
         ]
         new_headers = ['A', 'B', 'CONSTANT']
-        report = autom8.create_matrix({'rows': training, 'schema': schema})
-        ctx = autom8.create_training_context(report.matrix, [], [], 'regression')
+        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
+        ctx = autom8.create_training_context(matrix, [], [], 'regression')
         autom8.add_column_of_ones(ctx)
 
         self.assertEqual(len(ctx.preprocessors), 1)
@@ -39,8 +41,8 @@ class TestPreprocessors(unittest.TestCase):
         new_headers = [
             'A', 'B', 'A IS A FRACTION', 'B IS A FRACTION',
         ]
-        report = autom8.create_matrix({'rows': training, 'schema': schema})
-        ctx = autom8.create_training_context(report.matrix, [], [], 'regression')
+        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
+        ctx = autom8.create_training_context(matrix, [], [], 'regression')
         autom8.binarize_fractions(ctx)
 
         self.assertEqual(len(ctx.preprocessors), 1)
@@ -69,8 +71,8 @@ class TestPreprocessors(unittest.TestCase):
         new_headers = [
             'A', 'B', 'A IS POSITIVE', 'B IS POSITIVE',
         ]
-        report = autom8.create_matrix({'rows': training, 'schema': schema})
-        ctx = autom8.create_training_context(report.matrix, [], [], 'regression')
+        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
+        ctx = autom8.create_training_context(matrix, [], [], 'regression')
         autom8.binarize_signs(ctx)
 
         self.assertEqual(len(ctx.preprocessors), 1)
@@ -107,8 +109,8 @@ class TestPreprocessors(unittest.TestCase):
             'A DIVIDED BY B', 'A DIVIDED BY D', 'B DIVIDED BY A',
             'B DIVIDED BY D', 'D DIVIDED BY A', 'D DIVIDED BY B',
         ]
-        report = autom8.create_matrix({'rows': training, 'schema': schema})
-        ctx = autom8.create_training_context(report.matrix, [], [], 'regression')
+        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
+        ctx = autom8.create_training_context(matrix, [], [], 'regression')
         autom8.divide_columns(ctx)
 
         self.assertEqual(len(ctx.preprocessors), 1)
@@ -163,8 +165,8 @@ class TestPreprocessors(unittest.TestCase):
             {'name': 'F', 'role': 'categorical'},
         ]
         new_headers = ['A', 'C', 'D']
-        report = autom8.create_matrix({'rows': training, 'schema': schema})
-        ctx = autom8.create_training_context(report.matrix, [], [], 'regression')
+        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
+        ctx = autom8.create_training_context(matrix, [], [], 'regression')
         autom8.drop_duplicate_columns(ctx)
 
         # TODO: Use np.testing.assert_equal or np.allclose.
@@ -209,8 +211,8 @@ class TestPreprocessors(unittest.TestCase):
             'ENCODED CATEGORY (D)',
             'ENCODED CATEGORY (F)',
         ]
-        report = autom8.create_matrix({'rows': training, 'schema': schema})
-        ctx = autom8.create_training_context(report.matrix, [], [], 'regression')
+        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
+        ctx = autom8.create_training_context(matrix, [], [], 'regression')
         autom8.encode_categories(ctx)
 
         self.assertEqual(len(ctx.preprocessors), 1)
@@ -266,12 +268,13 @@ class TestPreprocessors(unittest.TestCase):
 
     def test_encode_categories_when_something_goes_wrong(self):
         from autom8.preprocessors import _encode_categories
-        report = autom8.create_matrix([
+        matrix = autom8.create_matrix([
             [10, 20, 30, 40, 50],
             [11, 21, 31, 41, 51],
             [12, 22, 32, 42, 52],
         ])
-        ctx = autom8.create_predicting_context(report.matrix)
+        acc = Accumulator()
+        ctx = PredictingContext(matrix, observer=acc)
 
         # For now, just monkey-patch in a preprocessors list.
         # (This is pretty terrible.)
@@ -305,8 +308,8 @@ class TestPreprocessors(unittest.TestCase):
             {'name': 'A', 'role': 'textual'},
             {'name': 'B', 'role': 'textual'},
         ]
-        report = autom8.create_matrix({'rows': training, 'schema': schema})
-        ctx = autom8.create_training_context(report.matrix, [], [], 'regression')
+        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
+        ctx = autom8.create_training_context(matrix, [], [], 'regression')
         autom8.encode_text(ctx)
         self.assertEqual(len(ctx.preprocessors), 1)
         self.assertEqual(ctx.matrix.columns[0].name, 'ENCODED TEXT 1')
@@ -386,9 +389,9 @@ class TestPreprocessors(unittest.TestCase):
             {'name': 'B', 'role': 'numerical'},
         ]
         new_headers = ['A', 'B', 'LOG A', 'LOG B']
-        report = autom8.create_matrix({'rows': training, 'schema': schema})
+        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
 
-        ctx = autom8.create_training_context(report.matrix, [], [], 'regression')
+        ctx = autom8.create_training_context(matrix, [], [], 'regression')
         autom8.logarithm_columns(ctx)
 
         self.assertEqual(ctx.matrix.tolist(), [
@@ -434,8 +437,8 @@ class TestPreprocessors(unittest.TestCase):
         new_headers = [
             'A', 'B', 'C', 'D', 'E', 'F', 'A TIMES B', 'A TIMES F', 'B TIMES F',
         ]
-        report = autom8.create_matrix({'rows': training, 'schema': schema})
-        ctx = autom8.create_training_context(report.matrix, [], [], 'regression')
+        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
+        ctx = autom8.create_training_context(matrix, [], [], 'regression')
         autom8.multiply_columns(ctx)
 
         self.assertEqual(len(ctx.preprocessors), 1)
@@ -483,8 +486,8 @@ class TestPreprocessors(unittest.TestCase):
             {'name': 'B', 'role': 'numerical'},
         ]
         new_headers = ['SCALED (A)', 'SCALED (B)']
-        report = autom8.create_matrix({'rows': training, 'schema': schema})
-        ctx = autom8.create_training_context(report.matrix, [], [], 'regression')
+        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
+        ctx = autom8.create_training_context(matrix, [], [], 'regression')
         autom8.scale_columns(ctx)
 
         self.assertEqual(len(ctx.preprocessors), 1)
@@ -521,8 +524,8 @@ class TestPreprocessors(unittest.TestCase):
         new_headers = [
             'A', 'B', 'C', 'D', 'E', 'A SQUARED', 'B SQUARED', 'E SQUARED',
         ]
-        report = autom8.create_matrix({'rows': training, 'schema': schema})
-        ctx = autom8.create_training_context(report.matrix, [], [], 'regression')
+        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
+        ctx = autom8.create_training_context(matrix, [], [], 'regression')
         autom8.square_columns(ctx)
 
         self.assertEqual(len(ctx.preprocessors), 1)
@@ -544,9 +547,9 @@ class TestPreprocessors(unittest.TestCase):
             {'name': 'B', 'role': 'numerical'},
         ]
         new_headers = ['A', 'B', 'SQRT A', 'SQRT B']
-        report = autom8.create_matrix({'rows': training, 'schema': schema})
+        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
 
-        ctx = autom8.create_training_context(report.matrix, [], [], 'regression')
+        ctx = autom8.create_training_context(matrix, [], [], 'regression')
         autom8.sqrt_columns(ctx)
 
         self.assertEqual(ctx.matrix.tolist(), [
@@ -576,8 +579,10 @@ class TestPreprocessors(unittest.TestCase):
         ])
 
 
-def _playback(training_context, schema, rows):
-    report = autom8.create_matrix({'rows': rows, 'schema': schema})
-    ctx = autom8.create_predicting_context(report.matrix)
-    autom8.playback(training_context.preprocessors, ctx)
+def _playback(training_context, schema, rows, observer=None):
+    if observer is None:
+        observer = Accumulator()
+    matrix = autom8.create_matrix({'rows': rows, 'schema': schema})
+    ctx = PredictingContext(matrix, observer=observer)
+    playback(training_context.preprocessors, ctx)
     return ctx.matrix.tolist()
