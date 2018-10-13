@@ -4,8 +4,8 @@ from .exceptions import expected
 
 
 def create_matrix(data, observer=None):
-    if not isinstance(data, (dict, list, tuple)):
-        raise expected('dict, list, or tuple', type(data))
+    if not isinstance(data, (dict, list, tuple, np.ndarray)):
+        raise expected('numpy array, dict, list, or tuple', type(data))
 
     if observer is None:
         observer = Observer()
@@ -207,7 +207,7 @@ def _create_matrix_from_iterable(data, observer):
         return Matrix([i.copy() for i in data])
 
     # Drop empty rows.
-    rows = [row for row in data if row]
+    rows = [row for row in data if len(row) > 0]
     num_dropped = len(data) - len(rows)
 
     # Warn the users if we dropped some rows.

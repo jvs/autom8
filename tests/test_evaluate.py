@@ -20,9 +20,7 @@ class TestEvaluate(unittest.TestCase):
         ctx << sklearn.linear_model.LinearRegression()
         self.assertEqual(len(acc.pipelines), 1)
 
-        pipeline = acc.pipelines[0]
-        report = autom8.evaluate_pipeline(ctx, pipeline)
-
+        pipeline, report = acc.pipelines[0]
         self.assertEqual(report.train.metrics['r2_score'], 1.0)
         self.assertEqual(report.test.metrics['r2_score'], 1.0)
 

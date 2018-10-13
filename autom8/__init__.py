@@ -21,3 +21,5 @@ from .preprocessors import (
     square_columns,
     sqrt_columns,
 )
+
+from .search import search

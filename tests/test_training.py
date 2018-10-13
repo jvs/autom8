@@ -35,7 +35,7 @@ class TestTrainingContext(unittest.TestCase):
         c2 = c1.copy()
         self.assertIsNot(c1, c2)
         self.assertIsNot(c1.matrix, c2.matrix)
-        self.assertIsNot(c1.preprocessors, c2.preprocessors)
+        self.assertIsNot(c1.steps, c2.steps)
 
     def test_training_and_testing_data(self):
         matrix = autom8.create_matrix([
@@ -78,7 +78,7 @@ class TestTrainingContext(unittest.TestCase):
         ctx = autom8.create_training_context(matrix, [], [], 'regression')
         autom8.add_column_of_ones(ctx)
 
-        self.assertEqual(len(ctx.preprocessors), 1)
+        self.assertEqual(len(ctx.steps), 1)
         self.assertEqual(len(ctx.matrix.columns), 4+1)
         self.assertEqual(ctx.matrix.tolist()[1:], [
             [1, 5, True, 9, 1],
@@ -89,7 +89,7 @@ class TestTrainingContext(unittest.TestCase):
 
         with ctx.sandbox():
             autom8.multiply_columns(ctx)
-            self.assertEqual(len(ctx.preprocessors), 2)
+            self.assertEqual(len(ctx.steps), 2)
             self.assertEqual(len(ctx.matrix.columns), 4+1+3)
             self.assertEqual(ctx.matrix.tolist()[1:], [
                 [1, 5, True, 9, 1, 1*5, 1*9, 5*9],
@@ -99,7 +99,7 @@ class TestTrainingContext(unittest.TestCase):
             ])
 
         # Now check that the context has been restored to its previous state.
-        self.assertEqual(len(ctx.preprocessors), 1)
+        self.assertEqual(len(ctx.steps), 1)
         self.assertEqual(len(ctx.matrix.columns), 4+1)
         self.assertEqual(ctx.matrix.tolist()[1:], [
             [1, 5, True, 9, 1],

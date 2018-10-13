@@ -11,8 +11,8 @@ class Accumulator(autom8.Observer):
         self.warnings = []
         self.pipelines = []
 
-    def receive_pipeline(self, pipeline):
-        self.pipelines.append(pipeline)
+    def receive_pipeline(self, pipeline, report):
+        self.pipelines.append((pipeline, report))
 
     def warn(self, message):
         self.warnings.append(message)

@@ -51,7 +51,7 @@ class TestMatrix(unittest.TestCase):
             })
 
     def test_empty_datasets(self):
-        for data in [[], (), {'rows': [], 'schema': []}]:
+        for data in [[], (), {'rows': [], 'schema': []}, np.array([])]:
             acc = Accumulator()
             matrix = autom8.create_matrix(data, observer=acc)
             self.assertEqual(matrix.columns, [])
@@ -156,6 +156,22 @@ class TestMatrix(unittest.TestCase):
         self.assertEqual(c3.is_original, True)
 
         self.assertEqual(acc.warnings, [])
+
+    def test_creating_simple_matrix_from_numpy_array(self):
+        acc = Accumulator()
+        matrix = autom8.create_matrix(
+            np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]]),
+            observer=acc,
+        )
+
+        c1, c2, c3 = matrix.columns
+        e1 = np.array([1, 4, 7, 10], dtype=object)
+        e2 = np.array([2, 5, 8, 11], dtype=None)
+        e3 = np.array([3, 6, 9, 12], dtype=None)
+
+        self.assertTrue(np.array_equal(c1.values, e1))
+        self.assertTrue(np.array_equal(c2.values, e2))
+        self.assertTrue(np.array_equal(c3.values, e3))
 
     def test_len_method(self):
         m1 = autom8.create_matrix([
