@@ -2,7 +2,7 @@ import unittest
 import math
 import numpy as np
 
-from context import autom8, Accumulator
+import autom8
 from autom8.pipeline import PipelineContext
 from autom8.preprocessors import playback
 
@@ -389,7 +389,7 @@ class TestPreprocessors(unittest.TestCase):
         autom8.encode_categories(ctx, method='ordinal', only_strings=False)
         encoder = ctx.steps[0].args[0]
 
-        acc = Accumulator()
+        acc = autom8.Accumulator()
         pip = PipelineContext(matrix, observer=acc)
 
         # For now, just monkey-patch in a "steps" list.
@@ -433,7 +433,7 @@ class TestPreprocessors(unittest.TestCase):
         autom8.encode_categories(ctx, method='one-hot', only_strings=False)
         encoder = ctx.steps[0].args[0]
 
-        acc = Accumulator()
+        acc = autom8.Accumulator()
         pip = PipelineContext(matrix, observer=acc)
 
         # As in the previous test, just monkey-patch in a "steps" list.
@@ -747,7 +747,7 @@ class TestPreprocessors(unittest.TestCase):
 
 def _playback(training_context, schema, rows, observer=None):
     if observer is None:
-        observer = Accumulator()
+        observer = autom8.Accumulator()
     matrix = autom8.create_matrix({'rows': rows, 'schema': schema})
     ctx = PipelineContext(matrix, observer=observer)
     playback(training_context.steps, ctx)

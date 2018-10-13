@@ -1,9 +1,9 @@
 import unittest
 import random
 import warnings
-
 import numpy as np
-from context import autom8, Accumulator
+
+import autom8
 
 
 class TestSearch(unittest.TestCase):
@@ -11,7 +11,7 @@ class TestSearch(unittest.TestCase):
         X = np.arange(0.0, 1, 0.01).reshape(-1, 1)
         y = np.sin(2 * np.pi * X).ravel()
 
-        acc = Accumulator()
+        acc = autom8.Accumulator()
         matrix = autom8.create_matrix(X, observer=acc)
 
         count = len(y)

@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from context import autom8, Accumulator
+import autom8
 
 
 class TestMatrix(unittest.TestCase):
@@ -52,20 +52,22 @@ class TestMatrix(unittest.TestCase):
 
     def test_empty_datasets(self):
         for data in [[], (), {'rows': [], 'schema': []}, np.array([])]:
-            acc = Accumulator()
+            acc = autom8.Accumulator()
             matrix = autom8.create_matrix(data, observer=acc)
             self.assertEqual(matrix.columns, [])
             self.assertEqual(acc.warnings, [])
 
     def test_empty_dataset_with_empty_rows(self):
         # Assert that we see one warning when we have three empty rows.
-        acc = Accumulator()
+        acc = autom8.Accumulator()
         matrix = autom8.create_matrix([[], [], []], observer=acc)
         self.assertEqual(matrix.columns, [])
         self.assertEqual(len(acc.warnings), 1)
 
     def test_empty_dataset_warning_message(self):
-        a1, a2, a3 = Accumulator(), Accumulator(), Accumulator()
+        a1 = autom8.Accumulator()
+        a2 = autom8.Accumulator()
+        a3 = autom8.Accumulator()
         autom8.create_matrix([[]], observer=a1)
         autom8.create_matrix([[], []], observer=a2)
         autom8.create_matrix([[], [], []], observer=a3)
@@ -74,7 +76,8 @@ class TestMatrix(unittest.TestCase):
         self.assertEqual(a3.warnings, ['Dropped 3 empty rows from dataset.'])
 
     def test_extra_columns_warning_message(self):
-        a1, a2 = Accumulator(), Accumulator()
+        a1 = autom8.Accumulator()
+        a2 = autom8.Accumulator()
         m1 = autom8.create_matrix([[1, 2], [1, 2, 3]], observer=a1)
         m2 = autom8.create_matrix(
             [[1], [1, 2, 3], [1, 2, 3, 4], [1, 2, 3, 4]], observer=a2
@@ -97,7 +100,7 @@ class TestMatrix(unittest.TestCase):
         ])
 
     def test_creating_simple_matrix_with_schema(self):
-        acc = Accumulator()
+        acc = autom8.Accumulator()
         matrix = autom8.create_matrix(
             {
                 'rows': [['hi', True], ['bye', False]],
@@ -128,7 +131,7 @@ class TestMatrix(unittest.TestCase):
         self.assertEqual(acc.warnings, [])
 
     def test_creating_simple_matrix_from_list(self):
-        acc = Accumulator()
+        acc = autom8.Accumulator()
         matrix = autom8.create_matrix(
             [['hi', 1, True], ['bye', 2, False]],
             observer=acc,
@@ -158,7 +161,7 @@ class TestMatrix(unittest.TestCase):
         self.assertEqual(acc.warnings, [])
 
     def test_creating_simple_matrix_from_numpy_array(self):
-        acc = Accumulator()
+        acc = autom8.Accumulator()
         matrix = autom8.create_matrix(
             np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]]),
             observer=acc,

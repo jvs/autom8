@@ -1,12 +1,13 @@
 import unittest
 import numpy as np
 import sklearn.linear_model
-from context import autom8, Accumulator
+
+import autom8
 
 
 class TestEvaluate(unittest.TestCase):
     def test_evaluate_pipeline(self):
-        acc = Accumulator()
+        acc = autom8.Accumulator()
         matrix = autom8.create_matrix([
             [1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16],
         ])

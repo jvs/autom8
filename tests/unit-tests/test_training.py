@@ -1,6 +1,7 @@
 import unittest
 import numpy as np
-from context import autom8, Accumulator
+
+import autom8
 from autom8.pipeline import PipelineContext
 
 
@@ -8,7 +9,7 @@ class TestContextInterface(unittest.TestCase):
     def test_is_training_property(self):
         matrix = autom8.create_matrix([[1]])
         c1 = autom8.create_training_context(matrix, [], [], 'regression')
-        c2 = PipelineContext(matrix, Accumulator())
+        c2 = PipelineContext(matrix, autom8.Accumulator())
         self.assertTrue(c1.is_training)
         self.assertFalse(c2.is_training)
         self.assertTrue(hasattr(c1, 'observer'))
@@ -17,7 +18,7 @@ class TestContextInterface(unittest.TestCase):
     def test_planner_decorator(self):
         matrix = autom8.create_matrix([[1, 1], [2, 2]])
         c1 = autom8.create_training_context(matrix, [], [], 'regression')
-        c2 = PipelineContext(matrix, Accumulator())
+        c2 = PipelineContext(matrix, autom8.Accumulator())
 
         # This should not raise an exception.
         autom8.drop_duplicate_columns(c1)

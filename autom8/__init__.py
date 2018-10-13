@@ -2,7 +2,7 @@ from .training import create_training_context
 from .evaluate import evaluate_pipeline
 from .exceptions import Autom8Exception, Autom8Warning
 from .matrix import create_matrix
-from .observer import Observer
+from .observer import Accumulator, Observer
 
 from .preprocessors import (
     add_column_of_ones,
