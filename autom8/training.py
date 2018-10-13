@@ -5,6 +5,7 @@ import numpy as np
 import scipy.sparse
 import sklearn.preprocessing
 
+from .evaluate import evaluate_pipeline
 from .exceptions import expected
 from .observer import Observer
 from .pipeline import Pipeline
@@ -40,14 +41,14 @@ def create_training_context(
 class TrainingContext:
     def __init__(
             self, matrix, labels, test_indices,
-            problem_type, observer, preprocessors=None
+            problem_type, observer, steps=None
         ):
         self.matrix = matrix.copy()
         self.labels = labels
         self.test_indices = test_indices
         self.problem_type = problem_type
         self.observer = observer
-        self.preprocessors = list(preprocessors) if preprocessors else []
+        self.steps = list(steps) if steps else []
         self.pool = None
 
     def copy(self):
@@ -57,7 +58,7 @@ class TrainingContext:
             test_indices=self.test_indices,
             problem_type=self.problem_type,
             observer=self.observer,
-            preprocessors=self.preprocessors,
+            steps=self.steps,
         )
 
     @property
@@ -89,8 +90,9 @@ class TrainingContext:
             logging.exception('Training failed')
             return
 
-        pl = Pipeline(list(self.preprocessors), estimator, self.labels.encoder)
-        self.observer.receive_pipeline(pl)
+        pipeline = Pipeline(list(self.steps), estimator, self.labels.encoder)
+        report = evaluate_pipeline(self, pipeline)
+        self.observer.receive_pipeline(pipeline, report)
 
     def submit(self, func, *args, **kwargs):
         if self.pool is None:
@@ -111,10 +113,10 @@ class TrainingContext:
     @contextmanager
     def sandbox(self):
         saved_matrix = self.matrix.copy()
-        saved_preprocessors = list(self.preprocessors)
+        saved_steps = list(self.steps)
         yield
         self.matrix = saved_matrix
-        self.preprocessors = saved_preprocessors
+        self.steps = saved_steps
 
     @contextmanager
     def parallel(self):
@@ -122,7 +124,7 @@ class TrainingContext:
             yield
             return
 
-        num_preprocessors = len(self.preprocessors)
+        num_steps = len(self.steps)
         self.pool = self.observer.create_executor()
         yield
 
@@ -131,7 +133,7 @@ class TrainingContext:
         finally:
             self.pool = None
 
-        if len(self.preprocessors) != num_preprocessors:
+        if len(self.steps) != num_steps:
             self.observer.warn(
                 'Potential race condition: The TrainingContext was updated'
                 ' within a `parallel` context. To avoid any race conditions,'

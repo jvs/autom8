@@ -19,7 +19,7 @@ class TestPreprocessors(unittest.TestCase):
         ctx = autom8.create_training_context(matrix, [], [], 'regression')
         autom8.add_column_of_ones(ctx)
 
-        self.assertEqual(len(ctx.preprocessors), 1)
+        self.assertEqual(len(ctx.steps), 1)
         self.assertEqual(ctx.matrix.tolist(), [
             new_headers, ['a', 'b', 1], ['c', 'd', 1],
         ])
@@ -46,7 +46,7 @@ class TestPreprocessors(unittest.TestCase):
         ctx = autom8.create_training_context(matrix, [], [], 'regression')
         autom8.binarize_fractions(ctx)
 
-        self.assertEqual(len(ctx.preprocessors), 1)
+        self.assertEqual(len(ctx.steps), 1)
         self.assertEqual(ctx.matrix.tolist(), [
             new_headers,
             [1, 0.2, False, True],
@@ -76,7 +76,7 @@ class TestPreprocessors(unittest.TestCase):
         ctx = autom8.create_training_context(matrix, [], [], 'regression')
         autom8.binarize_signs(ctx)
 
-        self.assertEqual(len(ctx.preprocessors), 1)
+        self.assertEqual(len(ctx.steps), 1)
         self.assertEqual(ctx.matrix.tolist(), [
             new_headers,
             [1, -2, True, False],
@@ -114,7 +114,7 @@ class TestPreprocessors(unittest.TestCase):
         ctx = autom8.create_training_context(matrix, [], [], 'regression')
         autom8.divide_columns(ctx)
 
-        self.assertEqual(len(ctx.preprocessors), 1)
+        self.assertEqual(len(ctx.steps), 1)
         self.assertEqual(ctx.matrix.tolist(), [
             new_headers,
             [1, 4, 'a', 7.0, 1 / 4, 1 / 7, 4 / 1, 4 / 7, 7 / 1, 7 / 4],
@@ -170,15 +170,13 @@ class TestPreprocessors(unittest.TestCase):
         ctx = autom8.create_training_context(matrix, [], [], 'regression')
         autom8.drop_duplicate_columns(ctx)
 
-        # TODO: Use np.testing.assert_equal or np.allclose.
-        # (Just find something better than this nonsense.)
         def _nan(x):
             return 'nan' if isinstance(x, float) and np.isnan(x) else x
 
         def _clean(a):
             return [[_nan(i) for i in row] for row in a]
 
-        self.assertEqual(len(ctx.preprocessors), 1)
+        self.assertEqual(len(ctx.steps), 1)
         self.assertEqual(_clean(ctx.matrix.tolist()), _clean([
             new_headers,
             [np.nan, 1, 'a'],
@@ -190,7 +188,7 @@ class TestPreprocessors(unittest.TestCase):
         m1 = _playback(ctx, schema, training)
         self.assertEqual(_clean(m1), _clean(ctx.matrix.tolist()))
 
-    def test_encode_categories(self):
+    def test_ordinal_encode_categories(self):
         training = [
             [1.1, 10, 'foo', 'bar', True, 5.0],
             [2.2, 20, 'bar', 'foo', False, 5.0],
@@ -207,16 +205,19 @@ class TestPreprocessors(unittest.TestCase):
         new_headers = [
             'A',
             'E',
-            'ENCODED CATEGORY (B)',
-            'ENCODED CATEGORY (C)',
-            'ENCODED CATEGORY (D)',
-            'ENCODED CATEGORY (F)',
+            'ENCODED B',
+            'ENCODED C',
+            'ENCODED D',
+            'ENCODED F',
         ]
+
         matrix = autom8.create_matrix({'rows': training, 'schema': schema})
         ctx = autom8.create_training_context(matrix, [], [], 'regression')
-        autom8.encode_categories(ctx)
 
-        self.assertEqual(len(ctx.preprocessors), 1)
+        restore_ctx = ctx.copy()
+        autom8.encode_categories(ctx, method='ordinal', only_strings=False)
+
+        self.assertEqual(len(ctx.steps), 1)
         self.assertEqual(ctx.matrix.tolist(), [
             new_headers,
             [1.1, True, 1, 1, 1, 1],
@@ -267,35 +268,199 @@ class TestPreprocessors(unittest.TestCase):
             [3.35, True, 3, 0, 0, 1],
         ])
 
-    def test_encode_categories_when_something_goes_wrong(self):
-        from autom8.preprocessors import _encode_categories
-        matrix = autom8.create_matrix([
-            [10, 20, 30, 40, 50],
-            [11, 21, 31, 41, 51],
-            [12, 22, 32, 42, 52],
+        # Now try just encoding the string columns.
+        new_headers = ['A', 'B', 'E', 'F', 'ENCODED C', 'ENCODED D']
+        ctx = restore_ctx.copy()
+        autom8.encode_categories(ctx, method='ordinal', only_strings=True)
+
+        # Once again, try playing it back on the original data.
+        m5 = _playback(ctx, schema, training)
+        self.assertEqual(m5, ctx.matrix.tolist())
+
+        # Try a case where all the values are expected.
+        m6 = _playback(ctx, schema, [
+            [1.11, 30, 'bar', 'bar', False, 5.0],
+            [2.22, 20, 'foo', 'foo', False, 5.0],
+            [3.33, 10, 'bar', 'foo', True, 5.0],
         ])
-        acc = Accumulator()
-        ctx = PipelineContext(matrix, observer=acc)
+        self.assertEqual(m6, [
+            new_headers,
+            [1.11, 30, False, 5.0, 2, 1],
+            [2.22, 20, False, 5.0, 1, 2],
+            [3.33, 10, True, 5.0, 2, 2],
+        ])
 
-        # For now, just monkey-patch in a preprocessors list.
-        # (This is pretty terrible.)
-        ctx.preprocessors = []
+    def test_one_hot_encode_categories(self):
+        training = [
+            [1, 10, 'foo', 'bar', -1.0],
+            [2, 20, 'bar', 'foo', -1.0],
+            [3, 30, 'foo', 'foo', -1.0],
+        ]
+        schema = [
+            {'name': 'A', 'role': 'numerical'},
+            {'name': 'B', 'role': 'categorical'},
+            {'name': 'C', 'role': 'categorical'},
+            {'name': 'D', 'role': 'categorical'},
+            {'name': 'E', 'role': 'categorical'},
+        ]
+        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
+        ctx = autom8.create_training_context(matrix, [], [], 'regression')
 
-        # Pass in `None` to the preprocessor, causing it to fail.
-        # Make sure that we get the expected columns.
-        _encode_categories(ctx, None, [0, 2, 4])
+        restore_ctx = ctx.copy()
+        autom8.encode_categories(ctx, method='one-hot', only_strings=False)
+
+        new_headers = [
+            'A',
+            'B = 10', 'B = 20', 'B = 30', 'B = -1',
+            'C = foo', 'C = bar', 'C = -1',
+            'D = bar', 'D = foo', 'D = -1',
+            'E = -1.0', 'E = -1',
+        ]
+
+        self.assertEqual(len(ctx.steps), 1)
         self.assertEqual(ctx.matrix.tolist(), [
-            [
-                'Column-2',
-                'Column-4',
-                'ENCODED CATEGORY (Column-1)',
-                'ENCODED CATEGORY (Column-3)',
-                'ENCODED CATEGORY (Column-5)',
-            ],
-            [20, 40, 0, 0, 0],
-            [21, 41, 0, 0, 0],
-            [22, 42, 0, 0, 0],
+            new_headers,
+            [1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
+            [2, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0],
+            [3, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0],
         ])
+
+        # Try playing it back on the original data.
+        m1 = _playback(ctx, schema, training)
+        self.assertEqual(m1, ctx.matrix.tolist())
+
+        # Try a case where all the values are expected.
+        m2 = _playback(ctx, schema, [
+            [4, 30, 'bar', 'bar', -1.0],
+            [5, 10, 'foo', 'foo', -1.0],
+            [6, 20, 'bar', 'bar', -1.0],
+        ])
+        self.assertEqual(m2, [
+            new_headers,
+            [4, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0],
+            [5, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0],
+            [6, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0],
+        ])
+
+        # Now try a case where some of the values are unexpected.
+        m3 = _playback(ctx, schema, [
+            [4, 33, 'foo', 'bar', -1.0],
+            [5, 20, 'baz', 'foo', -1.0],
+            [6, 10, 'bar', 'zim', -1.1],
+        ])
+        self.assertEqual(m3, [
+            new_headers,
+            [4, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
+            [5, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0],
+            [6, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+        ])
+
+        # Now try a case where some of the columns have the wrong type.
+        m4 = _playback(ctx, schema, [
+            [4, True, 'foo', 7, 'A'],
+            [5, True, 'baz', 8, 'B'],
+            [6, False, 'bar', 9, 'C'],
+        ])
+        self.assertEqual(m4, [
+            new_headers,
+            [4, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+            [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [6, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+        ])
+
+    def test_ordinal_encode_categories_when_something_goes_wrong(self):
+        import autom8.categories
+
+        training = [
+            [1, 10, 'foo', 'bar', -1.0],
+            [2, 20, 'bar', 'foo', -1.0],
+            [3, -1, 'foo', 'foo', -1.0],
+        ]
+        schema = [
+            {'name': 'A', 'role': 'numerical'},
+            {'name': 'B', 'role': 'categorical'},
+            {'name': 'C', 'role': 'categorical'},
+            {'name': 'D', 'role': 'categorical'},
+            {'name': 'E', 'role': 'categorical'},
+        ]
+        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
+        ctx = autom8.create_training_context(matrix, [], [], 'regression')
+
+        autom8.encode_categories(ctx, method='ordinal', only_strings=False)
+        encoder = ctx.steps[0].args[0]
+
+        acc = Accumulator()
+        pip = PipelineContext(matrix, observer=acc)
+
+        # For now, just monkey-patch in a "steps" list.
+        # (This is pretty terrible.)
+        ctx.steps = []
+
+        # Break the encoder so that our function will raise an exception.
+        encoder.transform = None
+
+        autom8.categories.encode(pip, encoder, [1, 2, 3, 4])
+        self.assertEqual(
+            [c.name for c in ctx.matrix.columns],
+            [c.name for c in pip.matrix.columns],
+        )
+        self.assertEqual(pip.matrix.tolist(), [
+            ['A', 'ENCODED B', 'ENCODED C', 'ENCODED D', 'ENCODED E'],
+            [1, 0, 0, 0, 0],
+            [2, 0, 0, 0, 0],
+            [3, 0, 0, 0, 0],
+        ])
+        self.assertEqual(len(acc.warnings), 1)
+
+    def test_one_hot_encode_categories_when_something_goes_wrong(self):
+        import autom8.categories
+
+        training = [
+            [1, 10, 'foo', 'bar', -1.0],
+            [2, 20, 'bar', 'foo', -1.0],
+            [3, -1, 'foo', 'foo', -1.0],
+        ]
+        schema = [
+            {'name': 'A', 'role': 'numerical'},
+            {'name': 'B', 'role': 'categorical'},
+            {'name': 'C', 'role': 'categorical'},
+            {'name': 'D', 'role': 'categorical'},
+            {'name': 'E', 'role': 'categorical'},
+        ]
+        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
+        ctx = autom8.create_training_context(matrix, [], [], 'regression')
+
+        autom8.encode_categories(ctx, method='one-hot', only_strings=False)
+        encoder = ctx.steps[0].args[0]
+
+        acc = Accumulator()
+        pip = PipelineContext(matrix, observer=acc)
+
+        # As in the previous test, just monkey-patch in a "steps" list.
+        # (Again, this is pretty terrible.)
+        ctx.steps = []
+
+        # Break the encoder so that our function will raise an exception.
+        encoder.transform = None
+
+        autom8.categories.encode(pip, encoder, [1, 2, 3, 4])
+        self.assertEqual(
+            [c.name for c in ctx.matrix.columns],
+            [c.name for c in pip.matrix.columns],
+        )
+        self.assertEqual(pip.matrix.tolist(), [
+            [
+                'A',
+                'B = 10', 'B = 20', 'B = -1', 'B = -1 [2]',
+                'C = foo', 'C = bar', 'C = -1',
+                'D = bar', 'D = foo', 'D = -1',
+                'E = -1.0', 'E = -1',
+            ],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        ])
+        self.assertEqual(len(acc.warnings), 1)
 
     def test_encode_text(self):
         training = [
@@ -312,7 +477,7 @@ class TestPreprocessors(unittest.TestCase):
         matrix = autom8.create_matrix({'rows': training, 'schema': schema})
         ctx = autom8.create_training_context(matrix, [], [], 'regression')
         autom8.encode_text(ctx)
-        self.assertEqual(len(ctx.preprocessors), 1)
+        self.assertEqual(len(ctx.steps), 1)
         self.assertEqual(ctx.matrix.columns[0].name, 'ENCODED TEXT 1')
         self.assertTrue(all(i.name.startswith('ENCODED TEXT ') for i in ctx.matrix.columns))
         self.assertTrue(all(i.role == 'encoded' for i in ctx.matrix.columns))
@@ -442,7 +607,7 @@ class TestPreprocessors(unittest.TestCase):
         ctx = autom8.create_training_context(matrix, [], [], 'regression')
         autom8.multiply_columns(ctx)
 
-        self.assertEqual(len(ctx.preprocessors), 1)
+        self.assertEqual(len(ctx.steps), 1)
         self.assertEqual(ctx.matrix.tolist(), [
             new_headers,
             [3, 10, 'foo', 'bar', True, 5.0, 3*10, 3*5.0, 10*5.0],
@@ -491,7 +656,7 @@ class TestPreprocessors(unittest.TestCase):
         ctx = autom8.create_training_context(matrix, [], [], 'regression')
         autom8.scale_columns(ctx)
 
-        self.assertEqual(len(ctx.preprocessors), 1)
+        self.assertEqual(len(ctx.steps), 1)
         self.assertEqual(ctx.matrix.tolist(), [
             new_headers,
             [-5/9, -5/9],
@@ -529,7 +694,7 @@ class TestPreprocessors(unittest.TestCase):
         ctx = autom8.create_training_context(matrix, [], [], 'regression')
         autom8.square_columns(ctx)
 
-        self.assertEqual(len(ctx.preprocessors), 1)
+        self.assertEqual(len(ctx.steps), 1)
         self.assertEqual(ctx.matrix.tolist(), [
             new_headers,
             [1, 2, 'x', -1, 3, 1*1, 2*2, 3*3],
@@ -585,5 +750,5 @@ def _playback(training_context, schema, rows, observer=None):
         observer = Accumulator()
     matrix = autom8.create_matrix({'rows': rows, 'schema': schema})
     ctx = PipelineContext(matrix, observer=observer)
-    playback(training_context.preprocessors, ctx)
+    playback(training_context.steps, ctx)
     return ctx.matrix.tolist()

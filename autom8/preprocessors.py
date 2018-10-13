@@ -1,13 +1,17 @@
+from collections import namedtuple
 import functools
 import itertools
 import logging
 
-import category_encoders
 import numpy as np
 import sklearn.feature_extraction.text
 import sklearn.preprocessing
 
+from . import categories
 from .exceptions import expected
+
+
+Step = namedtuple('Step', 'func, args, kwargs')
 
 
 def planner(f):
@@ -28,13 +32,12 @@ def preprocessor(f):
     @functools.wraps(f)
     def wrapper(ctx, *a, **k):
         f(ctx, *a, **k)
-        ctx.preprocessors.append({'func': f, 'args': a, 'kwargs': k})
+        ctx.steps.append(Step(f, a, k))
     return wrapper
 
 
-def playback(preprocessors, ctx):
-    for item in preprocessors:
-        f, a, k = item['func'], item['args'], item['kwargs']
+def playback(steps, ctx):
+    for f, a, k in steps:
         try:
             f(ctx, *a, **k)
         except Exception:
@@ -172,44 +175,21 @@ def _drop_weak_columns(ctx, indices):
 
 
 @planner
-def encode_categories(ctx, encoder=None):
-    indices = ctx.matrix.column_indices_where(
-        lambda col: col.role == 'categorical')
+def encode_categories(ctx, method='ordinal', only_strings=False):
+    if method not in {'one-hot', 'ordinal'}:
+        raise expected('one-hot or ordinal', method)
 
-    if indices and encoder is None:
-        encoder = category_encoders.OrdinalEncoder(
-            cols=list(range(len(indices))),
-            handle_unknown='impute',
-            return_df=False,
-        )
+    indices = categories.select_indices(ctx, only_strings=only_strings)
 
     if indices:
+        encoder = categories.create_encoder(ctx, method, indices)
         _encode_categories(ctx, encoder, indices)
 
 
 @preprocessor
 def _encode_categories(ctx, encoder, indices):
     """Turns categorical features into columns of numbers."""
-    found = ctx.matrix.select_columns(indices)
-    array = found.stack_columns()
-    ctx.matrix.drop_columns_by_index(indices)
-
-    if ctx.is_training:
-        result = encoder.fit_transform(array)
-    else:
-        try:
-            result = encoder.transform(array)
-        except Exception:
-            result = np.zeros_like(array)
-
-    # TODO: Make this work when the result has more columns, like when
-    # using one hot encoding.
-    for i in range(result.shape[1]):
-        ctx.matrix.append_column(
-            values=result[:, i],
-            name=f'ENCODED CATEGORY ({found.columns[i].name})',
-            role='encoded',
-        )
+    categories.encode(ctx, encoder, indices)
 
 
 @planner

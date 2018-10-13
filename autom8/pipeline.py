@@ -11,8 +11,8 @@ PredictionReport = namedtuple('PredictionReport', 'predictions, probabilities')
 
 
 class Pipeline:
-    def __init__(self, preprocessors, estimator, label_encoder):
-        self.preprocessors = preprocessors
+    def __init__(self, steps, estimator, label_encoder):
+        self.steps = steps
         self.estimator = estimator
         self.label_encoder = label_encoder
 
@@ -27,7 +27,7 @@ class Pipeline:
             features = create_matrix(features, observer)
 
         ctx = PipelineContext(features, observer)
-        playback(self.preprocessors, ctx)
+        playback(self.steps, ctx)
 
         X = ctx.matrix.stack_columns()
 
