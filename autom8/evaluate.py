@@ -28,7 +28,9 @@ def _general_stats(ctx, pipeline, estimator):
 
 
 def _evaluate(ctx, estimator, X, y):
-    X = X.astype(float)
+    if X.dtype != float:
+        X = X.astype(float)
+
     predictions = []
 
     # TODO: Calculate an appropriate window size.

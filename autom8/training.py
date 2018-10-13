@@ -83,8 +83,13 @@ class TrainingContext:
 
     def fit(self, estimator):
         X, y = self.training_data()
+
+        # Force all the columns to be floats at this point.
+        if X.dtype != float:
+            X = X.astype(float)
+
         try:
-            X = scipy.sparse.csr_matrix(X.astype(float))
+            X = scipy.sparse.csr_matrix(X)
             estimator.fit(X, y)
         except Exception:
             logging.exception('Training failed')
