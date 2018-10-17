@@ -3,7 +3,7 @@ TEST := $(PYTHON) -m unittest discover -s
 
 
 blackbox-tests:
-    $(TEST) tests/blackbox-tests
+	$(TEST) tests/blackbox-tests
 
 
 repl:

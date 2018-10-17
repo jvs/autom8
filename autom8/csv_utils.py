@@ -4,8 +4,8 @@ import chardet
 
 
 def load_csv(path):
-    with open(path) as f:
-        return decode_csv(f.read('rb'))
+    with open(path, 'rb') as f:
+        return decode_csv(f.read())
 
 
 def decode_csv(payload):
