@@ -105,3 +105,4 @@ ENV/
 .vscode
 *.sublime-*
 _attic/
+.virtualenv
