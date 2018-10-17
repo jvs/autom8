@@ -1,7 +1,9 @@
 import re
 import numpy as np
-from .observer import Observer
+
 from .exceptions import expected, typename
+from .observer import Observer
+from .parsing import parse_number
 
 
 def create_matrix(data, observer=None, infer_names=True):
@@ -101,14 +103,9 @@ class Matrix:
             if isinstance(obj, (int, float)):
                 return obj
             try:
-                return float(obj)
+                return parse_number(obj)
             except Exception:
-                pass
-            try:
-                return int(obj, 16)
-            except Exception:
-                pass
-            return default
+                return default
 
         for col in self.columns:
             if col.dtype not in (int, float):
