@@ -10,7 +10,8 @@ def parse_number(obj):
         pass
 
     try:
-        return int(obj, 16)
+        if obj.startswith(('0x', '0X')):
+            return int(obj, 16)
     except Exception:
         pass
 
