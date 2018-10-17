@@ -1,4 +1,6 @@
 import sklearn.linear_model
+import sklearn.naive_bayes
+import sklearn.neighbors
 import sklearn.neural_network
 import sklearn.svm
 import sklearn.tree
@@ -123,6 +125,33 @@ def fit_regressors(ctx, boosted_trees=True, classical=True):
         ctx << sklearn.neural_network.MLPRegressor(
             hidden_layer_sizes=(10, 10),
             random_state=1,
+        )
+
+
+def fit_classifiers(ctx, boosted_trees=True, classical=True):
+    if boosted_trees and lightgbm is not None:
+        ctx << lightgbm.LGBMClassifier(
+            class_weight='balanced', n_jobs=n_jobs(ctx), random_state=1,
+        )
+
+    if boosted_trees and xgboost is not None:
+        ctx << xgboost.XGBClassifier(
+            class_weight='balanced', n_jobs=n_jobs(ctx), random_state=1,
+        )
+
+    # Always fit a decision tree.
+    ctx << sklearn.tree.DecisionTreeClassifier(random_state=1)
+
+    if classical:
+        ctx << sklearn.neighbors.KNeighborsClassifier()
+        ctx << sklearn.naive_bayes.BernoulliNB(alpha=0.01)
+
+        ctx << sklearn.linear_model.SGDClassifier(
+            class_weight='balanced', max_iter=1000, tol=1e-3, random_state=1,
+        )
+
+        ctx << sklearn.neural_network.MLPClassifier(
+            hidden_layer_sizes=(10, 10), random_state=1,
         )
 
 
