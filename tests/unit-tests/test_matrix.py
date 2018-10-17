@@ -14,9 +14,6 @@ class TestMatrix(unittest.TestCase):
         with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*rows'):
             autom8.create_matrix({})
 
-        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*schema'):
-            autom8.create_matrix({'rows': []})
-
         with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*rows'):
             autom8.create_matrix({'schema': []})
 
@@ -46,8 +43,8 @@ class TestMatrix(unittest.TestCase):
 
         with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*role in'):
             autom8.create_matrix({
-                'rows': [['hi']],
-                'schema': [{'name': 'msg', 'role': 'str'}],
+                'rows': [[-1]],
+                'schema': [{'name': 'count', 'role': 'int'}],
             })
 
     def test_empty_datasets(self):
@@ -211,9 +208,9 @@ class TestMatrix(unittest.TestCase):
 
     def test_schema_property(self):
         schema = [
-            {'name': 'A', 'role': 'textual'},
-            {'name': 'B', 'role': 'encoded'},
-            {'name': 'C', 'role': None},
+            {'name': 'A', 'role': 'textual', 'dtype': 'int64'},
+            {'name': 'B', 'role': 'encoded', 'dtype': 'int64'},
+            {'name': 'C', 'role': None, 'dtype': 'int64'},
         ]
         matrix = autom8.create_matrix({'rows': [[1, 2, 3]], 'schema': schema})
         self.assertEqual(matrix.schema, schema)

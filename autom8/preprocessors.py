@@ -8,7 +8,7 @@ import sklearn.feature_extraction.text
 import sklearn.preprocessing
 
 from . import categories
-from .exceptions import expected
+from .exceptions import expected, typename
 
 
 Step = namedtuple('Step', 'func, args, kwargs')
@@ -18,7 +18,7 @@ def planner(f):
     @functools.wraps(f)
     def wrapper(ctx, *a, **k):
         if not ctx.is_training:
-            raise expected('TrainingContext', type(ctx).__name__)
+            raise expected('TrainingContext', typename(ctx))
         try:
             f(ctx, *a, **k)
         except Exception:
@@ -164,7 +164,7 @@ def drop_weak_columns(ctx, feature_selector=None):
     weak_cols = np.where(np.invert(feature_selector.get_support()))[0]
 
     # For now, ignore the selector if it wants to drop every column.
-    if weak_cols and len(weak_cols) < len(ctx.matrix.columns):
+    if 0 < len(weak_cols) < len(ctx.matrix.columns):
         _drop_weak_columns(ctx, weak_cols.tolist())
 
 

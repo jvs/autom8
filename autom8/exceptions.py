@@ -13,5 +13,12 @@ def expected(expected, received):
     return Autom8Exception(f'Expected {expected}. Received: {received}')
 
 
+def typename(obj):
+    try:
+        return type(obj).__name__
+    except Exception:
+        return 'unexpected object'
+
+
 def warn(message):
     warnings.warn(Autom8Warning(message), stacklevel=4)

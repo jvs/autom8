@@ -9,6 +9,7 @@ pandas = "*"
 scipy = "*"
 scikit-learn = "*"
 category-encoders = "*"
+chardet = "*"
 
 [dev-packages]
 

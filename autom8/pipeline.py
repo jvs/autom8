@@ -3,7 +3,7 @@ import numpy as np
 
 from .matrix import create_matrix, Matrix
 from .observer import Observer
-from .exceptions import expected
+from .exceptions import expected, typename
 from .preprocessors import playback
 
 
@@ -18,11 +18,12 @@ class Pipeline:
 
     def run(self, features, observer=None):
         if not isinstance(features, (list, Matrix)):
-            raise expected('list or Matrix', type(features).__name__)
+            raise expected('list or Matrix', typename(features))
 
         if observer is None:
             observer = Observer()
 
+        # TODO: Swizzle the input vectors to match the pipeline's schema.
         if isinstance(features, list):
             features = create_matrix(features, observer)
 
