@@ -745,7 +745,8 @@ class TestPreprocessors(unittest.TestCase):
 
 
 def _create_context(training, schema):
-    training = [row + [(i + 1) * 100] for i, row in enumerate(training)]
+    # Add a column of labels. It's required by create_training_context.
+    training = [row + [0] for row in training]
     schema = schema + [{'name': 'Target', 'role': 'numerical'}]
     return autom8.create_training_context({'rows': training, 'schema': schema})
 
