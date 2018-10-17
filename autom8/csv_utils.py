@@ -1,6 +1,8 @@
 import csv
 from io import StringIO
+
 import chardet
+from .parsing import parse_number
 
 
 def load_csv(path):
@@ -19,11 +21,6 @@ def decode_csv(payload):
 
 def _convert_csv_cell(cell):
     try:
-        return int(cell)
-    except ValueError:
-        pass
-
-    try:
-        return float(cell)
-    except ValueError:
+        return parse_number(cell)
+    except Exception:
         return cell

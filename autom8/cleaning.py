@@ -1,6 +1,7 @@
 import re
 import numpy as np
 from .exceptions import typename
+from .parsing import parse_number
 from .preprocessors import planner, preprocessor
 
 
@@ -122,7 +123,6 @@ def _coerce_column(ctx, index, typ, replacement):
 
 @preprocessor
 def _coerce_strings_to_numbers(ctx, index, coerce_all=True):
-    number_regex = re.compile(r'^\$*(\-?[0-9\.]+)\%*$')
     col = ctx.matrix.columns[index]
     new_values = [_coerce_string_to_number(i, is_required=coerce_all)
         if isinstance(i, str) else i
@@ -141,26 +141,18 @@ def _coerce_string_to_number(obj, is_required=True):
         return None
 
     try:
-        return _parse_number(obj)
+        return parse_number(obj)
     except Exception:
         pass
 
     # Pull out the number part and try parsing it.
-    m = number_regex.match(obj)
+    m = re.match(r'^\$*(\-?[0-9\.]+)\%*$', obj)
     if m:
-        return _parse_number(m.group(1))
+        return parse_number(m.group(1))
     elif is_required:
         raise Exception(f'Failed to coerce string to number: {obj}')
     else:
         return obj
-
-
-def _parse_number(obj):
-    assert isinstance(obj, str)
-    try:
-        return int(obj)
-    except Exception:
-        return float(obj)
 
 
 @preprocessor
