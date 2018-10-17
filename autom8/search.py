@@ -13,6 +13,8 @@ try:
 except ImportError:
     xgboost = None
 
+from .cleaning import clean_dataset
+from .inference import infer_roles
 from . import preprocessors as then
 
 
@@ -27,6 +29,12 @@ def search(ctx):
 
 
 def _search(ctx):
+    # First, clean the dataset.
+    clean_dataset(ctx)
+
+    # Then, infer each column's role.
+    infer_roles(ctx)
+
     # Always encode text columns.
     then.encode_text(ctx)
 

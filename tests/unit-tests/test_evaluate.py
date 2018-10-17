@@ -8,16 +8,16 @@ import autom8
 class TestEvaluate(unittest.TestCase):
     def test_evaluate_pipeline(self):
         acc = autom8.Accumulator()
-        matrix = autom8.create_matrix([
+        inputs = [
             [1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16],
-        ])
-        labels = np.array([1+2, 3+4, 5+6, 7+8, 9+10, 11+12, 13+14, 15+16])
-        test_indices = [2, 5]
-        ctx = autom8.create_training_context(
-            matrix, labels, test_indices, 'regression', observer=acc
-        )
-        autom8.add_column_of_ones(ctx)
+        ]
+        dataset = [i + [i[0] + i[1]] for i in inputs]
+        ctx = autom8.create_training_context(dataset, observer=acc)
 
+        # For now, just hack in the test_indices that we want.
+        ctx.test_indices = [2, 5]
+
+        autom8.add_column_of_ones(ctx)
         ctx << sklearn.linear_model.LinearRegression()
         self.assertEqual(len(acc.pipelines), 1)
 

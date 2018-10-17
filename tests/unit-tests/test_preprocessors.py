@@ -15,8 +15,8 @@ class TestPreprocessors(unittest.TestCase):
             {'name': 'B', 'role': 'categorical'},
         ]
         new_headers = ['A', 'B', 'CONSTANT']
-        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
-        ctx = autom8.create_training_context(matrix, [], [], 'regression')
+
+        ctx = _create_context(training, schema)
         autom8.add_column_of_ones(ctx)
 
         self.assertEqual(len(ctx.steps), 1)
@@ -24,6 +24,7 @@ class TestPreprocessors(unittest.TestCase):
             new_headers, ['a', 'b', 1], ['c', 'd', 1],
         ])
 
+        # Try replaying it on the original data.
         self.assertEqual(_playback(ctx, schema, training), ctx.matrix.tolist())
 
         m1 = _playback(ctx, schema, [['e', 'f'], ['g', 'h']])
@@ -42,8 +43,8 @@ class TestPreprocessors(unittest.TestCase):
         new_headers = [
             'A', 'B', 'A IS A FRACTION', 'B IS A FRACTION',
         ]
-        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
-        ctx = autom8.create_training_context(matrix, [], [], 'regression')
+
+        ctx = _create_context(training, schema)
         autom8.binarize_fractions(ctx)
 
         self.assertEqual(len(ctx.steps), 1)
@@ -53,6 +54,7 @@ class TestPreprocessors(unittest.TestCase):
             [0.3, 4, True, False],
         ])
 
+        # Try replaying it on the original data.
         self.assertEqual(_playback(ctx, schema, training), ctx.matrix.tolist())
 
         m1 = _playback(ctx, schema, [[0.99, 1.1], [1.0, -0.1], [0.0, -1.2]])
@@ -72,8 +74,8 @@ class TestPreprocessors(unittest.TestCase):
         new_headers = [
             'A', 'B', 'A IS POSITIVE', 'B IS POSITIVE',
         ]
-        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
-        ctx = autom8.create_training_context(matrix, [], [], 'regression')
+
+        ctx = _create_context(training, schema)
         autom8.binarize_signs(ctx)
 
         self.assertEqual(len(ctx.steps), 1)
@@ -84,6 +86,7 @@ class TestPreprocessors(unittest.TestCase):
             [0, 5, False, True],
         ])
 
+        # Try replaying it on the original data.
         self.assertEqual(_playback(ctx, schema, training), ctx.matrix.tolist())
 
         m1 = _playback(ctx, schema, [[10, -0.1], [0.1, -10]])
@@ -110,8 +113,8 @@ class TestPreprocessors(unittest.TestCase):
             'A DIVIDED BY B', 'A DIVIDED BY D', 'B DIVIDED BY A',
             'B DIVIDED BY D', 'D DIVIDED BY A', 'D DIVIDED BY B',
         ]
-        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
-        ctx = autom8.create_training_context(matrix, [], [], 'regression')
+
+        ctx = _create_context(training, schema)
         autom8.divide_columns(ctx)
 
         self.assertEqual(len(ctx.steps), 1)
@@ -122,9 +125,8 @@ class TestPreprocessors(unittest.TestCase):
             [3, 6, 'c', 9.0, 3 / 6, 3 / 9, 6 / 3, 6 / 9, 9 / 3, 9 / 6],
         ])
 
-        # Try playing it back on the original data.
-        m1 = _playback(ctx, schema, training)
-        self.assertEqual(m1, ctx.matrix.tolist())
+        # Try replaying it on the original data.
+        self.assertEqual(_playback(ctx, schema, training), ctx.matrix.tolist())
 
         # Try playing it back on some new data.
         m2 = _playback(ctx, schema, [
@@ -166,8 +168,8 @@ class TestPreprocessors(unittest.TestCase):
             {'name': 'F', 'role': 'categorical'},
         ]
         new_headers = ['A', 'C', 'D']
-        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
-        ctx = autom8.create_training_context(matrix, [], [], 'regression')
+
+        ctx = _create_context(training, schema)
         autom8.drop_duplicate_columns(ctx)
 
         def _nan(x):
@@ -185,8 +187,11 @@ class TestPreprocessors(unittest.TestCase):
             [1.0, 4, 'd'],
         ]))
 
-        m1 = _playback(ctx, schema, training)
-        self.assertEqual(_clean(m1), _clean(ctx.matrix.tolist()))
+        # Try replaying it on the original data.
+        self.assertEqual(
+            _clean(_playback(ctx, schema, training)),
+            _clean(ctx.matrix.tolist()),
+        )
 
     def test_ordinal_encode_categories(self):
         training = [
@@ -211,9 +216,7 @@ class TestPreprocessors(unittest.TestCase):
             'ENCODED F',
         ]
 
-        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
-        ctx = autom8.create_training_context(matrix, [], [], 'regression')
-
+        ctx = _create_context(training, schema)
         restore_ctx = ctx.copy()
         autom8.encode_categories(ctx, method='ordinal', only_strings=False)
 
@@ -225,9 +228,8 @@ class TestPreprocessors(unittest.TestCase):
             [3.3, True, 3, 1, 2, 1],
         ])
 
-        # First, try playing it back on the original data.
-        m1 = _playback(ctx, schema, training)
-        self.assertEqual(m1, ctx.matrix.tolist())
+        # Try replaying it on the original data.
+        self.assertEqual(_playback(ctx, schema, training), ctx.matrix.tolist())
 
         # Try a case where all the values are expected.
         m2 = _playback(ctx, schema, [
@@ -274,8 +276,7 @@ class TestPreprocessors(unittest.TestCase):
         autom8.encode_categories(ctx, method='ordinal', only_strings=True)
 
         # Once again, try playing it back on the original data.
-        m5 = _playback(ctx, schema, training)
-        self.assertEqual(m5, ctx.matrix.tolist())
+        self.assertEqual(_playback(ctx, schema, training), ctx.matrix.tolist())
 
         # Try a case where all the values are expected.
         m6 = _playback(ctx, schema, [
@@ -303,9 +304,8 @@ class TestPreprocessors(unittest.TestCase):
             {'name': 'D', 'role': 'categorical'},
             {'name': 'E', 'role': 'categorical'},
         ]
-        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
-        ctx = autom8.create_training_context(matrix, [], [], 'regression')
 
+        ctx = _create_context(training, schema)
         restore_ctx = ctx.copy()
         autom8.encode_categories(ctx, method='one-hot', only_strings=False)
 
@@ -325,9 +325,8 @@ class TestPreprocessors(unittest.TestCase):
             [3, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0],
         ])
 
-        # Try playing it back on the original data.
-        m1 = _playback(ctx, schema, training)
-        self.assertEqual(m1, ctx.matrix.tolist())
+        # Try replaying it on the original data.
+        self.assertEqual(_playback(ctx, schema, training), ctx.matrix.tolist())
 
         # Try a case where all the values are expected.
         m2 = _playback(ctx, schema, [
@@ -383,12 +382,12 @@ class TestPreprocessors(unittest.TestCase):
             {'name': 'D', 'role': 'categorical'},
             {'name': 'E', 'role': 'categorical'},
         ]
-        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
-        ctx = autom8.create_training_context(matrix, [], [], 'regression')
 
+        ctx = _create_context(training, schema)
         autom8.encode_categories(ctx, method='ordinal', only_strings=False)
         encoder = ctx.steps[0].args[0]
 
+        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
         acc = autom8.Accumulator()
         pip = PipelineContext(matrix, observer=acc)
 
@@ -427,8 +426,9 @@ class TestPreprocessors(unittest.TestCase):
             {'name': 'D', 'role': 'categorical'},
             {'name': 'E', 'role': 'categorical'},
         ]
+
         matrix = autom8.create_matrix({'rows': training, 'schema': schema})
-        ctx = autom8.create_training_context(matrix, [], [], 'regression')
+        ctx = _create_context(training, schema)
 
         autom8.encode_categories(ctx, method='one-hot', only_strings=False)
         encoder = ctx.steps[0].args[0]
@@ -474,9 +474,10 @@ class TestPreprocessors(unittest.TestCase):
             {'name': 'A', 'role': 'textual'},
             {'name': 'B', 'role': 'textual'},
         ]
-        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
-        ctx = autom8.create_training_context(matrix, [], [], 'regression')
+
+        ctx = _create_context(training, schema)
         autom8.encode_text(ctx)
+
         self.assertEqual(len(ctx.steps), 1)
         self.assertEqual(ctx.matrix.columns[0].name, 'ENCODED TEXT 1')
         self.assertTrue(all(i.name.startswith('ENCODED TEXT ') for i in ctx.matrix.columns))
@@ -531,18 +532,18 @@ class TestPreprocessors(unittest.TestCase):
         self.assertEqual(my1, my2)
 
         # Try playing it back on columns that don't contain text.
-        mz = _playback(ctx, schema, [[1.0, None], [2.0, None]])
-        assert_expected_shape(mz)
-        self.assertEqual(mz, [
+        mz1 = _playback(ctx, schema, [[1.0, None], [2.0, None]])
+        assert_expected_shape(mz1)
+        self.assertEqual(mz1, [
             ['ENCODED TEXT 1', 'ENCODED TEXT 2', 'ENCODED TEXT 3'],
             [0.0, 0.0, 0.0],
             [0.0, 0.0, 0.0],
         ])
 
         # Try playing it back on empty strings.
-        mz = _playback(ctx, schema, [['', ''], ['', '']])
-        assert_expected_shape(mz)
-        self.assertEqual(mz, [
+        mz2 = _playback(ctx, schema, [['x', ''], ['', 'y']])
+        assert_expected_shape(mz2)
+        self.assertEqual(mz2, [
             ['ENCODED TEXT 1', 'ENCODED TEXT 2', 'ENCODED TEXT 3'],
             [0.0, 0.0, 0.0],
             [0.0, 0.0, 0.0],
@@ -555,9 +556,8 @@ class TestPreprocessors(unittest.TestCase):
             {'name': 'B', 'role': 'numerical'},
         ]
         new_headers = ['A', 'B', 'LOG A', 'LOG B']
-        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
 
-        ctx = autom8.create_training_context(matrix, [], [], 'regression')
+        ctx = _create_context(training, schema)
         autom8.logarithm_columns(ctx)
 
         self.assertEqual(ctx.matrix.tolist(), [
@@ -603,8 +603,8 @@ class TestPreprocessors(unittest.TestCase):
         new_headers = [
             'A', 'B', 'C', 'D', 'E', 'F', 'A TIMES B', 'A TIMES F', 'B TIMES F',
         ]
-        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
-        ctx = autom8.create_training_context(matrix, [], [], 'regression')
+
+        ctx = _create_context(training, schema)
         autom8.multiply_columns(ctx)
 
         self.assertEqual(len(ctx.steps), 1)
@@ -652,8 +652,8 @@ class TestPreprocessors(unittest.TestCase):
             {'name': 'B', 'role': 'numerical'},
         ]
         new_headers = ['SCALED (A)', 'SCALED (B)']
-        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
-        ctx = autom8.create_training_context(matrix, [], [], 'regression')
+
+        ctx = _create_context(training, schema)
         autom8.scale_columns(ctx)
 
         self.assertEqual(len(ctx.steps), 1)
@@ -690,8 +690,8 @@ class TestPreprocessors(unittest.TestCase):
         new_headers = [
             'A', 'B', 'C', 'D', 'E', 'A SQUARED', 'B SQUARED', 'E SQUARED',
         ]
-        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
-        ctx = autom8.create_training_context(matrix, [], [], 'regression')
+
+        ctx = _create_context(training, schema)
         autom8.square_columns(ctx)
 
         self.assertEqual(len(ctx.steps), 1)
@@ -713,9 +713,8 @@ class TestPreprocessors(unittest.TestCase):
             {'name': 'B', 'role': 'numerical'},
         ]
         new_headers = ['A', 'B', 'SQRT A', 'SQRT B']
-        matrix = autom8.create_matrix({'rows': training, 'schema': schema})
 
-        ctx = autom8.create_training_context(matrix, [], [], 'regression')
+        ctx = _create_context(training, schema)
         autom8.sqrt_columns(ctx)
 
         self.assertEqual(ctx.matrix.tolist(), [
@@ -743,6 +742,12 @@ class TestPreprocessors(unittest.TestCase):
             [-55, 66, 0, math.sqrt(66)],
             [77, -88, math.sqrt(77), 0],
         ])
+
+
+def _create_context(training, schema):
+    training = [row + [(i + 1) * 100] for i, row in enumerate(training)]
+    schema = schema + [{'name': 'Target', 'role': 'numerical'}]
+    return autom8.create_training_context({'rows': training, 'schema': schema})
 
 
 def _playback(training_context, schema, rows, observer=None):

@@ -1,10 +1,17 @@
-repl:
-	pipenv run python3 -W ignore::PendingDeprecationWarning -i -c "import autom8"
+PYTHON := pipenv run python3 -W "ignore::PendingDeprecationWarning"
+TEST := $(PYTHON) -m unittest discover -s
 
-unit-tests:
-	pipenv run python3 \
-		-W ignore::PendingDeprecationWarning \
-		-m unittest discover \
-		-s tests/unit-tests
+
+blackbox-tests:
+    $(TEST) tests/blackbox-tests
+
+
+repl:
+	$(PYTHON) -i -c "import autom8;import numpy as np"
+
 
 test: unit-tests
+
+
+unit-tests:
+	$(TEST) tests/unit-tests

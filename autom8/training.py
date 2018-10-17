@@ -1,41 +1,94 @@
 from collections import namedtuple
 from contextlib import contextmanager
 import logging
+import random
+
 import numpy as np
 import scipy.sparse
 import sklearn.preprocessing
 
 from .evaluate import evaluate_pipeline
-from .exceptions import expected
+from .exceptions import expected, typename
+from .inference import _infer_role
+from .matrix import create_matrix
 from .observer import Observer
 from .pipeline import Pipeline
 
 
 def create_training_context(
-    feature_matrix, label_array, test_indices, problem_type, observer=None
+    dataset,
+    target_column=None,
+    problem_type=None,
+    test_ratio=None,
+    observer=None,
 ):
-    if problem_type not in ('regression', 'classification'):
-        raise expected(
-            'problem_type to be "regression" or "classification"', problem_type
-        )
-
-    # Maybe create the matrix if the features are in a list.
-    # Similarly, create the array if the labels are in a list.
-
+    # Create a default observer if the user didn't provide one.
     if observer is None:
         observer = Observer()
 
+    matrix = create_matrix(dataset, observer)
+    num_cols = len(matrix.columns)
+
+    if num_cols == 0:
+        raise expected('non-empty dataset', repr(dataset))
+
+    if num_cols == 1:
+        raise expected('dataset with more than one column', num_cols)
+
+    if target_column is None:
+        target_column = num_cols - 1
+
+    if not isinstance(target_column, (int, str)):
+        raise expected(f'target_column to be an int or a str',
+            typename(target_column))
+
+    if isinstance(target_column, str):
+        target_column = target_column.strip()
+        for index, col in enumerate(matrix.columns):
+            if target_column == col.name.strip():
+                target_column = index
+                break
+
+    if isinstance(target_column, str):
+        colnames = {col.name for col in matrix.columns}
+        raise expected('target_column to be one of: {colnames}',
+            repr(target_column))
+
+    if isinstance(target_column, int) and target_column >= len(matrix.columns):
+        raise expected(
+            f'target column to be valid column number (less than {num_cols})',
+            target_column,
+        )
+
+    labelcol = matrix.columns[target_column]
+    label_name, label_values = labelcol.name, labelcol.values
+    matrix.drop_columns_by_index(target_column)
+
+    if problem_type is None:
+        role = _infer_role(labelcol, observer)
+        problem_type = 'regression' if role == 'numerical' else 'classification'
+
+    valid_problems = {'regression', 'classification'}
+    if not isinstance(problem_type, str) or problem_type not in valid_problems:
+        raise expected(f'problem_type in {valid_problems}', repr(problem_type))
+
     if problem_type == 'regression':
-        labels = LabelContext(label_array, label_array, None)
+        labels = LabelContext(label_name, label_values, label_values, None)
     else:
         assert problem_type == 'classification'
         encoder = sklearn.preprocessing.LabelEncoder()
-        encoded = encoder.fit_transform(label_array)
-        labels = LabelContext(label_array, encoded, encoder)
+        encoded = encoder.fit_transform(label_values)
+        labels = LabelContext(label_name, label_values, encoded, encoder)
 
-    return TrainingContext(
-        feature_matrix, labels, test_indices, problem_type, observer
-    )
+    if test_ratio is None:
+        test_ratio = 0.2
+
+    if not isinstance(test_ratio, float) or not (0 < test_ratio < 1):
+        raise expected('test_ratio between 0.0 and 1.0', test_ratio)
+
+    count = len(matrix)
+    test_indices = sorted(random.sample(range(count), int(count * test_ratio) or 1))
+    return TrainingContext(matrix, labels, test_indices, problem_type, observer)
 
 
 class TrainingContext:
@@ -147,7 +200,7 @@ class TrainingContext:
             )
 
 
-class LabelContext(namedtuple('LabelContext', 'original, encoded, encoder')):
+class LabelContext(namedtuple('LabelContext', 'name, original, encoded, encoder')):
     def decode(self, encoded_labels):
         if self.encoder is None:
             return encoded_labels

@@ -7,8 +7,8 @@ from autom8.pipeline import PipelineContext
 
 class TestContextInterface(unittest.TestCase):
     def test_is_training_property(self):
-        matrix = autom8.create_matrix([[1]])
-        c1 = autom8.create_training_context(matrix, [], [], 'regression')
+        matrix = autom8.create_matrix([[1, 2]])
+        c1 = autom8.create_training_context(matrix)
         c2 = PipelineContext(matrix, autom8.Accumulator())
         self.assertTrue(c1.is_training)
         self.assertFalse(c2.is_training)
@@ -17,7 +17,7 @@ class TestContextInterface(unittest.TestCase):
 
     def test_planner_decorator(self):
         matrix = autom8.create_matrix([[1, 1], [2, 2]])
-        c1 = autom8.create_training_context(matrix, [], [], 'regression')
+        c1 = autom8.create_training_context(matrix)
         c2 = PipelineContext(matrix, autom8.Accumulator())
 
         # This should not raise an exception.
@@ -31,22 +31,24 @@ class TestContextInterface(unittest.TestCase):
 class TestTrainingContext(unittest.TestCase):
     def test_copy_method(self):
         # TODO: Make sure that the copied context actually works.
-        matrix = autom8.create_matrix([])
-        c1 = autom8.create_training_context(matrix, [], [], 'regression')
+        c1 = autom8.create_training_context([[1, 2]])
         c2 = c1.copy()
         self.assertIsNot(c1, c2)
         self.assertIsNot(c1.matrix, c2.matrix)
         self.assertIsNot(c1.steps, c2.steps)
 
     def test_training_and_testing_data(self):
-        matrix = autom8.create_matrix([
-            [1, 5, True, 9],
-            [2, 6, False, 10],
-            [3, 7, False, 11],
-            [4, 8, True, 12],
+        dataset = autom8.create_matrix([
+            [1, 5, True, 9, 10],
+            [2, 6, False, 10, 20],
+            [3, 7, False, 11, 30],
+            [4, 8, True, 12, 40],
         ])
-        labels = np.array([10, 20, 30, 40])
-        ctx = autom8.create_training_context(matrix, labels, [1, 3], 'regression')
+        ctx = autom8.create_training_context(dataset)
+
+        # For now, just hack in the test_indices that we want.
+        ctx.test_indices = [1, 3]
+
         m1, a1 = ctx.testing_data()
         m2, a2 = ctx.training_data()
         self.assertTrue(np.array_equal(a1, [20, 40]))
@@ -61,22 +63,23 @@ class TestTrainingContext(unittest.TestCase):
         ]))
 
     def test_sandbox(self):
-        matrix = autom8.create_matrix({
+        dataset = {
             'rows': [
-                [1, 5, True, 9],
-                [2, 6, False, 10],
-                [3, 7, False, 11],
-                [4, 8, True, 12],
+                [1, 5, True, 9, 10],
+                [2, 6, False, 10, 20],
+                [3, 7, False, 11, 30],
+                [4, 8, True, 12, 40],
             ],
             'schema': [
                 {'name': 'A', 'role': 'numerical'},
                 {'name': 'B', 'role': 'numerical'},
                 {'name': 'C', 'role': 'encoded'},
                 {'name': 'D', 'role': 'numerical'},
+                {'name': 'E', 'role': 'numerical'},
             ]
-        })
+        }
 
-        ctx = autom8.create_training_context(matrix, [], [], 'regression')
+        ctx = autom8.create_training_context(dataset)
         autom8.add_column_of_ones(ctx)
 
         self.assertEqual(len(ctx.steps), 1)
