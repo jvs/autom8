@@ -1,55 +1,47 @@
 from collections import namedtuple
-import numpy as np
 import sklearn.metrics
-import scipy.sparse
 
 
 Evaluation = namedtuple('Evaluation', 'general, train, test')
-EvaluationSection = namedtuple('EvaluationSection', 'predictions, metrics')
+PredictionSection = namedtuple('PredictionSection', 'predictions, metrics')
+ProbabilitySection = namedtuple('ProbabilitySection',
+    'predictions, probabilities, classes, metrics')
 
 
 def evaluate_pipeline(ctx, pipeline):
-    estimator = pipeline.estimator
-    general = _general_stats(ctx, pipeline, estimator)
-    train = _evaluate(ctx, estimator, *ctx.training_data())
-    test = _evaluate(ctx, estimator, *ctx.testing_data())
+    general = _general_stats(ctx, pipeline)
+    train = _evaluate(ctx, pipeline, *ctx.training_data())
+    test = _evaluate(ctx, pipeline, *ctx.testing_data())
     return Evaluation(general, train, test)
 
 
-def _general_stats(ctx, pipeline, estimator):
+def _general_stats(ctx, pipeline):
     result = {
         'num_steps': len(pipeline.steps),
         'num_columns': len(ctx.matrix.columns),
     }
-    for attr in dir(estimator):
+    for attr in dir(pipeline.estimator):
         if attr.endswith('_') and not attr.endswith('__'):
-            result[attr] = getattr(estimator, attr)
+            result[attr] = getattr(pipeline.estimator, attr)
     return result
 
 
-def _evaluate(ctx, estimator, X, y):
-    if X.dtype != float:
-        X = X.astype(float)
-
-    predictions = []
-
-    # TODO: Calculate an appropriate window size.
-    for i in range(0, len(X), 1000):
-        window = X[i : i + 1000]
-        matrix = scipy.sparse.csr_matrix(window)
-        encoded = estimator.predict(matrix)
-        decoded = ctx.labels.decode(encoded)
-        predictions.extend(decoded)
-
-    # Convert the predictions list to a numpy array.
-    predictions = np.array(predictions)
+def _evaluate(ctx, pipeline, X, y):
+    outputs = pipeline._predict(X)
 
     if ctx.is_regression:
-        metrics = _evaluate_regressor(ctx, y, predictions)
+        metrics = _evaluate_regressor(ctx, y, outputs.predictions)
     else:
-        metrics = _evaluate_classifier(ctx, y, predictions)
+        # MAY: Eventually use the probabilities, too.
+        predicted = pipeline.label_encoder.transform(outputs.predictions)
+        metrics = _evaluate_classifier(ctx, y, predicted)
 
-    return EvaluationSection(predictions, metrics)
+    if hasattr(outputs, 'probabilities'):
+        return ProbabilitySection(
+            outputs.predictions, outputs.probabilities, outputs.classes, metrics
+        )
+    else:
+        return PredictionSection(outputs.predictions, metrics)
 
 
 def _evaluate_regressor(ctx, actual, predicted):
@@ -65,12 +57,18 @@ def _evaluate_regressor(ctx, actual, predicted):
 
 
 def _evaluate_classifier(ctx, actual, predicted):
-    funcs = [
+    funcs1 = [
+        sklearn.metrics.f1_score,
         sklearn.metrics.precision_score,
         sklearn.metrics.recall_score,
-        sklearn.metrics.f1_score,
     ]
-    return _apply_metrics(funcs, actual, predicted, average='weighted')
+    funcs2 = [
+        sklearn.metrics.accuracy_score,
+    ]
+    d1 = _apply_metrics(funcs1, actual, predicted, average='weighted')
+    d2 = _apply_metrics(funcs2, actual, predicted)
+    d1.update(d2)
+    return d1
 
 
 def _apply_metrics(funcs, *a, **k):

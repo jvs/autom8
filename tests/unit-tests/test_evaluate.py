@@ -42,5 +42,5 @@ class TestEvaluate(unittest.TestCase):
             result.predictions,
             np.array([17+18, 19+20, 21+22]),
         ))
-        self.assertIsNone(result.probabilities)
+        self.assertFalse(hasattr(result, 'probabilities'))
         self.assertEqual(acc.warnings, [])
