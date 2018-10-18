@@ -145,7 +145,7 @@ class TrainingContext:
             X = scipy.sparse.csr_matrix(X)
             estimator.fit(X, y)
         except Exception:
-            logging.exception('Training failed')
+            logging.getLogger('autom8').exception('Training failed')
             return
 
         pipeline = Pipeline(list(self.steps), estimator, self.labels.encoder)

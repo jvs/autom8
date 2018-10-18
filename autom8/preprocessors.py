@@ -21,9 +21,9 @@ def planner(f):
             raise expected('TrainingContext', typename(ctx))
         try:
             f(ctx, *a, **k)
-        except Exception:
-            msg = f'Planning step "{f.__name__}" failed'
-            logging.exception(msg)
+        except Exception as exc:
+            msg = f'Planning step "{f.__name__}" failed: {exc}'
+            logging.getLogger('autom8').exception(msg)
             ctx.observer.warn(msg)
     return wrapper
 
@@ -42,7 +42,7 @@ def playback(steps, ctx):
             f(ctx, *a, **k)
         except Exception:
             msg = f'Playback failed on step {f.__name__}'
-            logging.exception(msg)
+            logging.getLogger('autom8').exception(msg)
             ctx.observer.warn(msg)
 
 
@@ -96,6 +96,28 @@ def _binarize_signs(ctx, indices):
             name=f'{col.name} IS POSITIVE',
             role='encoded',
         )
+
+
+@planner
+def coerce_columns(ctx):
+    dtypes = [col.dtype for col in ctx.matrix.columns]
+    _coerce_columns(ctx, dtypes)
+
+
+@preprocessor
+def _coerce_columns(ctx, dtypes):
+    if ctx.is_training:
+        return
+
+    for col, dtype in zip(ctx.matrix.columns, dtypes):
+        if dtype == object:
+            continue
+        try:
+            col.values = col.values.astype(dtype)
+        except Exception:
+            ctx.observer.warn(
+                f'Failed to convert column "{col.name}" to {dtype}'
+            )
 
 
 @planner

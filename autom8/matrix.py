@@ -96,7 +96,7 @@ class Matrix:
     def coerce_values_to_strings(self):
         for col in self.columns:
             if not all(isinstance(i, str) for i in col.values):
-                col.values = np.array([str(i) for i in col.values], dtype=object)
+                col.values = create_array([str(i) for i in col.values])
 
     def coerce_values_to_numbers(self, default=0, as_type=None):
         def conv(obj):
@@ -223,8 +223,11 @@ def _create_matrix_from_dict(data, observer):
 def _merge_names(inferred, provided, observer):
     n1, n2 = inferred.strip(), provided.strip()
     is_anonymous = re.match(r'Column-\d+', n1)
+
     if not is_anonymous and n1.lower() != n2.lower():
-        observer.warn(f'Found column with two names: {inferred} and {provided}.')
+        observer.warn('Found column with two names:'
+            f' {repr(inferred)} and {repr(provided)}.')
+
     return provided.strip()
 
 
@@ -283,9 +286,7 @@ def _is_blank(obj):
 
 
 def _make_column(rows, index):
-    raw = [row[index] for row in rows]
-    has_text = any(isinstance(i, str) for i in raw)
-    values = np.array(raw, dtype=object if has_text else None)
+    values = create_array([row[index] for row in rows])
     name = f'Column-{index + 1}'
     return Column(values=values, name=name, role=None, is_original=True)
 
@@ -307,8 +308,8 @@ def _infer_column_names(matrix):
     columns = []
     for col, name in zip(matrix.columns, row):
         # Let numpy infer a (potentially) new dtype.
-        rest = col.values[1:].tolist()
-        columns.append(Column(np.array(rest), name, col.role, col.is_original))
+        values = create_array(col.values[1:].tolist())
+        columns.append(Column(values, name, col.role, col.is_original))
 
     return Matrix(columns)
 
@@ -318,3 +319,8 @@ def _coerce_values(col, dtype, observer):
         new_values = col.values.astype(dtype)
     except Exception:
         observer.warn(f'Failed to convert column {repr(col.name)} to type {dtype}')
+
+
+def create_array(values):
+    has_str = any(isinstance(i, str) for i in values)
+    return np.array(values, dtype=object if has_str else None)
