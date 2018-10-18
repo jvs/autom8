@@ -7,9 +7,6 @@ TEST := $(PYTHON) $(TEST_FLAGS)
 blackbox-tests: virtualenv
 	$(TEST) tests/blackbox-tests
 
-boston-test: virtualenv
-	$(TEST) tests/blackbox-tests -p test_boston_dataset.py
-
 # TODO: Make coverage ignore PendingDeprecationWarning.
 coverage:
 	$(COVERAGE) run --source autom8 $(TEST_FLAGS) tests/unit-tests
@@ -31,5 +28,18 @@ virtualenv: .virtualenv/bin/activate
 	test -d .virtualenv || virtualenv .virtualenv
 	.virtualenv/bin/pip install -Ur requirements.txt
 	touch .virtualenv/bin/activate
+
+
+# Individual blackbox tests:
+
+boston-test: virtualenv
+	$(TEST) tests/blackbox-tests -p test_boston_dataset.py
+
+iris-test: virtualenv
+	$(TEST) tests/blackbox-tests -p test_iris_dataset.py
+
+wine-test: virtualenv
+	$(TEST) tests/blackbox-tests -p test_wine_dataset.py
+
 
 .PHONY: blackbox-tests boston-test coverage repl test unit-tests virtualenv
