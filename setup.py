@@ -6,7 +6,7 @@ with open('autom8/__init__.py', encoding='utf-8') as f:
     version = re.search(r'__version__ = \'(.*?)\'', f.read()).group(1)
 
 with open('README.md', encoding='utf-8') as f:
-    long_description = f.read()
+    long_description = '\n' + f.read()
 
 setup(
     name='autom8',
@@ -30,7 +30,7 @@ setup(
         'scikit-learn>=0.19.1',
         'scipy>=1.1.0',
     ],
-    tests_require=['coverage'],
+    tests_require=['coverage', 'pytest>=3'],
     extras_require={
         'ml': [
             'lightgbm>=2.1.2',

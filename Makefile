@@ -1,15 +1,13 @@
 COVERAGE := .virtualenv/bin/coverage
 PYTHON := .virtualenv/bin/python -W "ignore::PendingDeprecationWarning"
-TEST_FLAGS = -m unittest discover -v -s
-TEST := $(PYTHON) $(TEST_FLAGS)
-
+TEST_FLAGS := -v -W "ignore::PendingDeprecationWarning"
+TEST := .virtualenv/bin/pytest $(TEST_FLAGS)
 
 blackbox-tests: virtualenv
 	$(TEST) tests/blackbox-tests
 
-# TODO: Make coverage ignore PendingDeprecationWarning.
 coverage:
-	$(COVERAGE) run --source autom8 $(TEST_FLAGS) tests/unit-tests
+	$(COVERAGE) run --source autom8 -m pytest $(TEST_FLAGS)
 	$(COVERAGE) report
 	$(COVERAGE) html
 	open htmlcov/index.html
@@ -27,19 +25,20 @@ virtualenv: .virtualenv/bin/activate
 .virtualenv/bin/activate: setup.py
 	test -d .virtualenv || virtualenv .virtualenv
 	.virtualenv/bin/pip install -U -e .
+	.virtualenv/bin/pip install -U xgboost coverage pytest
 	touch .virtualenv/bin/activate
 
 
 # Individual blackbox tests:
 
 boston-test: virtualenv
-	$(TEST) tests/blackbox-tests -p test_boston_dataset.py
+	$(TEST) tests/blackbox-tests/test_boston_dataset.py
 
 iris-test: virtualenv
-	$(TEST) tests/blackbox-tests -p test_iris_dataset.py
+	$(TEST) tests/blackbox-tests/test_iris_dataset.py
 
 wine-test: virtualenv
-	$(TEST) tests/blackbox-tests -p test_wine_dataset.py
+	$(TEST) tests/blackbox-tests/test_wine_dataset.py
 
 
 .PHONY: blackbox-tests boston-test coverage repl test unit-tests virtualenv

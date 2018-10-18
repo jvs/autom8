@@ -1,150 +1,160 @@
-import unittest
+import pytest
 import numpy as np
 
 import autom8
 from autom8.pipeline import PipelineContext
 
 
-class TestContextInterface(unittest.TestCase):
-    def test_is_training_property(self):
-        matrix = autom8.create_matrix([[1, 2]])
-        c1 = autom8.create_training_context(matrix)
-        c2 = PipelineContext(matrix, autom8.Accumulator())
-        self.assertTrue(c1.is_training)
-        self.assertFalse(c2.is_training)
-        self.assertTrue(hasattr(c1, 'observer'))
-        self.assertTrue(hasattr(c2, 'observer'))
-
-    def test_planner_decorator(self):
-        matrix = autom8.create_matrix([[1, 1], [2, 2]])
-        c1 = autom8.create_training_context(matrix)
-        c2 = PipelineContext(matrix, autom8.Accumulator())
-
-        # This should not raise an exception.
-        autom8.drop_duplicate_columns(c1)
-
-        # But this should raise one.
-        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*TrainingContext'):
-            autom8.drop_duplicate_columns(c2)
+def test_is_training_property():
+    matrix = autom8.create_matrix([[1, 2]])
+    c1 = autom8.create_training_context(matrix)
+    c2 = PipelineContext(matrix, autom8.Accumulator())
+    assert c1.is_training
+    assert not c2.is_training
+    assert hasattr(c1, 'observer')
+    assert hasattr(c2, 'observer')
 
 
-class TestTrainingContext(unittest.TestCase):
-    def test_invalid_training_contexts(self):
-        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*dataset'):
-            autom8.create_training_context([])
+def test_planner_decorator():
+    matrix = autom8.create_matrix([[1, 1], [2, 2]])
+    c1 = autom8.create_training_context(matrix)
+    c2 = PipelineContext(matrix, autom8.Accumulator())
 
-        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*dataset'):
-            autom8.create_training_context([[1], [2], [3]])
+    # This should not raise an exception.
+    autom8.drop_duplicate_columns(c1)
 
-        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*target_column'):
-            autom8.create_training_context(
-                dataset=[['A', 'B'], [1, 2]],
-                target_column='C',
-            )
+    # But this should raise one.
+    with pytest.raises(autom8.Autom8Exception) as excinfo:
+        autom8.drop_duplicate_columns(c2)
+    excinfo.match('Expected.*TrainingContext')
 
-        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*target_column'):
-            autom8.create_training_context(
-                dataset=[['A', 'B'], [1, 2]],
-                target_column=object(),
-            )
 
-        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*target_column'):
-            autom8.create_training_context(
-                dataset=[['A', 'B'], [1, 2]],
-                target_column=10,
-            )
+def test_invalid_training_contexts():
+    with pytest.raises(autom8.Autom8Exception) as excinfo:
+        autom8.create_training_context([])
+    excinfo.match('Expected.*dataset')
 
-        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*problem_type'):
-            autom8.create_training_context(
-                dataset=[['A', 'B'], [1, 2]],
-                problem_type='classify',
-            )
+    with pytest.raises(autom8.Autom8Exception) as excinfo:
+        autom8.create_training_context([[1], [2], [3]])
+    excinfo.match('Expected.*dataset')
 
-        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*test_ratio'):
-            autom8.create_training_context(
-                dataset=[['A', 'B'], [1, 2]],
-                test_ratio=1.2,
-            )
+    with pytest.raises(autom8.Autom8Exception) as excinfo:
+        autom8.create_training_context(
+            dataset=[['A', 'B'], [1, 2]],
+            target_column='C',
+        )
+    excinfo.match('Expected.*target_column')
 
-    def test_copy_method(self):
-        # TODO: Make sure that the copied context actually works.
-        c1 = autom8.create_training_context([[1, 2]])
-        c2 = c1.copy()
-        self.assertIsNot(c1, c2)
-        self.assertIsNot(c1.matrix, c2.matrix)
-        self.assertIsNot(c1.steps, c2.steps)
+    with pytest.raises(autom8.Autom8Exception) as excinfo:
+        autom8.create_training_context(
+            dataset=[['A', 'B'], [1, 2]],
+            target_column=object(),
+        )
+    excinfo.match('Expected.*target_column')
 
-    def test_training_and_testing_data(self):
-        dataset = autom8.create_matrix([
+    with pytest.raises(autom8.Autom8Exception) as excinfo:
+        autom8.create_training_context(
+            dataset=[['A', 'B'], [1, 2]],
+            target_column=10,
+        )
+    excinfo.match('Expected.*target_column')
+
+    with pytest.raises(autom8.Autom8Exception) as excinfo:
+        autom8.create_training_context(
+            dataset=[['A', 'B'], [1, 2]],
+            problem_type='classify',
+        )
+    excinfo.match('Expected.*problem_type')
+
+    with pytest.raises(autom8.Autom8Exception) as excinfo:
+        autom8.create_training_context(
+            dataset=[['A', 'B'], [1, 2]],
+            test_ratio=1.2,
+        )
+    excinfo.match('Expected.*test_ratio')
+
+
+def test_copy_method():
+    # TODO: Make sure that the copied context actually works.
+    c1 = autom8.create_training_context([[1, 2]])
+    c2 = c1.copy()
+    assert c1 is not c2
+    assert c1.matrix is not c2.matrix
+    assert c1.steps is not c2.steps
+
+
+def test_training_and_testing_data():
+    dataset = autom8.create_matrix([
+        [1, 5, True, 9, 10],
+        [2, 6, False, 10, 20],
+        [3, 7, False, 11, 30],
+        [4, 8, True, 12, 40],
+    ])
+    ctx = autom8.create_training_context(dataset)
+
+    # For now, just hack in the test_indices that we want.
+    ctx.test_indices = [1, 3]
+
+    m1, a1 = ctx.testing_data()
+    m2, a2 = ctx.training_data()
+    assert np.array_equal(a1, [20, 40])
+    assert np.array_equal(a2, [10, 30])
+    assert np.array_equal(m1, [
+        [2, 6, False, 10],
+        [4, 8, True, 12],
+    ])
+    assert np.array_equal(m2, [
+        [1, 5, True, 9],
+        [3, 7, False, 11],
+    ])
+
+
+def test_sandbox():
+    dataset = {
+        'rows': [
             [1, 5, True, 9, 10],
             [2, 6, False, 10, 20],
             [3, 7, False, 11, 30],
             [4, 8, True, 12, 40],
-        ])
-        ctx = autom8.create_training_context(dataset)
+        ],
+        'schema': [
+            {'name': 'A', 'role': 'numerical'},
+            {'name': 'B', 'role': 'numerical'},
+            {'name': 'C', 'role': 'encoded'},
+            {'name': 'D', 'role': 'numerical'},
+            {'name': 'E', 'role': 'numerical'},
+        ]
+    }
 
-        # For now, just hack in the test_indices that we want.
-        ctx.test_indices = [1, 3]
+    ctx = autom8.create_training_context(dataset)
+    autom8.add_column_of_ones(ctx)
 
-        m1, a1 = ctx.testing_data()
-        m2, a2 = ctx.training_data()
-        self.assertTrue(np.array_equal(a1, [20, 40]))
-        self.assertTrue(np.array_equal(a2, [10, 30]))
-        self.assertTrue(np.array_equal(m1, [
-            [2, 6, False, 10],
-            [4, 8, True, 12],
-        ]))
-        self.assertTrue(np.array_equal(m2, [
-            [1, 5, True, 9],
-            [3, 7, False, 11],
-        ]))
+    assert len(ctx.steps) == 1
+    assert len(ctx.matrix.columns) == 4+1
+    assert ctx.matrix.tolist()[1:] == [
+        [1, 5, True, 9, 1],
+        [2, 6, False, 10, 1],
+        [3, 7, False, 11, 1],
+        [4, 8, True, 12, 1],
+    ]
 
-    def test_sandbox(self):
-        dataset = {
-            'rows': [
-                [1, 5, True, 9, 10],
-                [2, 6, False, 10, 20],
-                [3, 7, False, 11, 30],
-                [4, 8, True, 12, 40],
-            ],
-            'schema': [
-                {'name': 'A', 'role': 'numerical'},
-                {'name': 'B', 'role': 'numerical'},
-                {'name': 'C', 'role': 'encoded'},
-                {'name': 'D', 'role': 'numerical'},
-                {'name': 'E', 'role': 'numerical'},
-            ]
-        }
+    with ctx.sandbox():
+        autom8.multiply_columns(ctx)
+        assert len(ctx.steps) == 2
+        assert len(ctx.matrix.columns) == 4+1+3
+        assert ctx.matrix.tolist()[1:] == [
+            [1, 5, True, 9, 1, 1*5, 1*9, 5*9],
+            [2, 6, False, 10, 1, 2*6, 2*10, 6*10],
+            [3, 7, False, 11, 1, 3*7, 3*11, 7*11],
+            [4, 8, True, 12, 1, 4*8, 4*12, 8*12],
+        ]
 
-        ctx = autom8.create_training_context(dataset)
-        autom8.add_column_of_ones(ctx)
-
-        self.assertEqual(len(ctx.steps), 1)
-        self.assertEqual(len(ctx.matrix.columns), 4+1)
-        self.assertEqual(ctx.matrix.tolist()[1:], [
-            [1, 5, True, 9, 1],
-            [2, 6, False, 10, 1],
-            [3, 7, False, 11, 1],
-            [4, 8, True, 12, 1],
-        ])
-
-        with ctx.sandbox():
-            autom8.multiply_columns(ctx)
-            self.assertEqual(len(ctx.steps), 2)
-            self.assertEqual(len(ctx.matrix.columns), 4+1+3)
-            self.assertEqual(ctx.matrix.tolist()[1:], [
-                [1, 5, True, 9, 1, 1*5, 1*9, 5*9],
-                [2, 6, False, 10, 1, 2*6, 2*10, 6*10],
-                [3, 7, False, 11, 1, 3*7, 3*11, 7*11],
-                [4, 8, True, 12, 1, 4*8, 4*12, 8*12],
-            ])
-
-        # Now check that the context has been restored to its previous state.
-        self.assertEqual(len(ctx.steps), 1)
-        self.assertEqual(len(ctx.matrix.columns), 4+1)
-        self.assertEqual(ctx.matrix.tolist()[1:], [
-            [1, 5, True, 9, 1],
-            [2, 6, False, 10, 1],
-            [3, 7, False, 11, 1],
-            [4, 8, True, 12, 1],
-        ])
+    # Now check that the context has been restored to its previous state.
+    assert len(ctx.steps) == 1
+    assert len(ctx.matrix.columns) == 4+1
+    assert ctx.matrix.tolist()[1:] == [
+        [1, 5, True, 9, 1],
+        [2, 6, False, 10, 1],
+        [3, 7, False, 11, 1],
+        [4, 8, True, 12, 1],
+    ]
