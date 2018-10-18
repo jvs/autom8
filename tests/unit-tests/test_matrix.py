@@ -355,7 +355,3 @@ class TestColumn(unittest.TestCase):
         col = matrix.columns[0]
         with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*role in'):
             col.role = 'foo'
-
-
-if __name__ == '__main__':
-    unittest.main()
