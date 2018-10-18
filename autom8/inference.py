@@ -3,9 +3,7 @@ from .preprocessors import planner, preprocessor
 
 @planner
 def infer_roles(ctx):
-    roles = []
-    for col in ctx.matrix.columns:
-        roles.append(_infer_role(col, ctx.observer))
+    roles = [_infer_role(col, ctx.observer) for col in ctx.matrix.columns]
     _set_roles(ctx, roles)
 
 

@@ -10,6 +10,7 @@ from .preprocessors import (
     add_column_of_ones,
     binarize_fractions,
     binarize_signs,
+    coerce_columns,
     divide_columns,
     drop_duplicate_columns,
     drop_weak_columns,

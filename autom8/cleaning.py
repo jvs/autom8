@@ -1,24 +1,37 @@
 import re
 import numpy as np
-from .exceptions import typename
+from .exceptions import expected, typename
+from .matrix import create_array
 from .parsing import parse_number
-from .preprocessors import planner, preprocessor
+from .preprocessors import planner, preprocessor, _drop_weak_columns
+
+
+int_type = (int, np.int64)
 
 
 @planner
 def clean_dataset(ctx):
-    for index, col in enumerate(ctx.matrix.columns):
-        if col.dtype == object:
-            _clean_column(ctx, index, col)
+    for col in ctx.matrix.columns:
+        _clean_column(ctx, col)
 
 
-def _clean_column(ctx, index, col):
+def _clean_column(ctx, col):
+    # If numpy inferred a real dtype for this column, then it's clean enough.
+    # TODO: Consider bipartitioning columns with nan values.
+    if col.dtype != object:
+        return
+
+    index = ctx.matrix.columns.index(col)
     values = col.values
     num_values = len(values)
 
     num_bools = sum(1 for i in values if isinstance(i, bool))
     num_floats = sum(1 for i in values if isinstance(i, float))
-    num_ints = sum(1 for i in values if isinstance(i, int))
+
+    num_ints = sum(1 for i in values
+        if isinstance(i, int_type)
+        and not isinstance(i, bool))
+
     num_none = sum(1 for i in values if i is None)
     num_strings = sum(1 for i in values if isinstance(i, str))
     computed_total = num_bools + num_floats + num_ints + num_none + num_strings
@@ -26,12 +39,13 @@ def _clean_column(ctx, index, col):
     if computed_total != num_values:
         try:
             found = {typename(i) for i in values if i is not None
-                and not isinstance(i, (bool, int, float, str))}
+                and not isinstance(i, (bool, int, float, str, np.int64))}
         except Exception:
             found = 'unexpected values'
-        msg1 = 'columns to only contain booleans, numbers, and strings'
-        msg2 = f'{col.name}: {found}'
-        raise expected(msg1, msg2)
+        ctx.observer.warn(f'Dropping column "{col.name}". A column must only'
+            f' contain booleans, numbers, and strings. Received: {found}.')
+        _drop_weak_columns(ctx, [index])
+        return
 
     # If we somehow got an array of primitives with dtype == object, then just
     # coerce it to the appropriate type.
@@ -44,21 +58,15 @@ def _clean_column(ctx, index, col):
 
     # If we have all None values, then drop this column.
     if num_none == num_values:
-        observer.warn(f'Found column of all None values: {col.name}')
+        ctx.observer.warn(f'Dropping column of all None values: {col.name}')
         _drop_weak_columns(ctx, [index])
         return
 
-    # If we have some strings, try converting them all to numbers.
-    if num_strings > 0:
-        try:
-            _coerce_strings_to_numbers(ctx, index, coerce_all=True)
-        except Exception:
-            # Well, that didn't work. Just keep trucking along, then.
-            pass
-        else:
-            # We were able to convert the strings to numbers, so let's recur.
-            _clean_column(ctx, index, col)
-            return
+    # If we have some strings, see if we can convert them all to numbers.
+    if num_strings > 0 and _can_coerce_all_strings_to_numbers(values):
+        _coerce_strings_to_numbers(ctx, index)
+        _clean_column(ctx, col)
+        return
 
     # If we have all strings, then we're clean. Just leave this column alone.
     if num_strings == num_values:
@@ -68,21 +76,21 @@ def _clean_column(ctx, index, col):
     # If we have all strings, but some are None, then use the empty string.
     # (And don't warn the user about the None values in this case.)
     if num_strings + num_none == num_values:
-        _replace_nones(ctx, index, '')
+        _replace_none_values(ctx, index, '')
         return
 
     # If we have some ints and some floats, then coerce the ints to floats
     # and recur.
     if num_ints > 0 and num_floats > 0:
         _coerce_ints_to_floats(ctx, index)
-        _clean_column(ctx, index, col)
+        _clean_column(ctx, col)
         return
 
     # If all of the strings are the empty string, then replace the empty
     # strings with None and recur.
     if num_strings > 0 and all(i == '' for i in values if isinstance(i, str)):
         _replace_empty_strings(ctx, index, None)
-        _clean_column(ctx, index, col)
+        _clean_column(ctx, col)
         return
 
     # If we have all primitive values, but some are None, then replace None
@@ -90,9 +98,9 @@ def _clean_column(ctx, index, col):
     # which values were missing.
     for typ, num in casts.items():
         if num + num_none == num_values:
-            observer.warn(
-                f'Found column with {num_none} missing value'
-                f'{"" if num_none == 1 else "s"}: {column.name}'
+            ctx.observer.warn(
+                f'Column {repr(col.name)} has {num_none} missing'
+                f' value{"" if num_none == 1 else "s"}.'
             )
             _flag_missing_values(ctx, index, zeros[typ])
             return
@@ -103,34 +111,38 @@ def _clean_column(ctx, index, col):
 
     # First, coerce as many of the strings as we can into numbers. Then split
     # this column into two columns: one for numbers and another for strings.
-    _coerce_strings_to_numbers(ctx, index, coerce_all=False)
+    _coerce_strings_to_numbers(ctx, index)
+    _bipartition_strings(ctx, index)
 
 
 @preprocessor
 def _coerce_column(ctx, index, typ, replacement):
     assert typ != str
     col = ctx.matrix.columns[index]
-    def conv(x):
-        if isinstance(x, typ):
-            return x
-        try:
-            return typ(x)
-        except Exception:
-            return replacement
-    new_values = [conv(x) for x in col.values]
-    col.values = np.array(new_values, dtype=typ)
+    try:
+        col.values = col.values.astype(typ)
+    except Exception:
+        col.values = np.array([replacement for _ in col.values], dtype=typ)
+
+
+_string_to_number_regex = re.compile(r'^\$*(\-?[0-9\.]+)\%*$')
+
+
+def _can_coerce_all_strings_to_numbers(values):
+    return all(_string_to_number_regex.match(i)
+        for i in values if isinstance(i, str))
 
 
 @preprocessor
-def _coerce_strings_to_numbers(ctx, index, coerce_all=True):
+def _coerce_strings_to_numbers(ctx, index):
     col = ctx.matrix.columns[index]
-    new_values = [_coerce_string_to_number(i, is_required=coerce_all)
+    new_values = [_coerce_string_to_number(i)
         if isinstance(i, str) else i
         for i in col.values]
-    col.values = _create_array(new_values)
+    col.values = create_array(new_values)
 
 
-def _coerce_string_to_number(obj, is_required=True):
+def _coerce_string_to_number(obj):
     assert isinstance(obj, str)
 
     # Remove leading and trailing whitespace.
@@ -143,30 +155,23 @@ def _coerce_string_to_number(obj, is_required=True):
     try:
         return parse_number(obj)
     except Exception:
-        pass
-
-    # Pull out the number part and try parsing it.
-    m = re.match(r'^\$*(\-?[0-9\.]+)\%*$', obj)
-    if m:
-        return parse_number(m.group(1))
-    elif is_required:
-        raise Exception(f'Failed to coerce string to number: {obj}')
-    else:
-        return obj
+        # Pull out the number part and try parsing it.
+        m = _string_to_number_regex.match(obj)
+        return parse_number(m.group(1)) if m else obj
 
 
 @preprocessor
-def _replace_nones(ctx, index, replacement):
+def _replace_none_values(ctx, index, replacement):
     col = ctx.matrix.columns[index]
     new_values = [replacement if i is None else i for i in col.values]
-    col.values = _create_array(new_values)
+    col.values = create_array(new_values)
 
 
 @preprocessor
 def _coerce_ints_to_floats(ctx, index):
     col = ctx.matrix.columns[index]
-    new_values = [float(i) if isinstance(i, int) else i for i in col.values]
-    col.values = _create_array(new_values)
+    new_values = [float(i) if isinstance(i, int_type) else i for i in col.values]
+    col.values = create_array(new_values)
 
 
 @preprocessor
@@ -176,7 +181,7 @@ def _replace_empty_strings(ctx, index, replacement):
         replacement if isinstance(i, str) and i == '' else i
         for i in col.values
     ]
-    col.values = _create_array(new_values)
+    col.values = create_array(new_values)
 
 
 @preprocessor
@@ -184,7 +189,7 @@ def _flag_missing_values(ctx, index, replacement):
     col = ctx.matrix.columns[index]
     new_values = [replacement if i is None else i for i in col.values]
     ctx.matrix.drop_columns_by_index([index])
-    ctx.matrix.append_column(col.copy_with(_create_array(new_values)))
+    ctx.matrix.columns.append(col.copy_with(create_array(new_values)))
     ctx.matrix.append_column(
         values=col.values != None,
         name=f'PRESENT ({col.name})',
@@ -200,24 +205,20 @@ def _bipartition_strings(ctx, index):
     col = ctx.matrix.columns[index]
     ctx.matrix.drop_columns_by_index([index])
 
-    numbers = [i if isinstance(i, (int, float)) else 0 for i in col.values]
+    is_num = lambda x: x is not None and not isinstance(x, str)
+    numbers = [i if is_num(i) else 0 for i in col.values]
     strings = [i if isinstance(i, str) else '' for i in col.values]
 
     ctx.matrix.append_column(
-        values=_create_array(numbers),
+        values=create_array(numbers),
         name=f'NUMBERS ({col.name})',
         role=None,
         is_original=True,
     )
 
     ctx.matrix.append_column(
-        values=_create_array(strings),
+        values=create_array(strings),
         name=f'STRINGS ({col.name})',
         role=None,
         is_original=True,
     )
-
-
-def _create_array(values):
-    has_str = any(isinstance(i, str) for i in values)
-    return np.array(values, dtype=object if has_str else None)

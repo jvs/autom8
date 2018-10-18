@@ -31,11 +31,9 @@ def search(ctx):
 
 
 def _search(ctx):
-    # First, clean the dataset.
     clean_dataset(ctx)
-
-    # Then, infer each column's role.
     infer_roles(ctx)
+    then.coerce_columns(ctx)
 
     # Always encode text columns.
     then.encode_text(ctx)
