@@ -29,6 +29,43 @@ class TestContextInterface(unittest.TestCase):
 
 
 class TestTrainingContext(unittest.TestCase):
+    def test_invalid_training_contexts(self):
+        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*dataset'):
+            autom8.create_training_context([])
+
+        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*dataset'):
+            autom8.create_training_context([[1], [2], [3]])
+
+        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*target_column'):
+            autom8.create_training_context(
+                dataset=[['A', 'B'], [1, 2]],
+                target_column='C',
+            )
+
+        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*target_column'):
+            autom8.create_training_context(
+                dataset=[['A', 'B'], [1, 2]],
+                target_column=object(),
+            )
+
+        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*target_column'):
+            autom8.create_training_context(
+                dataset=[['A', 'B'], [1, 2]],
+                target_column=10,
+            )
+
+        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*problem_type'):
+            autom8.create_training_context(
+                dataset=[['A', 'B'], [1, 2]],
+                problem_type='classify',
+            )
+
+        with self.assertRaisesRegex(autom8.Autom8Exception, 'Expected.*test_ratio'):
+            autom8.create_training_context(
+                dataset=[['A', 'B'], [1, 2]],
+                test_ratio=1.2,
+            )
+
     def test_copy_method(self):
         # TODO: Make sure that the copied context actually works.
         c1 = autom8.create_training_context([[1, 2]])

@@ -106,7 +106,7 @@ def _clean_column(ctx, col):
             return
 
     # Now we know we have some strings, some numbers, and maybe some Nones.
-    # We also know that the non-empty strings cannot all be coerced into
+    # We also know that the nonempty strings cannot all be coerced into
     # numbers (but maybe some can be coerced).
 
     # First, coerce as many of the strings as we can into numbers. Then split
