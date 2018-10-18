@@ -1,3 +1,5 @@
+__version__ = '0.0.1'
+
 from .cleaning import clean_dataset
 from .csv_utils import load_csv, decode_csv
 from .evaluate import evaluate_pipeline

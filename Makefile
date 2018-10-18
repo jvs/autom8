@@ -24,9 +24,9 @@ unit-tests: virtualenv
 
 virtualenv: .virtualenv/bin/activate
 
-.virtualenv/bin/activate: requirements.txt
+.virtualenv/bin/activate: setup.py
 	test -d .virtualenv || virtualenv .virtualenv
-	.virtualenv/bin/pip install -Ur requirements.txt
+	.virtualenv/bin/pip install -U -e .
 	touch .virtualenv/bin/activate
 
 
