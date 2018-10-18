@@ -387,7 +387,7 @@ def test_ordinal_encode_categories_when_something_goes_wrong():
 
     matrix = autom8.create_matrix({'rows': training, 'schema': schema})
     acc = autom8.Accumulator()
-    pip = PipelineContext(matrix, observer=acc)
+    pip = PipelineContext(matrix, receiver=acc)
 
     # For now, just monkey-patch in a "steps" list.
     # (This is pretty terrible.)
@@ -433,7 +433,7 @@ def test_one_hot_encode_categories_when_something_goes_wrong():
     encoder = ctx.steps[0].args[0]
 
     acc = autom8.Accumulator()
-    pip = PipelineContext(matrix, observer=acc)
+    pip = PipelineContext(matrix, receiver=acc)
 
     # As in the previous test, just monkey-patch in a "steps" list.
     # (Again, this is pretty terrible.)
@@ -750,10 +750,10 @@ def _create_context(training, schema):
     return autom8.create_training_context({'rows': training, 'schema': schema})
 
 
-def _playback(training_context, schema, rows, observer=None):
-    if observer is None:
-        observer = autom8.Accumulator()
+def _playback(training_context, schema, rows, receiver=None):
+    if receiver is None:
+        receiver = autom8.Accumulator()
     matrix = autom8.create_matrix({'rows': rows, 'schema': schema})
-    ctx = PipelineContext(matrix, observer=observer)
+    ctx = PipelineContext(matrix, receiver=receiver)
     playback(training_context.steps, ctx)
     return ctx.matrix.tolist()

@@ -2,13 +2,13 @@ import re
 import numpy as np
 
 from .exceptions import expected, typename
-from .observer import Observer
 from .parsing import parse_number
+from .receiver import Receiver
 
 
-def create_matrix(data, observer=None, infer_names=True):
-    if observer is None:
-        observer = Observer()
+def create_matrix(data, receiver=None, infer_names=True):
+    if receiver is None:
+        receiver = Receiver()
 
     if not isinstance(data, (dict, list, tuple, np.ndarray, Matrix)):
         raise expected('dict, list, tuple, numpy array, or Matrix', typename(data))
@@ -17,9 +17,9 @@ def create_matrix(data, observer=None, infer_names=True):
         return data
 
     if isinstance(data, dict):
-        return _create_matrix_from_dict(data, observer)
+        return _create_matrix_from_dict(data, receiver)
     else:
-        return _create_matrix_from_iterable(data, observer, infer_names)
+        return _create_matrix_from_iterable(data, receiver, infer_names)
 
 
 class Matrix:
@@ -182,14 +182,14 @@ class Column:
         return self.copy_with(np.delete(self.values, indices))
 
 
-def _create_matrix_from_dict(data, observer):
+def _create_matrix_from_dict(data, receiver):
     assert isinstance(data, dict)
 
     if 'rows' not in data:
         raise expected('dict with "rows" element', list(data.keys()))
 
     has_schema = 'schema' in data
-    matrix = create_matrix(data['rows'], observer, infer_names=not has_schema)
+    matrix = create_matrix(data['rows'], receiver, infer_names=not has_schema)
 
     if not has_schema:
         return matrix
@@ -211,27 +211,27 @@ def _create_matrix_from_dict(data, observer):
             len(schema))
 
     for col, details in zip(matrix.columns, schema):
-        col.name = _merge_names(col.name, details['name'], observer)
+        col.name = _merge_names(col.name, details['name'], receiver)
         col.role = details['role']
 
         if 'dtype' in details:
-            _coerce_values(col, details['dtype'], observer)
+            _coerce_values(col, details['dtype'], receiver)
 
     return matrix
 
 
-def _merge_names(inferred, provided, observer):
+def _merge_names(inferred, provided, receiver):
     n1, n2 = inferred.strip(), provided.strip()
     is_anonymous = re.match(r'Column-\d+', n1)
 
     if not is_anonymous and n1.lower() != n2.lower():
-        observer.warn('Found column with two names:'
+        receiver.warn('Found column with two names:'
             f' {repr(inferred)} and {repr(provided)}.')
 
     return provided.strip()
 
 
-def _create_matrix_from_iterable(data, observer, infer_names=False):
+def _create_matrix_from_iterable(data, receiver, infer_names=False):
     if len(data) > 0 and isinstance(data[0], Column):
         # In this case, require each element to be a Column object.
         if not all(isinstance(i, Column) for i in data):
@@ -247,7 +247,7 @@ def _create_matrix_from_iterable(data, observer, infer_names=False):
     # Warn the users if we dropped some rows.
     if num_dropped:
         suffix = '' if num_dropped == 1 else 's'
-        observer.warn(f'Dropped {num_dropped} empty row{suffix} from dataset.')
+        receiver.warn(f'Dropped {num_dropped} empty row{suffix} from dataset.')
 
     # If we don't have any rows, then just return an empty matrix.
     if not rows:
@@ -262,7 +262,7 @@ def _create_matrix_from_iterable(data, observer, infer_names=False):
         num_extra = maxcols - mincols
         suffix1 = '' if num_extra == 1 else 's'
         suffix2 = '' if mincols == 1 else 's'
-        observer.warn(
+        receiver.warn(
             f'Dropped {num_extra} extra column{suffix1} from dataset.'
             f' Keeping first {mincols} column{suffix2}.'
             ' To avoid this behavior, ensure that each row in the dataset has'
@@ -314,11 +314,11 @@ def _infer_column_names(matrix):
     return Matrix(columns)
 
 
-def _coerce_values(col, dtype, observer):
+def _coerce_values(col, dtype, receiver):
     try:
         new_values = col.values.astype(dtype)
     except Exception:
-        observer.warn(f'Failed to convert column {repr(col.name)} to type {dtype}')
+        receiver.warn(f'Failed to convert column {repr(col.name)} to type {dtype}')
 
 
 def create_array(values):

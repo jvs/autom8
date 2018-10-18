@@ -24,7 +24,7 @@ def planner(f):
         except Exception as exc:
             msg = f'Planning step "{f.__name__}" failed: {exc}'
             logging.getLogger('autom8').exception(msg)
-            ctx.observer.warn(msg)
+            ctx.receiver.warn(msg)
     return wrapper
 
 
@@ -43,7 +43,7 @@ def playback(steps, ctx):
         except Exception:
             msg = f'Playback failed on step {f.__name__}'
             logging.getLogger('autom8').exception(msg)
-            ctx.observer.warn(msg)
+            ctx.receiver.warn(msg)
 
 
 @preprocessor
@@ -115,7 +115,7 @@ def _coerce_columns(ctx, dtypes):
         try:
             col.values = col.values.astype(dtype)
         except Exception:
-            ctx.observer.warn(
+            ctx.receiver.warn(
                 f'Failed to convert column "{col.name}" to {dtype}'
             )
 

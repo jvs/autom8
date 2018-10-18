@@ -11,8 +11,8 @@ from .evaluate import evaluate_pipeline
 from .exceptions import expected, typename
 from .inference import _infer_role
 from .matrix import create_matrix
-from .observer import Observer
 from .pipeline import Pipeline
+from .receiver import Receiver
 
 
 def create_training_context(
@@ -20,13 +20,13 @@ def create_training_context(
     target_column=None,
     problem_type=None,
     test_ratio=None,
-    observer=None,
+    receiver=None,
 ):
-    # Create a default observer if the user didn't provide one.
-    if observer is None:
-        observer = Observer()
+    # Create a default receiver if the user didn't provide one.
+    if receiver is None:
+        receiver = Receiver()
 
-    matrix = create_matrix(dataset, observer)
+    matrix = create_matrix(dataset, receiver)
     num_cols = len(matrix.columns)
 
     if num_cols == 0:
@@ -65,7 +65,7 @@ def create_training_context(
     matrix.drop_columns_by_index(target_column)
 
     if problem_type is None:
-        role = _infer_role(labelcol, observer)
+        role = _infer_role(labelcol, receiver)
         problem_type = 'regression' if role == 'numerical' else 'classification'
 
     valid_problems = {'regression', 'classification'}
@@ -88,19 +88,19 @@ def create_training_context(
 
     count = len(matrix)
     test_indices = sorted(random.sample(range(count), int(count * test_ratio) or 1))
-    return TrainingContext(matrix, labels, test_indices, problem_type, observer)
+    return TrainingContext(matrix, labels, test_indices, problem_type, receiver)
 
 
 class TrainingContext:
     def __init__(
             self, matrix, labels, test_indices,
-            problem_type, observer, steps=None
+            problem_type, receiver, steps=None
         ):
         self.matrix = matrix.copy()
         self.labels = labels
         self.test_indices = test_indices
         self.problem_type = problem_type
-        self.observer = observer
+        self.receiver = receiver
         self.steps = list(steps) if steps else []
         self.pool = None
 
@@ -110,7 +110,7 @@ class TrainingContext:
             labels=self.labels,
             test_indices=self.test_indices,
             problem_type=self.problem_type,
-            observer=self.observer,
+            receiver=self.receiver,
             steps=self.steps,
         )
 
@@ -150,7 +150,7 @@ class TrainingContext:
 
         pipeline = Pipeline(list(self.steps), estimator, self.labels.encoder)
         report = evaluate_pipeline(self, pipeline)
-        self.observer.receive_pipeline(pipeline, report)
+        self.receiver.receive_pipeline(pipeline, report)
 
     def submit(self, func, *args, **kwargs):
         if self.pool is None:
@@ -183,7 +183,7 @@ class TrainingContext:
             return
 
         num_steps = len(self.steps)
-        self.pool = self.observer.create_executor()
+        self.pool = self.receiver.create_executor()
         yield
 
         try:
@@ -192,7 +192,7 @@ class TrainingContext:
             self.pool = None
 
         if len(self.steps) != num_steps:
-            self.observer.warn(
+            self.receiver.warn(
                 'Potential race condition: The TrainingContext was updated'
                 ' within a `parallel` context. To avoid any race conditions,'
                 ' create a copy of the TrainingContext before applying any'

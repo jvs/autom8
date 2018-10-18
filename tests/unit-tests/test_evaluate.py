@@ -9,7 +9,7 @@ def test_evaluate_pipeline():
         [1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16],
     ]
     dataset = [i + [i[0] + i[1]] for i in inputs]
-    ctx = autom8.create_training_context(dataset, observer=acc)
+    ctx = autom8.create_training_context(dataset, receiver=acc)
 
     # For now, just hack in the test_indices that we want.
     ctx.test_indices = [2, 5]
@@ -33,7 +33,7 @@ def test_evaluate_pipeline():
     )
 
     # Try using the pipeline to make some predictions.
-    result = pipeline.run([[17, 18], [19, 20], [21, 22]], observer=acc)
+    result = pipeline.run([[17, 18], [19, 20], [21, 22]], receiver=acc)
 
     assert np.allclose(result.predictions, np.array([17+18, 19+20, 21+22]))
     assert not hasattr(result, 'probabilities')

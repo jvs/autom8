@@ -3,10 +3,10 @@ PYTHON := .virtualenv/bin/python -W "ignore::PendingDeprecationWarning"
 TEST_FLAGS := -v -W "ignore::PendingDeprecationWarning"
 TEST := .virtualenv/bin/pytest $(TEST_FLAGS)
 
-blackbox-tests: virtualenv
+blackbox-tests: clean virtualenv
 	$(TEST) tests/blackbox-tests
 
-coverage:
+coverage: clean
 	$(COVERAGE) run --source autom8 -m pytest $(TEST_FLAGS)
 	$(COVERAGE) report
 	$(COVERAGE) html
@@ -17,7 +17,7 @@ repl:
 
 test: unit-tests
 
-unit-tests: virtualenv
+unit-tests: clean virtualenv
 	$(TEST) tests/unit-tests
 
 virtualenv: .virtualenv/bin/activate
@@ -31,14 +31,21 @@ virtualenv: .virtualenv/bin/activate
 
 # Individual blackbox tests:
 
-boston-test: virtualenv
+boston-test: clean virtualenv
 	$(TEST) tests/blackbox-tests/test_boston_dataset.py
 
-iris-test: virtualenv
+iris-test: clean virtualenv
 	$(TEST) tests/blackbox-tests/test_iris_dataset.py
 
-wine-test: virtualenv
+wine-test: clean virtualenv
 	$(TEST) tests/blackbox-tests/test_wine_dataset.py
 
 
-.PHONY: blackbox-tests boston-test coverage repl test unit-tests virtualenv
+clean:
+	rm -rf \
+		./autom8/__pycache__/*.pyc \
+		./tests/blackbox-tests/__pycache__/*.pyc \
+		./tests/unit-tests/__pycache__/*.pyc
+
+
+.PHONY: blackbox-tests boston-test clean coverage repl test unit-tests virtualenv

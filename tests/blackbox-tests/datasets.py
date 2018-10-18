@@ -7,4 +7,4 @@ def load_dataset(name):
     path = os.path.join(testdir, 'datasets', name)
     dataset = autom8.load_csv(path)
     acc = autom8.Accumulator()
-    return autom8.create_training_context(dataset, observer=acc)
+    return autom8.create_training_context(dataset, receiver=acc)

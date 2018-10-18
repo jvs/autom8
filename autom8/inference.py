@@ -3,7 +3,7 @@ from .preprocessors import planner, preprocessor
 
 @planner
 def infer_roles(ctx):
-    roles = [_infer_role(col, ctx.observer) for col in ctx.matrix.columns]
+    roles = [_infer_role(col, ctx.receiver) for col in ctx.matrix.columns]
     _set_roles(ctx, roles)
 
 
@@ -13,9 +13,9 @@ def _set_roles(ctx, roles):
         col.role = role
 
 
-def _infer_role(col, observer):
+def _infer_role(col, receiver):
     inferred = _infer_role_from_values(col.values)
-    return _merge_roles(col, inferred, observer)
+    return _merge_roles(col, inferred, receiver)
 
 
 def _infer_role_from_values(values):
@@ -40,13 +40,13 @@ def _infer_role_from_values(values):
         return 'numerical'
 
 
-def _merge_roles(col, new_role, observer):
+def _merge_roles(col, new_role, receiver):
     # Let's use short names in here.
     old, new = col.role, new_role
 
     # Complain if one is "numerical" and the other is "textual".
     if (old, new) in {('numerical', 'textual'), ('textual', 'numerical')}:
-        observer.warn(
+        receiver.warn(
             f'Found a {new} column declared as a {old} column: {col.name}'
         )
         return new

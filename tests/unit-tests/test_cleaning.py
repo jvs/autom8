@@ -21,8 +21,8 @@ def test_matrix_with_unexpected_value():
         [5, 6, object()],
     ]
     acc = autom8.Accumulator()
-    matrix = autom8.create_matrix(_add_labels(dataset), observer=acc)
-    ctx = autom8.create_training_context(matrix, observer=acc)
+    matrix = autom8.create_matrix(_add_labels(dataset), receiver=acc)
+    ctx = autom8.create_training_context(matrix, receiver=acc)
 
     autom8.clean_dataset(ctx)
     assert len(acc.warnings) == 1
@@ -31,8 +31,8 @@ def test_matrix_with_unexpected_value():
     assert ctx.matrix.tolist() == [['A', 'B'], [1, 2], [3, 4], [5, 6]]
 
     vectors = [['A', 'B', 'C'], [1, 2, 'foo'], [3, 4, 'bar']]
-    matrix = autom8.create_matrix(vectors, observer=acc)
-    out = PipelineContext(matrix, observer=acc)
+    matrix = autom8.create_matrix(vectors, receiver=acc)
+    out = PipelineContext(matrix, receiver=acc)
     playback(ctx.steps, out)
     assert out.matrix.tolist() == [['A', 'B'], [1, 2], [3, 4]]
 
@@ -46,11 +46,11 @@ def test_primitives_with_object_dtype():
     ]
 
     acc = autom8.Accumulator()
-    matrix = autom8.create_matrix(_add_labels(dataset), observer=acc)
+    matrix = autom8.create_matrix(_add_labels(dataset), receiver=acc)
     for col in matrix.columns:
         col.values = col.values.astype(object)
 
-    ctx = autom8.create_training_context(matrix, observer=acc)
+    ctx = autom8.create_training_context(matrix, receiver=acc)
     autom8.clean_dataset(ctx)
 
     dtypes = [c.dtype for c in ctx.matrix.columns]
@@ -59,8 +59,8 @@ def test_primitives_with_object_dtype():
     assert dtypes[2] == int
 
     vectors = [['A', 'B', 'C'], [1, 2, 3.0], [0, 4, 5.0], [1, False, 6.9]]
-    matrix = autom8.create_matrix(vectors, observer=acc)
-    out = PipelineContext(matrix, observer=acc)
+    matrix = autom8.create_matrix(vectors, receiver=acc)
+    out = PipelineContext(matrix, receiver=acc)
     playback(ctx.steps, out)
     assert out.matrix.tolist() == [
         ['A', 'B', 'C'], [True, 2.0, 3], [False, 4.0, 5], [True, 0.0, 6]
@@ -72,8 +72,8 @@ def test_primitives_with_object_dtype():
     assert dtypes[2] == int
 
     vectors = [['A', 'B', 'C'], ['1', '2', None], ['', None, ()]]
-    matrix = autom8.create_matrix(vectors, observer=acc)
-    out = PipelineContext(matrix, observer=acc)
+    matrix = autom8.create_matrix(vectors, receiver=acc)
+    out = PipelineContext(matrix, receiver=acc)
     playback(ctx.steps, out)
 
     # Just use repr to avoid having to fart around with nan.
@@ -91,8 +91,8 @@ def test_column_with_all_none():
     ]
 
     acc = autom8.Accumulator()
-    matrix = autom8.create_matrix(_add_labels(dataset), observer=acc)
-    ctx = autom8.create_training_context(matrix, observer=acc)
+    matrix = autom8.create_matrix(_add_labels(dataset), receiver=acc)
+    ctx = autom8.create_training_context(matrix, receiver=acc)
 
     autom8.clean_dataset(ctx)
     assert len(acc.warnings) == 1
@@ -100,8 +100,8 @@ def test_column_with_all_none():
     assert ctx.matrix.tolist() == [['A', 'C'], [True, 2], [False, 4], [True, 6]]
 
     vectors = [['A', 'B', 'C'], [1, 2, 'foo'], [3, 4, 'bar']]
-    matrix = autom8.create_matrix(vectors, observer=acc)
-    out = PipelineContext(matrix, observer=acc)
+    matrix = autom8.create_matrix(vectors, receiver=acc)
+    out = PipelineContext(matrix, receiver=acc)
     playback(ctx.steps, out)
     assert out.matrix.tolist() == [['A', 'C'], [1, 'foo'], [3, 'bar']]
 
@@ -115,8 +115,8 @@ def test_columns_with_numbers_as_strings():
     ]
 
     acc = autom8.Accumulator()
-    matrix = autom8.create_matrix(_add_labels(dataset), observer=acc)
-    ctx = autom8.create_training_context(matrix, observer=acc)
+    matrix = autom8.create_matrix(_add_labels(dataset), receiver=acc)
+    ctx = autom8.create_training_context(matrix, receiver=acc)
 
     autom8.clean_dataset(ctx)
     assert len(acc.warnings) == 0
@@ -127,8 +127,8 @@ def test_columns_with_numbers_as_strings():
     ]
 
     vectors = [['A', 'B', 'C'], [1, '2%', 'foo'], ['3', 4.0, 'bar']]
-    matrix = autom8.create_matrix(vectors, observer=acc)
-    out = PipelineContext(matrix, observer=acc)
+    matrix = autom8.create_matrix(vectors, receiver=acc)
+    out = PipelineContext(matrix, receiver=acc)
     playback(ctx.steps, out)
     assert out.matrix.tolist() == [['A', 'B', 'C'], [1, 2, 'foo'], [3, 4, 'bar']]
     assert out.matrix.columns[0].dtype == int
@@ -144,8 +144,8 @@ def test_column_of_all_strings():
     ]
 
     acc = autom8.Accumulator()
-    matrix = autom8.create_matrix(_add_labels(dataset), observer=acc)
-    ctx = autom8.create_training_context(matrix, observer=acc)
+    matrix = autom8.create_matrix(_add_labels(dataset), receiver=acc)
+    ctx = autom8.create_training_context(matrix, receiver=acc)
 
     autom8.clean_dataset(ctx)
     assert len(acc.warnings) == 0
@@ -162,8 +162,8 @@ def test_column_of_all_strings_and_none_values():
     ]
 
     acc = autom8.Accumulator()
-    matrix = autom8.create_matrix(_add_labels(dataset), observer=acc)
-    ctx = autom8.create_training_context(matrix, observer=acc)
+    matrix = autom8.create_matrix(_add_labels(dataset), receiver=acc)
+    ctx = autom8.create_training_context(matrix, receiver=acc)
 
     autom8.clean_dataset(ctx)
     assert len(acc.warnings) == 0
@@ -171,8 +171,8 @@ def test_column_of_all_strings_and_none_values():
     assert ctx.matrix.tolist() == [['A', 'B'], ['1', 2], ['foo', 4], ['', 0]]
 
     vectors = [['A', 'B'], [None, 'bar'], ['baz', None]]
-    matrix = autom8.create_matrix(vectors, observer=acc)
-    out = PipelineContext(matrix, observer=acc)
+    matrix = autom8.create_matrix(vectors, receiver=acc)
+    out = PipelineContext(matrix, receiver=acc)
     playback(ctx.steps, out)
     assert out.matrix.tolist() == [['A', 'B'], ['', 'bar'], ['baz', None]]
 
@@ -186,8 +186,8 @@ def test_column_of_ints_and_floats():
     ]
 
     acc = autom8.Accumulator()
-    matrix = autom8.create_matrix(_add_labels(dataset), observer=acc)
-    ctx = autom8.create_training_context(matrix, observer=acc)
+    matrix = autom8.create_matrix(_add_labels(dataset), receiver=acc)
+    ctx = autom8.create_training_context(matrix, receiver=acc)
 
     autom8.clean_dataset(ctx)
 
@@ -201,8 +201,8 @@ def test_column_of_ints_and_floats():
     ]
 
     vectors = [['A', 'B'], [None, 10], [20.0, None], [30, 40]]
-    matrix = autom8.create_matrix(vectors, observer=acc)
-    out = PipelineContext(matrix, observer=acc)
+    matrix = autom8.create_matrix(vectors, receiver=acc)
+    out = PipelineContext(matrix, receiver=acc)
     playback(ctx.steps, out)
     assert out.matrix.tolist() == [
         ['A', 'PRESENT (A)', 'B', 'PRESENT (B)'],
@@ -226,8 +226,8 @@ def test_columns_with_some_empty_strings():
     ]
 
     acc = autom8.Accumulator()
-    matrix = autom8.create_matrix(_add_labels(dataset), observer=acc)
-    ctx = autom8.create_training_context(matrix, observer=acc)
+    matrix = autom8.create_matrix(_add_labels(dataset), receiver=acc)
+    ctx = autom8.create_training_context(matrix, receiver=acc)
 
     autom8.clean_dataset(ctx)
 
@@ -243,8 +243,8 @@ def test_columns_with_some_empty_strings():
     ]
 
     vectors = [['A', 'B', 'C'], ['', 5.5, ''], [True, '', 50]]
-    matrix = autom8.create_matrix(vectors, observer=acc)
-    out = PipelineContext(matrix, observer=acc)
+    matrix = autom8.create_matrix(vectors, receiver=acc)
+    out = PipelineContext(matrix, receiver=acc)
     playback(ctx.steps, out)
     assert out.matrix.tolist() == [
         ['A', 'PRESENT (A)', 'B', 'PRESENT (B)', 'C', 'PRESENT (C)'],
@@ -267,8 +267,8 @@ def test_mixed_up_columns_with_strings_and_numbers():
     ]
 
     acc = autom8.Accumulator()
-    matrix = autom8.create_matrix(_add_labels(dataset), observer=acc)
-    ctx = autom8.create_training_context(matrix, observer=acc)
+    matrix = autom8.create_matrix(_add_labels(dataset), receiver=acc)
+    ctx = autom8.create_training_context(matrix, receiver=acc)
 
     autom8.clean_dataset(ctx)
 
@@ -286,8 +286,8 @@ def test_mixed_up_columns_with_strings_and_numbers():
     ]
 
     vectors = [['A', 'B'], [False, 'buz'], ['zim', 10], [2, None]]
-    matrix = autom8.create_matrix(vectors, observer=acc)
-    out = PipelineContext(matrix, observer=acc)
+    matrix = autom8.create_matrix(vectors, receiver=acc)
+    out = PipelineContext(matrix, receiver=acc)
     playback(ctx.steps, out)
     assert out.matrix.tolist() == [
         ['NUMBERS (A)', 'STRINGS (A)', 'NUMBERS (B)', 'STRINGS (B)'],

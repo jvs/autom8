@@ -10,7 +10,7 @@ def test_simple_search():
     dataset = np.column_stack([x, y])
 
     acc = autom8.Accumulator()
-    ctx = autom8.create_training_context(dataset, observer=acc)
+    ctx = autom8.create_training_context(dataset, receiver=acc)
 
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')

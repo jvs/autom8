@@ -6,7 +6,6 @@ from .evaluate import evaluate_pipeline
 from .exceptions import Autom8Exception, Autom8Warning
 from .inference import infer_roles
 from .matrix import create_matrix, Matrix
-from .observer import Accumulator, Observer
 
 from .preprocessors import (
     add_column_of_ones,
@@ -27,5 +26,6 @@ from .preprocessors import (
     sqrt_columns,
 )
 
+from .receiver import Accumulator, Receiver
 from .search import search
 from .training import create_training_context

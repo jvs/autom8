@@ -3,9 +3,9 @@ import numpy as np
 import scipy.sparse
 
 from .matrix import create_matrix, Matrix
-from .observer import Observer
 from .exceptions import expected, typename
 from .preprocessors import playback
+from .receiver import Receiver
 
 
 PredictionReport = namedtuple('PredictionReport', 'predictions')
@@ -19,18 +19,18 @@ class Pipeline:
         self.estimator = estimator
         self.label_encoder = label_encoder
 
-    def run(self, features, observer=None):
+    def run(self, features, receiver=None):
         if not isinstance(features, (list, Matrix)):
             raise expected('list or Matrix', typename(features))
 
-        if observer is None:
-            observer = Observer()
+        if receiver is None:
+            receiver = Receiver()
 
         # TODO: Swizzle the input vectors to match the pipeline's schema.
         if isinstance(features, list):
-            features = create_matrix(features, observer)
+            features = create_matrix(features, receiver)
 
-        ctx = PipelineContext(features, observer)
+        ctx = PipelineContext(features, receiver)
         playback(self.steps, ctx)
 
         X = ctx.matrix.stack_columns()
@@ -70,9 +70,9 @@ class Pipeline:
 
 
 class PipelineContext:
-    def __init__(self, matrix, observer):
+    def __init__(self, matrix, receiver):
         self.matrix = matrix
-        self.observer = observer
+        self.receiver = receiver
 
     @property
     def is_training(self):

@@ -10,7 +10,7 @@ def test_wine_dataset():
         autom8.search(ctx)
 
     # Grab our accumulator.
-    acc = ctx.observer
+    acc = ctx.receiver
 
     # Assert that we at least got 7 pipelines.
     assert len(acc.pipelines) >= 7
@@ -57,7 +57,7 @@ def test_wine_dataset():
     ]
     for pipeline, _ in acc.pipelines:
         tmp = autom8.Accumulator()
-        pred = pipeline.run(vectors, observer=tmp)
+        pred = pipeline.run(vectors, receiver=tmp)
         assert len(pred.predictions) == 3
         for name in pred.predictions:
             assert name in {'class_0', 'class_1', 'class_2'}

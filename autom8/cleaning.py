@@ -42,7 +42,7 @@ def _clean_column(ctx, col):
                 and not isinstance(i, (bool, int, float, str, np.int64))}
         except Exception:
             found = 'unexpected values'
-        ctx.observer.warn(f'Dropping column "{col.name}". A column must only'
+        ctx.receiver.warn(f'Dropping column "{col.name}". A column must only'
             f' contain booleans, numbers, and strings. Received: {found}.')
         _drop_weak_columns(ctx, [index])
         return
@@ -58,7 +58,7 @@ def _clean_column(ctx, col):
 
     # If we have all None values, then drop this column.
     if num_none == num_values:
-        ctx.observer.warn(f'Dropping column of all None values: {col.name}')
+        ctx.receiver.warn(f'Dropping column of all None values: {col.name}')
         _drop_weak_columns(ctx, [index])
         return
 
@@ -98,7 +98,7 @@ def _clean_column(ctx, col):
     # which values were missing.
     for typ, num in casts.items():
         if num + num_none == num_values:
-            ctx.observer.warn(
+            ctx.receiver.warn(
                 f'Column {repr(col.name)} has {num_none} missing'
                 f' value{"" if num_none == 1 else "s"}.'
             )

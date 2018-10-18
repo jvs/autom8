@@ -21,13 +21,13 @@ from . import preprocessors as then
 
 
 def search(ctx):
-    ctx.observer.on_begin_search(ctx)
+    ctx.receiver.on_begin_search(ctx)
     try:
         _search(ctx)
     except Exception as exc:
-        ctx.observer.on_fail_search(ctx, exc)
+        ctx.receiver.on_fail_search(ctx, exc)
     else:
-        ctx.observer.on_end_search(ctx)
+        ctx.receiver.on_end_search(ctx)
 
 
 def _search(ctx):
@@ -160,4 +160,4 @@ def is_big(ctx):
 
 
 def n_jobs(ctx):
-    return -1 if ctx.observer.allow_multicore() else 1
+    return -1 if ctx.receiver.allow_multicore() else 1

@@ -36,7 +36,7 @@ def encode(ctx, encoder, indices):
             df = encoder.transform(array)
         except Exception:
             df = _create_failed_encoding(found, encoder)
-            ctx.observer.warn('Failed to encode categorical data.')
+            ctx.receiver.warn('Failed to encode categorical data.')
 
     if isinstance(encoder, OneHotEncoder):
         column_names = _rename_one_hot_encoded_columns(df.columns, found)

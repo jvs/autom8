@@ -11,7 +11,7 @@ def test_boston_dataset():
         autom8.search(ctx)
 
     # Grab our accumulator.
-    acc = ctx.observer
+    acc = ctx.receiver
 
     # Assert that we at least got 10 pipelines.
     assert len(acc.pipelines) >= 10
@@ -40,7 +40,7 @@ def test_boston_dataset():
     ]
     for pipeline, _ in acc.pipelines:
         tmp = autom8.Accumulator()
-        pred = pipeline.run(vectors, observer=tmp)
+        pred = pipeline.run(vectors, receiver=tmp)
         assert len(pred.predictions) == 2
         assert isinstance(pred.predictions[0].tolist(), float)
         assert isinstance(pred.predictions[1].tolist(), float)

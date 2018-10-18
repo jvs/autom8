@@ -11,8 +11,8 @@ def test_is_training_property():
     c2 = PipelineContext(matrix, autom8.Accumulator())
     assert c1.is_training
     assert not c2.is_training
-    assert hasattr(c1, 'observer')
-    assert hasattr(c2, 'observer')
+    assert hasattr(c1, 'receiver')
+    assert hasattr(c2, 'receiver')
 
 
 def test_planner_decorator():

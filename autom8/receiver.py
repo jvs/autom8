@@ -1,7 +1,7 @@
 from . import exceptions
 
 
-class Observer:
+class Receiver:
     def allow_multicore(self):
         return True
 
@@ -35,7 +35,7 @@ class ImmediateExecutor:
         pass
 
 
-class Accumulator(Observer):
+class Accumulator(Receiver):
     def __init__(self):
         self.warnings = []
         self.pipelines = []

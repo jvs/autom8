@@ -62,7 +62,7 @@ def test_invalid_arguments():
 def test_empty_datasets():
     for data in [[], (), {'rows': [], 'schema': []}, np.array([])]:
         acc = autom8.Accumulator()
-        matrix = autom8.create_matrix(data, observer=acc)
+        matrix = autom8.create_matrix(data, receiver=acc)
         assert len(matrix.columns) == 0
         assert len(acc.warnings) == 0
 
@@ -70,7 +70,7 @@ def test_empty_datasets():
 def test_empty_dataset_with_empty_rows():
     # Assert that we see one warning when we have three empty rows.
     acc = autom8.Accumulator()
-    matrix = autom8.create_matrix([[], [], []], observer=acc)
+    matrix = autom8.create_matrix([[], [], []], receiver=acc)
     assert len(matrix.columns) == 0
     assert len(acc.warnings) == 1
 
@@ -79,9 +79,9 @@ def test_empty_dataset_warning_message():
     a1 = autom8.Accumulator()
     a2 = autom8.Accumulator()
     a3 = autom8.Accumulator()
-    autom8.create_matrix([[]], observer=a1)
-    autom8.create_matrix([[], []], observer=a2)
-    autom8.create_matrix([[], [], []], observer=a3)
+    autom8.create_matrix([[]], receiver=a1)
+    autom8.create_matrix([[], []], receiver=a2)
+    autom8.create_matrix([[], [], []], receiver=a3)
     assert a1.warnings == ['Dropped 1 empty row from dataset.']
     assert a2.warnings == ['Dropped 2 empty rows from dataset.']
     assert a3.warnings == ['Dropped 3 empty rows from dataset.']
@@ -90,9 +90,9 @@ def test_empty_dataset_warning_message():
 def test_extra_columns_warning_message():
     a1 = autom8.Accumulator()
     a2 = autom8.Accumulator()
-    m1 = autom8.create_matrix([[1, 2], [1, 2, 3]], observer=a1)
+    m1 = autom8.create_matrix([[1, 2], [1, 2, 3]], receiver=a1)
     m2 = autom8.create_matrix(
-        [[1], [1, 2, 3], [1, 2, 3, 4], [1, 2, 3, 4]], observer=a2
+        [[1], [1, 2, 3], [1, 2, 3, 4], [1, 2, 3, 4]], receiver=a2
     )
 
     assert len(m1.columns), 2
@@ -122,7 +122,7 @@ def test_creating_simple_matrix_with_schema():
                 {'name': 'flag', 'role': 'encoded'},
             ],
         },
-        observer=acc,
+        receiver=acc,
     )
 
     c1, c2 = matrix.columns
@@ -148,7 +148,7 @@ def test_creating_simple_matrix_from_list():
     acc = autom8.Accumulator()
     matrix = autom8.create_matrix(
         [['hi', 1, True], ['bye', 2, False]],
-        observer=acc,
+        receiver=acc,
     )
 
     c1, c2, c3 = matrix.columns
@@ -179,7 +179,7 @@ def test_creating_simple_matrix_from_numpy_array():
     acc = autom8.Accumulator()
     matrix = autom8.create_matrix(
         np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]]),
-        observer=acc,
+        receiver=acc,
     )
 
     c1, c2, c3 = matrix.columns
