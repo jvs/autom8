@@ -30,7 +30,7 @@ def create_training_context(
     num_cols = len(matrix.columns)
 
     if num_cols == 0:
-        raise expected('non-empty dataset', repr(dataset))
+        raise expected('dataset with more than one column', repr(dataset))
 
     if num_cols == 1:
         raise expected('dataset with more than one column', num_cols)
@@ -56,7 +56,7 @@ def create_training_context(
 
     if isinstance(target_column, int) and target_column >= len(matrix.columns):
         raise expected(
-            f'target column to be valid column number (less than {num_cols})',
+            f'target_column to be valid column number (less than {num_cols})',
             target_column,
         )
 
