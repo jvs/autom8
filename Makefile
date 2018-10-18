@@ -4,13 +4,13 @@ TEST := $(PYTHON) -m unittest discover -v -s
 blackbox-tests:
 	$(TEST) tests/blackbox-tests
 
+boston-test:
+	$(TEST) tests/blackbox-tests -p test_boston_dataset.py
+
 repl:
 	$(PYTHON) -i -c "import autom8;import numpy as np"
 
 test: unit-tests
-
-test-boston:
-	$(TEST) tests/blackbox-tests -p test_boston_dataset.py
 
 unit-tests: virtualenv
 	$(TEST) tests/unit-tests
