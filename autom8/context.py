@@ -20,7 +20,8 @@ def create_context(
     target_column=None,
     problem_type=None,
     test_ratio=None,
-    multicore=True,
+    allow_multicore=True,
+    executor_class=None,
     receiver=None,
 ):
     # Create a default receiver if the user didn't provide one.
@@ -90,21 +91,26 @@ def create_context(
     count = len(matrix)
     test_indices = sorted(random.sample(range(count), int(count * test_ratio) or 1))
 
+    if executor_class is None:
+        executor_class = SynchronousExecutor
+
     return FittingContext(
-        matrix, labels, test_indices, problem_type, multicore, receiver,
+        matrix, labels, test_indices, problem_type,
+        allow_multicore, executor_class, receiver,
     )
 
 
 class FittingContext:
     def __init__(
             self, matrix, labels, test_indices, problem_type,
-            multicore, receiver, steps=None,
+            allow_multicore, executor_class, receiver, steps=None,
         ):
         self.matrix = matrix.copy()
         self.labels = labels
         self.test_indices = test_indices
         self.problem_type = problem_type
-        self.multicore = multicore
+        self.allow_multicore = allow_multicore
+        self.executor_class = executor_class
         self.receiver = receiver
         self.steps = list(steps) if steps else []
         self.pool = None
@@ -179,7 +185,7 @@ class FittingContext:
             return
 
         num_steps = len(self.steps)
-        self.pool = self.receiver.create_executor()
+        self.pool = self.executor_class()
         yield
 
         try:
@@ -203,3 +209,14 @@ class LabelContext(namedtuple('LabelContext', 'name, original, encoded, encoder'
             return encoded_labels
         else:
             return self.encoder.inverse_transform(encoded_labels)
+
+
+class SynchronousExecutor:
+    def fit(self, context, estimator):
+        self.submit(context.fit, estimator)
+
+    def submit(self, func, *args, **kwargs):
+        func(*args, **kwargs)
+
+    def shutdown(self, wait=True):
+        pass

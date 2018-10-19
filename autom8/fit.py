@@ -151,4 +151,4 @@ def is_big(ctx):
 
 
 def n_jobs(ctx):
-    return -1 if ctx.multicore else 1
+    return -1 if ctx.allow_multicore else 1
