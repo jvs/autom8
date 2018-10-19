@@ -27,5 +27,5 @@ from .preprocessors import (
 )
 
 from .receiver import Accumulator, Receiver
-from .search import search
+from .search import fit
 from .training import create_training_context

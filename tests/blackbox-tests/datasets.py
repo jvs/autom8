@@ -1,10 +1,20 @@
 import os
+import warnings
 import autom8
 
 
-def load_dataset(name):
+def load(name):
     testdir = os.path.dirname(os.path.dirname(__file__))
     path = os.path.join(testdir, 'datasets', name)
-    dataset = autom8.load_csv(path)
+    return autom8.load_csv(path)
+
+
+def fit(name):
+    dataset = load(name)
     acc = autom8.Accumulator()
-    return autom8.create_training_context(dataset, receiver=acc)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        autom8.fit(dataset, receiver=acc)
+
+    return acc

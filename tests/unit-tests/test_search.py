@@ -4,17 +4,16 @@ import numpy as np
 import autom8
 
 
-def test_simple_search():
+def test_fit():
     x = np.arange(0.0, 1, 0.01)
     y = np.sin(2 * np.pi * x)
-    dataset = np.column_stack([x, y])
 
+    dataset = np.column_stack([x, y])
     acc = autom8.Accumulator()
-    ctx = autom8.create_training_context(dataset, receiver=acc)
 
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        autom8.search(ctx)
+        autom8.fit(dataset, receiver=acc)
 
     # Assert that we at least got 10 pipelines.
     assert len(acc.pipelines) >= 10

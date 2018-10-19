@@ -18,14 +18,15 @@ except ImportError:
 from .cleaning import clean_dataset
 from .inference import infer_roles
 from . import preprocessors as then
+from .training import create_training_context
 
 
-def search(ctx):
+def fit(*args, **kwargs):
+    ctx = create_training_context(*args, **kwargs)
+
     clean_dataset(ctx)
     infer_roles(ctx)
     then.coerce_columns(ctx)
-
-    # Always encode text columns.
     then.encode_text(ctx)
 
     with ctx.sandbox():

@@ -1,16 +1,9 @@
-import warnings
 import autom8
-from datasets import load_dataset
+import datasets
+
 
 def test_wine_dataset():
-    ctx = load_dataset('wine.csv')
-
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
-        autom8.search(ctx)
-
-    # Grab our accumulator.
-    acc = ctx.receiver
+    acc = datasets.fit('wine.csv')
 
     # Assert that we at least got 7 pipelines.
     assert len(acc.pipelines) >= 7
