@@ -1,3 +1,4 @@
+import json
 import autom8
 import datasets
 
@@ -29,6 +30,10 @@ def test_iris_dataset():
             if section.probabilities is not None:
                 assert len(section.predictions) == len(section.probabilities)
 
+    # Make sure that we can literalize and encode each report.
+    for _, report in acc.pipelines:
+        json.dumps(autom8.literalize(report))
+
     # Assert that the best test score is better than 0.6.
     best = max(i.test.metrics['f1_score'] for _, i in acc.pipelines)
     assert best > 0.6
@@ -48,6 +53,9 @@ def test_iris_dataset():
         tmp = autom8.Accumulator()
         pred = pipeline.run(vectors, receiver=tmp)
         assert not tmp.warnings
+
+        # Make sure that we can literalize and encode the predictions.
+        json.dumps(autom8.literalize(pred))
 
         assert len(pred.predictions) == 3
         for label in pred.predictions:

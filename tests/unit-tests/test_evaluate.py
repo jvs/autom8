@@ -1,3 +1,4 @@
+from pytest import approx
 import numpy as np
 import sklearn.linear_model
 import autom8
@@ -32,9 +33,23 @@ def test_evaluate_pipeline():
         np.array([5+6, 11+12]),
     )
 
+    # Make sure that we can literalize the report.
+    obj = autom8.literalize(report)
+    assert isinstance(obj, dict)
+    assert 'train' in obj and 'test' in obj
+    assert obj['test']['metrics']['r2_score'] == 1.0
+    assert obj['test']['metrics']['r2_score'] == 1.0
+
     # Try using the pipeline to make some predictions.
     result = pipeline.run([[17, 18], [19, 20], [21, 22]], receiver=acc)
 
     assert np.allclose(result.predictions, np.array([17+18, 19+20, 21+22]))
     assert result.probabilities is None
     assert not acc.warnings
+
+    # Make sure that we can literalize the result.
+    obj = autom8.literalize(result)
+    assert isinstance(obj, dict)
+    assert 'predictions' in obj and 'probabilities' in obj
+    assert obj['predictions'] == approx([17+18, 19+20, 21+22])
+    assert obj['probabilities'] is None
