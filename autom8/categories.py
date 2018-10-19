@@ -29,7 +29,7 @@ def encode(ctx, encoder, indices):
     array = found.stack_columns()
     ctx.matrix.drop_columns_by_index(indices)
 
-    if ctx.is_training:
+    if ctx.is_fitting:
         df = encoder.fit_transform(array)
     else:
         try:

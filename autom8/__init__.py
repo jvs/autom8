@@ -1,9 +1,11 @@
 __version__ = '0.0.1'
 
 from .cleaning import clean_dataset
+from .context import create_context
 from .csv_utils import load_csv, decode_csv
 from .evaluate import evaluate_pipeline
 from .exceptions import Autom8Exception, Autom8Warning
+from .fit import fit
 from .inference import infer_roles
 from .matrix import create_matrix, Matrix
 
@@ -27,5 +29,3 @@ from .preprocessors import (
 )
 
 from .receiver import Accumulator, Receiver
-from .search import fit
-from .training import create_training_context

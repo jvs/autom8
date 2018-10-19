@@ -15,7 +15,7 @@ from .pipeline import Pipeline
 from .receiver import Receiver
 
 
-def create_training_context(
+def create_context(
     dataset,
     target_column=None,
     problem_type=None,
@@ -90,12 +90,12 @@ def create_training_context(
     count = len(matrix)
     test_indices = sorted(random.sample(range(count), int(count * test_ratio) or 1))
 
-    return TrainingContext(
+    return FittingContext(
         matrix, labels, test_indices, problem_type, multicore, receiver,
     )
 
 
-class TrainingContext:
+class FittingContext:
     def __init__(
             self, matrix, labels, test_indices, problem_type,
             multicore, receiver, steps=None,
@@ -110,7 +110,7 @@ class TrainingContext:
         self.pool = None
 
     @property
-    def is_training(self):
+    def is_fitting(self):
         return True
 
     @property
@@ -136,11 +136,12 @@ class TrainingContext:
         if X.dtype != float:
             X = X.astype(float)
 
+        X = scipy.sparse.csr_matrix(X)
+
         try:
-            X = scipy.sparse.csr_matrix(X)
             estimator.fit(X, y)
         except Exception:
-            logging.getLogger('autom8').exception('Training failed')
+            logging.getLogger('autom8').exception('Failure in fit method')
             return
 
         pipeline = Pipeline(list(self.steps), estimator, self.labels.encoder)
@@ -188,10 +189,10 @@ class TrainingContext:
 
         if len(self.steps) != num_steps:
             self.receiver.warn(
-                'Potential race condition: The TrainingContext was updated'
+                'Potential race condition: The FittingContext was updated'
                 ' within a `parallel` context. To avoid any race conditions,'
                 ' use the `sandbox` method to create a temporary copy of the'
-                ' TrainingContext. Then apply your preprocessing functions'
+                ' FittingContext. Then apply your preprocessing functions'
                 ' to the sandboxed copy.'
             )
 

@@ -18,11 +18,11 @@ except ImportError:
 from .cleaning import clean_dataset
 from .inference import infer_roles
 from . import preprocessors as then
-from .training import create_training_context
+from .context import create_context
 
 
 def fit(*args, **kwargs):
-    ctx = create_training_context(*args, **kwargs)
+    ctx = create_context(*args, **kwargs)
 
     clean_dataset(ctx)
     infer_roles(ctx)

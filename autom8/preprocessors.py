@@ -17,8 +17,8 @@ Step = namedtuple('Step', 'func, args, kwargs')
 def planner(f):
     @functools.wraps(f)
     def wrapper(ctx, *a, **k):
-        if not ctx.is_training:
-            raise expected('TrainingContext', typename(ctx))
+        if not ctx.is_fitting:
+            raise expected('FittingContext', typename(ctx))
         try:
             f(ctx, *a, **k)
         except Exception as exc:
@@ -106,7 +106,7 @@ def coerce_columns(ctx):
 
 @preprocessor
 def _coerce_columns(ctx, dtypes):
-    if ctx.is_training:
+    if ctx.is_fitting:
         return
 
     for col, dtype in zip(ctx.matrix.columns, dtypes):
@@ -237,7 +237,7 @@ def _encode_text(ctx, encoder, indices):
     found.coerce_values_to_strings()
     combined = [' '.join(text) for text in found.stack_columns()]
 
-    if ctx.is_training:
+    if ctx.is_fitting:
         result = encoder.fit_transform(combined).toarray()
     else:
         # TODO: Append the appropriate number of 0-columns when this fails.
@@ -316,7 +316,7 @@ def _scale_columns(ctx, scaler, indices):
     array = found.stack_columns()
     ctx.matrix.drop_columns_by_index(indices)
 
-    if ctx.is_training:
+    if ctx.is_fitting:
         result = scaler.fit_transform(array)
     else:
         try:

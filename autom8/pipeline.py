@@ -75,5 +75,5 @@ class PipelineContext:
         self.receiver = receiver
 
     @property
-    def is_training(self):
+    def is_fitting(self):
         return False

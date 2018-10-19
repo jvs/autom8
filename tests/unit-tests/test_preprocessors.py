@@ -7,14 +7,14 @@ from autom8.preprocessors import playback
 
 
 def test_add_column_of_ones():
-    training = [['a', 'b'], ['c', 'd']]
+    features = [['a', 'b'], ['c', 'd']]
     schema = [
         {'name': 'A', 'role': 'categorical'},
         {'name': 'B', 'role': 'categorical'},
     ]
     new_headers = ['A', 'B', 'CONSTANT']
 
-    ctx = _create_context(training, schema)
+    ctx = _create_context(features, schema)
     autom8.add_column_of_ones(ctx)
 
     assert len(ctx.steps) == 1
@@ -23,14 +23,14 @@ def test_add_column_of_ones():
     ]
 
     # Try replaying it on the original data.
-    assert _playback(ctx, schema, training) == ctx.matrix.tolist()
+    assert _playback(ctx, schema, features) == ctx.matrix.tolist()
 
     m1 = _playback(ctx, schema, [['e', 'f'], ['g', 'h']])
     assert m1 == [new_headers, ['e', 'f', 1], ['g', 'h', 1]]
 
 
 def test_binarize_fractions():
-    training = [[1, 0.2], [0.3, 4]]
+    features = [[1, 0.2], [0.3, 4]]
     schema = [
         {'name': 'A', 'role': 'numerical'},
         {'name': 'B', 'role': 'numerical'},
@@ -39,7 +39,7 @@ def test_binarize_fractions():
         'A', 'B', 'A IS A FRACTION', 'B IS A FRACTION',
     ]
 
-    ctx = _create_context(training, schema)
+    ctx = _create_context(features, schema)
     autom8.binarize_fractions(ctx)
 
     assert len(ctx.steps) == 1
@@ -50,7 +50,7 @@ def test_binarize_fractions():
     ]
 
     # Try replaying it on the original data.
-    assert _playback(ctx, schema, training) == ctx.matrix.tolist()
+    assert _playback(ctx, schema, features) == ctx.matrix.tolist()
 
     m1 = _playback(ctx, schema, [[0.99, 1.1], [1.0, -0.1], [0.0, -1.2]])
     assert m1 == [
@@ -62,7 +62,7 @@ def test_binarize_fractions():
 
 
 def test_binarize_signs():
-    training = [[1, -2], [-3, 4], [0, 5]]
+    features = [[1, -2], [-3, 4], [0, 5]]
     schema = [
         {'name': 'A', 'role': 'numerical'},
         {'name': 'B', 'role': 'numerical'},
@@ -71,7 +71,7 @@ def test_binarize_signs():
         'A', 'B', 'A IS POSITIVE', 'B IS POSITIVE',
     ]
 
-    ctx = _create_context(training, schema)
+    ctx = _create_context(features, schema)
     autom8.binarize_signs(ctx)
 
     assert len(ctx.steps) == 1
@@ -83,7 +83,7 @@ def test_binarize_signs():
     ]
 
     # Try replaying it on the original data.
-    assert _playback(ctx, schema, training) == ctx.matrix.tolist()
+    assert _playback(ctx, schema, features) == ctx.matrix.tolist()
 
     m1 = _playback(ctx, schema, [[10, -0.1], [0.1, -10]])
     assert m1 == [
@@ -94,7 +94,7 @@ def test_binarize_signs():
 
 
 def test_divide_columns():
-    training = [
+    features = [
         [1, 4, 'a', 7.0],
         [2, 5, 'b', 8.0],
         [3, 6, 'c', 9.0],
@@ -111,7 +111,7 @@ def test_divide_columns():
         'B DIVIDED BY D', 'D DIVIDED BY A', 'D DIVIDED BY B',
     ]
 
-    ctx = _create_context(training, schema)
+    ctx = _create_context(features, schema)
     autom8.divide_columns(ctx)
 
     assert len(ctx.steps) == 1
@@ -123,7 +123,7 @@ def test_divide_columns():
     ]
 
     # Try replaying it on the original data.
-    assert _playback(ctx, schema, training) == ctx.matrix.tolist()
+    assert _playback(ctx, schema, features) == ctx.matrix.tolist()
 
     # Try playing it back on some new data.
     m2 = _playback(ctx, schema, [
@@ -151,7 +151,7 @@ def test_divide_columns():
 
 
 def test_drop_duplicate_columns():
-    training = [
+    features = [
         [np.nan, np.nan, 1, 'a', np.nan, 'a'],
         [np.inf, np.inf, 2, 'b', np.inf, 'b'],
         [0, 0, 3, 'c', 0, 'c'],
@@ -167,7 +167,7 @@ def test_drop_duplicate_columns():
     ]
     new_headers = ['A', 'C', 'D']
 
-    ctx = _create_context(training, schema)
+    ctx = _create_context(features, schema)
     autom8.drop_duplicate_columns(ctx)
 
     def _nan(x):
@@ -186,11 +186,11 @@ def test_drop_duplicate_columns():
     ])
 
     # Try replaying it on the original data.
-    assert _clean(_playback(ctx, schema, training)) == _clean(ctx.matrix.tolist())
+    assert _clean(_playback(ctx, schema, features)) == _clean(ctx.matrix.tolist())
 
 
 def test_ordinal_encode_categories():
-    training = [
+    features = [
         [1.1, 10, 'foo', 'bar', True, 5.0],
         [2.2, 20, 'bar', 'foo', False, 5.0],
         [3.3, 30, 'foo', 'foo', True, 5.0],
@@ -212,7 +212,7 @@ def test_ordinal_encode_categories():
         'ENCODED F',
     ]
 
-    ctx = _create_context(training, schema)
+    ctx = _create_context(features, schema)
     autom8.encode_categories(ctx, method='ordinal', only_strings=False)
 
     assert len(ctx.steps) == 1
@@ -224,7 +224,7 @@ def test_ordinal_encode_categories():
     ]
 
     # Try replaying it on the original data.
-    assert _playback(ctx, schema, training) == ctx.matrix.tolist()
+    assert _playback(ctx, schema, features) == ctx.matrix.tolist()
 
     # Try a case where all the values are expected.
     m2 = _playback(ctx, schema, [
@@ -267,11 +267,11 @@ def test_ordinal_encode_categories():
 
     # Now try just encoding the string columns.
     new_headers = ['A', 'B', 'E', 'F', 'ENCODED C', 'ENCODED D']
-    ctx = _create_context(training, schema)
+    ctx = _create_context(features, schema)
     autom8.encode_categories(ctx, method='ordinal', only_strings=True)
 
     # Once again, try playing it back on the original data.
-    assert _playback(ctx, schema, training) == ctx.matrix.tolist()
+    assert _playback(ctx, schema, features) == ctx.matrix.tolist()
 
     # Try a case where all the values are expected.
     m6 = _playback(ctx, schema, [
@@ -288,7 +288,7 @@ def test_ordinal_encode_categories():
 
 
 def test_one_hot_encode_categories():
-    training = [
+    features = [
         [1, 10, 'foo', 'bar', -1.0],
         [2, 20, 'bar', 'foo', -1.0],
         [3, 30, 'foo', 'foo', -1.0],
@@ -301,7 +301,7 @@ def test_one_hot_encode_categories():
         {'name': 'E', 'role': 'categorical'},
     ]
 
-    ctx = _create_context(training, schema)
+    ctx = _create_context(features, schema)
     autom8.encode_categories(ctx, method='one-hot', only_strings=False)
 
     new_headers = [
@@ -321,7 +321,7 @@ def test_one_hot_encode_categories():
     ]
 
     # Try replaying it on the original data.
-    assert _playback(ctx, schema, training) == ctx.matrix.tolist()
+    assert _playback(ctx, schema, features) == ctx.matrix.tolist()
 
     # Try a case where all the values are expected.
     m2 = _playback(ctx, schema, [
@@ -366,7 +366,7 @@ def test_one_hot_encode_categories():
 def test_ordinal_encode_categories_when_something_goes_wrong():
     import autom8.categories
 
-    training = [
+    features = [
         [1, 10, 'foo', 'bar', -1.0],
         [2, 20, 'bar', 'foo', -1.0],
         [3, -1, 'foo', 'foo', -1.0],
@@ -379,11 +379,11 @@ def test_ordinal_encode_categories_when_something_goes_wrong():
         {'name': 'E', 'role': 'categorical'},
     ]
 
-    ctx = _create_context(training, schema)
+    ctx = _create_context(features, schema)
     autom8.encode_categories(ctx, method='ordinal', only_strings=False)
     encoder = ctx.steps[0].args[0]
 
-    matrix = autom8.create_matrix({'rows': training, 'schema': schema})
+    matrix = autom8.create_matrix({'rows': features, 'schema': schema})
     acc = autom8.Accumulator()
     pip = PipelineContext(matrix, receiver=acc)
 
@@ -411,7 +411,7 @@ def test_ordinal_encode_categories_when_something_goes_wrong():
 def test_one_hot_encode_categories_when_something_goes_wrong():
     import autom8.categories
 
-    training = [
+    features = [
         [1, 10, 'foo', 'bar', -1.0],
         [2, 20, 'bar', 'foo', -1.0],
         [3, -1, 'foo', 'foo', -1.0],
@@ -424,8 +424,8 @@ def test_one_hot_encode_categories_when_something_goes_wrong():
         {'name': 'E', 'role': 'categorical'},
     ]
 
-    matrix = autom8.create_matrix({'rows': training, 'schema': schema})
-    ctx = _create_context(training, schema)
+    matrix = autom8.create_matrix({'rows': features, 'schema': schema})
+    ctx = _create_context(features, schema)
 
     autom8.encode_categories(ctx, method='one-hot', only_strings=False)
     encoder = ctx.steps[0].args[0]
@@ -461,7 +461,7 @@ def test_one_hot_encode_categories_when_something_goes_wrong():
 
 
 def test_encode_text():
-    training = [
+    features = [
         ['foo and bar or baz', 'foo'],
         ['bar or foo and baz', 'bar'],
         ['baz or bar and foo', 'baz'],
@@ -473,7 +473,7 @@ def test_encode_text():
         {'name': 'B', 'role': 'textual'},
     ]
 
-    ctx = _create_context(training, schema)
+    ctx = _create_context(features, schema)
     autom8.encode_text(ctx)
 
     assert len(ctx.steps) == 1
@@ -482,7 +482,7 @@ def test_encode_text():
     assert all(i.role == 'encoded' for i in ctx.matrix.columns)
 
     # First, try playing it back on the original data.
-    assert _playback(ctx, schema, training) == ctx.matrix.tolist()
+    assert _playback(ctx, schema, features) == ctx.matrix.tolist()
 
     def assert_expected_shape(matrix):
         assert matrix[0] == ctx.matrix.tolist()[0]
@@ -548,14 +548,14 @@ def test_encode_text():
 
 
 def test_logarithm_columns():
-    training = [[1, 2], [3, 4]]
+    features = [[1, 2], [3, 4]]
     schema = [
         {'name': 'A', 'role': 'numerical'},
         {'name': 'B', 'role': 'numerical'},
     ]
     new_headers = ['A', 'B', 'LOG A', 'LOG B']
 
-    ctx = _create_context(training, schema)
+    ctx = _create_context(features, schema)
     autom8.logarithm_columns(ctx)
 
     assert ctx.matrix.tolist() == [
@@ -565,7 +565,7 @@ def test_logarithm_columns():
     ]
 
     # Try playing it back on the original data.
-    assert _playback(ctx, schema, training) == ctx.matrix.tolist()
+    assert _playback(ctx, schema, features) == ctx.matrix.tolist()
 
     # Try playing it back on some new data.
     m2 = _playback(ctx, schema, [[5, 6], [7, 8]])
@@ -585,7 +585,7 @@ def test_logarithm_columns():
 
 
 def test_multiply_colums():
-    training = [
+    features = [
         [3, 10, 'foo', 'bar', True, 5.0],
         [2, 20, 'bar', 'foo', False, 6.0],
         [1, 30, 'foo', 'foo', True, 7.0],
@@ -602,7 +602,7 @@ def test_multiply_colums():
         'A', 'B', 'C', 'D', 'E', 'F', 'A TIMES B', 'A TIMES F', 'B TIMES F',
     ]
 
-    ctx = _create_context(training, schema)
+    ctx = _create_context(features, schema)
     autom8.multiply_columns(ctx)
 
     assert len(ctx.steps) == 1
@@ -614,7 +614,7 @@ def test_multiply_colums():
     ]
 
     # Try playing it back on the original data.
-    assert _playback(ctx, schema, training) == ctx.matrix.tolist()
+    assert _playback(ctx, schema, features) == ctx.matrix.tolist()
 
     # Try playing it back on some new data.
     m2 = _playback(ctx, schema, [
@@ -644,14 +644,14 @@ def test_multiply_colums():
 
 
 def test_scale_columns():
-    training = [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12]]
+    features = [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12]]
     schema = [
         {'name': 'A', 'role': 'numerical'},
         {'name': 'B', 'role': 'numerical'},
     ]
     new_headers = ['SCALED (A)', 'SCALED (B)']
 
-    ctx = _create_context(training, schema)
+    ctx = _create_context(features, schema)
     autom8.scale_columns(ctx)
 
     assert len(ctx.steps) == 1
@@ -666,14 +666,14 @@ def test_scale_columns():
     ]
 
     # Try playing it back on the original data.
-    assert _playback(ctx, schema, training) == ctx.matrix.tolist()
+    assert _playback(ctx, schema, features) == ctx.matrix.tolist()
 
     m2 = _playback(ctx, schema, [[-100, 200], [100, 200]])
     assert m2[0] == new_headers
 
 
 def test_square_columns():
-    training = [
+    features = [
         [1, 2, 'x', -1, 3],
         [4, 5, 'y', -2, 6],
         [7, 8, 'z', -3, 9],
@@ -689,7 +689,7 @@ def test_square_columns():
         'A', 'B', 'C', 'D', 'E', 'A SQUARED', 'B SQUARED', 'E SQUARED',
     ]
 
-    ctx = _create_context(training, schema)
+    ctx = _create_context(features, schema)
     autom8.square_columns(ctx)
 
     assert len(ctx.steps) == 1
@@ -701,18 +701,18 @@ def test_square_columns():
     ]
 
     # Try playing it back on the original data.
-    assert _playback(ctx, schema, training) == ctx.matrix.tolist()
+    assert _playback(ctx, schema, features) == ctx.matrix.tolist()
 
 
 def test_sqrt_columns():
-    training = [[1, 2], [3, 4]]
+    features = [[1, 2], [3, 4]]
     schema = [
         {'name': 'A', 'role': 'numerical'},
         {'name': 'B', 'role': 'numerical'},
     ]
     new_headers = ['A', 'B', 'SQRT A', 'SQRT B']
 
-    ctx = _create_context(training, schema)
+    ctx = _create_context(features, schema)
     autom8.sqrt_columns(ctx)
 
     assert ctx.matrix.tolist() == [
@@ -722,7 +722,7 @@ def test_sqrt_columns():
     ]
 
     # Try playing it back on the original data.
-    assert _playback(ctx, schema, training) == ctx.matrix.tolist()
+    assert _playback(ctx, schema, features) == ctx.matrix.tolist()
 
     # Try playing it back on some new data.
     m2 = _playback(ctx, schema, [[5, 6], [7, 8]])
@@ -741,17 +741,17 @@ def test_sqrt_columns():
     ]
 
 
-def _create_context(training, schema):
-    # Add a column of labels. It's required by create_training_context.
-    training = [row + [0] for row in training]
+def _create_context(features, schema):
+    # Add a column of labels. It's required by create_context.
+    features = [row + [0] for row in features]
     schema = schema + [{'name': 'Target', 'role': 'numerical'}]
-    return autom8.create_training_context({'rows': training, 'schema': schema})
+    return autom8.create_context({'rows': features, 'schema': schema})
 
 
-def _playback(training_context, schema, rows, receiver=None):
+def _playback(fit_context, schema, rows, receiver=None):
     if receiver is None:
         receiver = autom8.Accumulator()
     matrix = autom8.create_matrix({'rows': rows, 'schema': schema})
     ctx = PipelineContext(matrix, receiver=receiver)
-    playback(training_context.steps, ctx)
+    playback(fit_context.steps, ctx)
     return ctx.matrix.tolist()

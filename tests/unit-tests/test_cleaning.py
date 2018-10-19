@@ -22,7 +22,7 @@ def test_matrix_with_unexpected_value():
     ]
     acc = autom8.Accumulator()
     matrix = autom8.create_matrix(_add_labels(dataset), receiver=acc)
-    ctx = autom8.create_training_context(matrix, receiver=acc)
+    ctx = autom8.create_context(matrix, receiver=acc)
 
     autom8.clean_dataset(ctx)
     assert len(acc.warnings) == 1
@@ -50,7 +50,7 @@ def test_primitives_with_object_dtype():
     for col in matrix.columns:
         col.values = col.values.astype(object)
 
-    ctx = autom8.create_training_context(matrix, receiver=acc)
+    ctx = autom8.create_context(matrix, receiver=acc)
     autom8.clean_dataset(ctx)
 
     dtypes = [c.dtype for c in ctx.matrix.columns]
@@ -92,7 +92,7 @@ def test_column_with_all_none():
 
     acc = autom8.Accumulator()
     matrix = autom8.create_matrix(_add_labels(dataset), receiver=acc)
-    ctx = autom8.create_training_context(matrix, receiver=acc)
+    ctx = autom8.create_context(matrix, receiver=acc)
 
     autom8.clean_dataset(ctx)
     assert len(acc.warnings) == 1
@@ -116,7 +116,7 @@ def test_columns_with_numbers_as_strings():
 
     acc = autom8.Accumulator()
     matrix = autom8.create_matrix(_add_labels(dataset), receiver=acc)
-    ctx = autom8.create_training_context(matrix, receiver=acc)
+    ctx = autom8.create_context(matrix, receiver=acc)
 
     autom8.clean_dataset(ctx)
     assert len(acc.warnings) == 0
@@ -145,7 +145,7 @@ def test_column_of_all_strings():
 
     acc = autom8.Accumulator()
     matrix = autom8.create_matrix(_add_labels(dataset), receiver=acc)
-    ctx = autom8.create_training_context(matrix, receiver=acc)
+    ctx = autom8.create_context(matrix, receiver=acc)
 
     autom8.clean_dataset(ctx)
     assert len(acc.warnings) == 0
@@ -163,7 +163,7 @@ def test_column_of_all_strings_and_none_values():
 
     acc = autom8.Accumulator()
     matrix = autom8.create_matrix(_add_labels(dataset), receiver=acc)
-    ctx = autom8.create_training_context(matrix, receiver=acc)
+    ctx = autom8.create_context(matrix, receiver=acc)
 
     autom8.clean_dataset(ctx)
     assert len(acc.warnings) == 0
@@ -187,7 +187,7 @@ def test_column_of_ints_and_floats():
 
     acc = autom8.Accumulator()
     matrix = autom8.create_matrix(_add_labels(dataset), receiver=acc)
-    ctx = autom8.create_training_context(matrix, receiver=acc)
+    ctx = autom8.create_context(matrix, receiver=acc)
 
     autom8.clean_dataset(ctx)
 
@@ -227,7 +227,7 @@ def test_columns_with_some_empty_strings():
 
     acc = autom8.Accumulator()
     matrix = autom8.create_matrix(_add_labels(dataset), receiver=acc)
-    ctx = autom8.create_training_context(matrix, receiver=acc)
+    ctx = autom8.create_context(matrix, receiver=acc)
 
     autom8.clean_dataset(ctx)
 
@@ -268,7 +268,7 @@ def test_mixed_up_columns_with_strings_and_numbers():
 
     acc = autom8.Accumulator()
     matrix = autom8.create_matrix(_add_labels(dataset), receiver=acc)
-    ctx = autom8.create_training_context(matrix, receiver=acc)
+    ctx = autom8.create_context(matrix, receiver=acc)
 
     autom8.clean_dataset(ctx)
 
