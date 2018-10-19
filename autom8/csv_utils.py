@@ -13,6 +13,7 @@ def load_csv(path):
 def decode_csv(payload):
     if isinstance(payload, bytes):
         payload = payload.decode(chardet.detect(payload)['encoding'])
+
     # SHOULD: Make this work for quoted values with newlines in the first row.
     dialect = csv.Sniffer().sniff(payload.split('\n')[0])
     reader = csv.reader(StringIO(payload), dialect)

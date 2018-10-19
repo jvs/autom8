@@ -28,7 +28,7 @@ class Pipeline:
 
         # TODO: Swizzle the input vectors to match the pipeline's schema.
         if isinstance(features, list):
-            features = create_matrix(features, receiver)
+            features = create_matrix(features, receiver=receiver)
 
         ctx = PipelineContext(features, receiver)
         playback(self.steps, ctx)

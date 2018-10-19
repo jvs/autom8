@@ -17,6 +17,8 @@ from .receiver import Receiver
 
 def create_context(
     dataset,
+    column_names=None,
+    column_roles=None,
     target_column=None,
     problem_type=None,
     test_ratio=None,
@@ -28,7 +30,12 @@ def create_context(
     if receiver is None:
         receiver = Receiver()
 
-    matrix = create_matrix(dataset, receiver)
+    matrix = create_matrix(
+        dataset=dataset,
+        column_names=column_names,
+        column_roles=column_roles,
+        receiver=receiver,
+    )
     num_cols = len(matrix.columns)
 
     if num_cols == 0:

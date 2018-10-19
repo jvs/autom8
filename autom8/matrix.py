@@ -6,20 +6,56 @@ from .parsing import parse_number
 from .receiver import Receiver
 
 
-def create_matrix(data, receiver=None, infer_names=True):
+def create_matrix(dataset, column_names=None, column_roles=None, receiver=None):
     if receiver is None:
         receiver = Receiver()
 
-    if not isinstance(data, (dict, list, tuple, np.ndarray, Matrix)):
-        raise expected('dict, list, tuple, numpy array, or Matrix', typename(data))
+    matrix = _create_matrix(dataset, column_names, column_roles, receiver)
 
-    if isinstance(data, Matrix):
-        return data
+    # Warn the user if the column names are not unique.
+    names = [col.name for col in matrix.columns]
+    if len(names) != len(set(names)):
+        receiver.warn(f'Column names are not unique in {repr(names)}')
 
-    if isinstance(data, dict):
-        return _create_matrix_from_dict(data, receiver)
-    else:
-        return _create_matrix_from_iterable(data, receiver, infer_names)
+    return matrix
+
+
+def _create_matrix(dataset, names, roles, receiver):
+    if not isinstance(dataset, (list, tuple, np.ndarray, Matrix)):
+        raise expected('list, tuple, numpy array, or Matrix', typename(dataset))
+
+    if isinstance(dataset, Matrix):
+        return _copy_and_update_matrix(dataset, names, roles)
+
+    # Drop empty rows.
+    rows = _drop_empty_rows(dataset)
+    num_dropped = len(dataset) - len(rows)
+
+    # Warn the users if we dropped some rows.
+    if num_dropped:
+        suffix = '' if num_dropped == 1 else 's'
+        receiver.warn(f'Dropped {num_dropped} empty row{suffix} from dataset.')
+
+    # Figure out how many columns we need.
+    mincols = min(len(row) for row in rows) if rows else 0
+    maxcols = max(len(row) for row in rows) if rows else 0
+
+    # Warn the user if we're dropping any extra columns.
+    if mincols < maxcols:
+        num_extra = maxcols - mincols
+        suffix1 = '' if num_extra == 1 else 's'
+        suffix2 = '' if mincols == 1 else 's'
+        receiver.warn(
+            f'Dropped {num_extra} extra column{suffix1} from dataset.'
+            f' Keeping first {mincols} column{suffix2}.'
+            ' To avoid this behavior, ensure that each row in the dataset has'
+            ' the same number of columns.'
+        )
+
+    matrix = Matrix([_make_column(rows, i) for i in range(mincols)])
+    _name_columns(matrix, names)
+    _update_roles(matrix, roles)
+    return matrix
 
 
 class Matrix:
@@ -153,7 +189,7 @@ class Column:
         valid_roles = {None, 'categorical', 'encoded', 'numerical', 'textual'}
 
         if role not in valid_roles:
-            raise expected(f'role in {valid_roles}', role)
+            raise expected(f'role in {valid_roles}', repr(role))
 
         self._role = role
 
@@ -182,95 +218,16 @@ class Column:
         return self.copy_with(np.delete(self.values, indices))
 
 
-def _create_matrix_from_dict(data, receiver):
-    assert isinstance(data, dict)
+def _copy_and_update_matrix(matrix, names, roles):
+    matrix = matrix.copy()
 
-    if 'rows' not in data:
-        raise expected('dict with "rows" element', list(data.keys()))
+    if names is not None:
+        _name_columns(matrix, names)
 
-    has_schema = 'schema' in data
-    matrix = create_matrix(data['rows'], receiver, infer_names=not has_schema)
-
-    if not has_schema:
-        return matrix
-
-    schema = data['schema']
-
-    if not isinstance(schema, (list, tuple)):
-        raise expected('"schema" to be a list of dict objects.', type(schema))
-
-    if not all(isinstance(i, dict) for i in schema):
-        raise expected('"schema" to be a list of dict objects.', type(schema[0]))
-
-    if not all('name' in i and 'role' in i for i in schema):
-        raise expected('schema items to contain "name" and "role" entries.', schema[0])
-
-    num_cols = len(matrix.columns)
-    if num_cols != len(schema):
-        raise expected(f'schema to have one item for each column ({num_cols})',
-            len(schema))
-
-    for col, details in zip(matrix.columns, schema):
-        col.name = _merge_names(col.name, details['name'], receiver)
-        col.role = details['role']
-
-        if 'dtype' in details:
-            _coerce_values(col, details['dtype'], receiver)
+    if roles is not None:
+        _update_roles(matrix, roles)
 
     return matrix
-
-
-def _merge_names(inferred, provided, receiver):
-    n1, n2 = inferred.strip(), provided.strip()
-    is_anonymous = re.match(r'Column-\d+', n1)
-
-    if not is_anonymous and n1.lower() != n2.lower():
-        receiver.warn('Found column with two names:'
-            f' {repr(inferred)} and {repr(provided)}.')
-
-    return provided.strip()
-
-
-def _create_matrix_from_iterable(data, receiver, infer_names=False):
-    if len(data) > 0 and isinstance(data[0], Column):
-        # In this case, require each element to be a Column object.
-        if not all(isinstance(i, Column) for i in data):
-            raise expected('list of Column objects', [typename(i) for i in data])
-
-        # Make a copy of the columns and return the matrix.
-        return Matrix([i.copy() for i in data])
-
-    # Drop empty rows.
-    rows = _drop_empty_rows(data)
-    num_dropped = len(data) - len(rows)
-
-    # Warn the users if we dropped some rows.
-    if num_dropped:
-        suffix = '' if num_dropped == 1 else 's'
-        receiver.warn(f'Dropped {num_dropped} empty row{suffix} from dataset.')
-
-    # If we don't have any rows, then just return an empty matrix.
-    if not rows:
-        return Matrix([])
-
-    # Figure out how many columns we need.
-    mincols = min(len(row) for row in rows)
-    maxcols = max(len(row) for row in rows)
-
-    # Warn the users if we're dropping any extra columns.
-    if mincols < maxcols:
-        num_extra = maxcols - mincols
-        suffix1 = '' if num_extra == 1 else 's'
-        suffix2 = '' if mincols == 1 else 's'
-        receiver.warn(
-            f'Dropped {num_extra} extra column{suffix1} from dataset.'
-            f' Keeping first {mincols} column{suffix2}.'
-            ' To avoid this behavior, ensure that each row in the dataset has'
-            ' the same number of columns.'
-        )
-
-    anon = Matrix([_make_column(rows, i) for i in range(mincols)])
-    return _infer_column_names(anon) if infer_names else anon
 
 
 def _drop_empty_rows(rows):
@@ -291,34 +248,132 @@ def _make_column(rows, index):
     return Column(values=values, name=name, role=None, is_original=True)
 
 
-def _infer_column_names(matrix):
-    # If the matrix is empty, then just stop here.
+def _name_columns(matrix, names):
+    # If the column names are included in the dataset, then remove the first
+    # value from each column and use that at its name.
+    if isinstance(names, str) and names == 'included':
+        _extract_column_names(matrix)
+        return
+
+    # If the column names are missing from the dataset, then assign a new,
+    # unique name to each column.
+    if isinstance(names, str) and names == 'missing':
+        _generate_column_names(matrix)
+        return
+
+    # If the column names are provided separately, then assign a name to each
+    # column. Raise an exception if we don't have the right number of names.
+    if isinstance(names, (list, tuple)):
+        _update_column_names(matrix, names)
+        return
+
+    # Make sure that names is either 'unknown' or None.
+    if names not in {'unknown', None}:
+        valid_codes = {'included', 'missing', 'unknown', None}
+        raise expected(
+            f'column names to be a list of strings, or one of {valid_codes}',
+            repr(names)
+        )
+
+    # Figure out whether the column names are included or missing, and then recur.
+    are_included = _includes_column_names(matrix)
+    _name_columns(matrix, 'included' if are_included else 'missing')
+
+
+def _includes_column_names(matrix):
+    # If the matrix is empty, then the column names must be missing.
     if len(matrix) == 0:
-        return matrix
+        return False
 
-    # Get the first value from each column.
-    row = [col.values[0] for col in matrix.columns]
+    # If the first row contains all strings, then assume those are the
+    # column names.
+    if all(isinstance(col.values[0], str) for col in matrix.columns):
+        return True
 
-    # If the first row is not all text, then stop.
-    all_text = all(isinstance(i, str) for i in row)
-    if not all_text:
-        return matrix
+    # If any column looks like it starts with a name, then assume that this
+    # matrix must include the column names.
+    for col in matrix.columns:
+        vals = col.values
+        has_name = isinstance(vals[0], str)
+        has_rest = len(vals) > 1
+        has_nums = any(i is not None and not isinstance(i, str) for i in vals[1:])
+        no_strs = all(not isinstance(i, str) or i == '' for i in vals[1:])
+        if has_name and has_rest and has_nums and no_strs:
+            return True
 
-    # The first row contains the column names.
-    columns = []
-    for col, name in zip(matrix.columns, row):
+    # Well, it doesn't look like this matrix contains the column names.
+    return False
+
+
+def _extract_column_names(matrix):
+    if len(matrix) == 0:
+        raise expected('nonempty dataset', 'empty dataset')
+
+    for col in matrix.columns:
+        # Use the first value, even if it's not a string.
+        col.name = str(col.values[0])
+
         # Let numpy infer a (potentially) new dtype.
-        values = create_array(col.values[1:].tolist())
-        columns.append(Column(values, name, col.role, col.is_original))
-
-    return Matrix(columns)
+        col.values = create_array(col.values[1:].tolist())
 
 
-def _coerce_values(col, dtype, receiver):
-    try:
-        new_values = col.values.astype(dtype)
-    except Exception:
-        receiver.warn(f'Failed to convert column {repr(col.name)} to type {dtype}')
+def _generate_column_names(matrix):
+    for i, col in enumerate(matrix.columns):
+        col.name = f'Column-{i + 1}'
+
+
+def _update_column_names(matrix, names):
+    assert isinstance(names, (list, tuple))
+
+    if len(matrix.columns) != len(names):
+        raise expected(f'{len(matrix.columns)} column names', len(names))
+
+    if not all(isinstance(i, str) for i in names):
+        raise expected('column names to be a list of strings', repr(names))
+
+    for col, name in zip(matrix.columns, names):
+        col.name = name
+
+
+def _update_roles(matrix, roles):
+    if roles is None:
+        return
+
+    if isinstance(roles, (list, tuple)):
+        _assign_roles(matrix, roles)
+        return
+
+    if not isinstance(roles, dict):
+        raise expected('column roles to be a list or a dict', repr(roles))
+
+    colmap = {col.name: col for col in matrix.columns}
+
+    def lookup(key):
+        if isinstance(key, str) and key not in colmap:
+            names = [col.name for col in matrix.columns]
+            raise expected(f'column to be one of {names}', repr(key))
+
+        if isinstance(key, str):
+            return colmap[key]
+
+        try:
+            return matrix.columns[key]
+        except Exception:
+            pass
+
+        raise expected('valid column key', repr(key))
+
+    for key, role in roles.items():
+        col = lookup(key)
+        col.role = role
+
+
+def _assign_roles(matrix, roles):
+    if len(matrix.columns) != len(roles):
+        raise expected(f'{len(matrix.columns)} column roles', len(roles))
+
+    for col, role in zip(matrix.columns, roles):
+        col.role = role
 
 
 def create_array(values):
