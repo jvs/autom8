@@ -109,17 +109,6 @@ class TrainingContext:
         self.steps = list(steps) if steps else []
         self.pool = None
 
-    def copy(self):
-        return TrainingContext(
-            matrix=self.matrix,
-            labels=self.labels,
-            test_indices=self.test_indices,
-            problem_type=self.problem_type,
-            multicore=self.multicore,
-            receiver=self.receiver,
-            steps=self.steps,
-        )
-
     @property
     def is_training(self):
         return True
@@ -201,8 +190,9 @@ class TrainingContext:
             self.receiver.warn(
                 'Potential race condition: The TrainingContext was updated'
                 ' within a `parallel` context. To avoid any race conditions,'
-                ' create a copy of the TrainingContext before applying any'
-                ' preprocessing functions to it.'
+                ' use the `sandbox` method to create a temporary copy of the'
+                ' TrainingContext. Then apply your preprocessing functions'
+                ' to the sandboxed copy.'
             )
 
 

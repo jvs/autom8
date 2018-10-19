@@ -213,7 +213,6 @@ def test_ordinal_encode_categories():
     ]
 
     ctx = _create_context(training, schema)
-    restore_ctx = ctx.copy()
     autom8.encode_categories(ctx, method='ordinal', only_strings=False)
 
     assert len(ctx.steps) == 1
@@ -268,7 +267,7 @@ def test_ordinal_encode_categories():
 
     # Now try just encoding the string columns.
     new_headers = ['A', 'B', 'E', 'F', 'ENCODED C', 'ENCODED D']
-    ctx = restore_ctx.copy()
+    ctx = _create_context(training, schema)
     autom8.encode_categories(ctx, method='ordinal', only_strings=True)
 
     # Once again, try playing it back on the original data.
@@ -303,7 +302,6 @@ def test_one_hot_encode_categories():
     ]
 
     ctx = _create_context(training, schema)
-    restore_ctx = ctx.copy()
     autom8.encode_categories(ctx, method='one-hot', only_strings=False)
 
     new_headers = [

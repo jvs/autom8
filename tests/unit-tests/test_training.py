@@ -74,15 +74,6 @@ def test_invalid_training_contexts():
     excinfo.match('Expected.*test_ratio')
 
 
-def test_copy_method():
-    # TODO: Make sure that the copied context actually works.
-    c1 = autom8.create_training_context([[1, 2]])
-    c2 = c1.copy()
-    assert c1 is not c2
-    assert c1.matrix is not c2.matrix
-    assert c1.steps is not c2.steps
-
-
 def test_training_and_testing_data():
     dataset = autom8.create_matrix([
         [1, 5, True, 9, 10],
