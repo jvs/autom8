@@ -7,6 +7,7 @@ from .evaluate import evaluate_pipeline
 from .exceptions import Autom8Exception, Autom8Warning
 from .fit import fit
 from .inference import infer_roles
+from .literalize import literalize
 from .matrix import create_matrix, Matrix
 
 from .preprocessors import (
