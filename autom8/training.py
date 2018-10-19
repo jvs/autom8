@@ -20,6 +20,7 @@ def create_training_context(
     target_column=None,
     problem_type=None,
     test_ratio=None,
+    multicore=True,
     receiver=None,
 ):
     # Create a default receiver if the user didn't provide one.
@@ -88,18 +89,22 @@ def create_training_context(
 
     count = len(matrix)
     test_indices = sorted(random.sample(range(count), int(count * test_ratio) or 1))
-    return TrainingContext(matrix, labels, test_indices, problem_type, receiver)
+
+    return TrainingContext(
+        matrix, labels, test_indices, problem_type, multicore, receiver,
+    )
 
 
 class TrainingContext:
     def __init__(
-            self, matrix, labels, test_indices,
-            problem_type, receiver, steps=None
+            self, matrix, labels, test_indices, problem_type,
+            multicore, receiver, steps=None,
         ):
         self.matrix = matrix.copy()
         self.labels = labels
         self.test_indices = test_indices
         self.problem_type = problem_type
+        self.multicore = multicore
         self.receiver = receiver
         self.steps = list(steps) if steps else []
         self.pool = None
@@ -110,6 +115,7 @@ class TrainingContext:
             labels=self.labels,
             test_indices=self.test_indices,
             problem_type=self.problem_type,
+            multicore=self.multicore,
             receiver=self.receiver,
             steps=self.steps,
         )

@@ -21,16 +21,6 @@ from . import preprocessors as then
 
 
 def search(ctx):
-    ctx.receiver.on_begin_search(ctx)
-    try:
-        _search(ctx)
-    except Exception as exc:
-        ctx.receiver.on_fail_search(ctx, exc)
-    else:
-        ctx.receiver.on_end_search(ctx)
-
-
-def _search(ctx):
     clean_dataset(ctx)
     infer_roles(ctx)
     then.coerce_columns(ctx)
@@ -160,4 +150,4 @@ def is_big(ctx):
 
 
 def n_jobs(ctx):
-    return -1 if ctx.receiver.allow_multicore() else 1
+    return -1 if ctx.multicore else 1
