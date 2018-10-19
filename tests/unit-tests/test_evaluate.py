@@ -36,5 +36,5 @@ def test_evaluate_pipeline():
     result = pipeline.run([[17, 18], [19, 20], [21, 22]], receiver=acc)
 
     assert np.allclose(result.predictions, np.array([17+18, 19+20, 21+22]))
-    assert not hasattr(result, 'probabilities')
+    assert result.probabilities is None
     assert not acc.warnings

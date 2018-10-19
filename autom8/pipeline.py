@@ -8,9 +8,7 @@ from .preprocessors import playback
 from .receiver import Receiver
 
 
-PredictionReport = namedtuple('PredictionReport', 'predictions')
-ProbabilityReport = namedtuple('ProbabilityReport',
-    'predictions, probabilities, classes')
+PredictionReport = namedtuple('PredictionReport', 'predictions, probabilities')
 
 
 class Pipeline:
@@ -40,23 +38,26 @@ class Pipeline:
         if X.dtype != float:
             X = X.astype(float)
 
-        encoder = self.label_encoder
+        has_proba = hasattr(self.estimator, 'predict_proba')
+        probabilities = [] if has_proba else None
+        predictions = []
 
-        if hasattr(self.estimator, 'predict_proba'):
-            classes = [] if encoder is None else encoder.classes_
-            report = ProbabilityReport([], [], classes)
-        else:
-            report = PredictionReport([])
+        # TODO: Calculate an appropriate stride.
+        stride = 1000
+        for i in range(0, len(X), stride):
+            window = scipy.sparse.csr_matrix(X[i : i + stride])
 
-        # TODO: Calculate an appropriate window size.
-        for i in range(0, len(X), 1000):
-            self._predict_window(report, X[i : i + 1000])
+            if has_proba:
+                y = self.estimator.predict_proba(window)
+                predictions.extend(np.argmax(p) for p in y)
+                probabilities.extend(self._format_probabilities(p) for p in y)
+            else:
+                predictions.extend(self.estimator.predict(window))
 
-        if encoder is not None:
-            decoded = encoder.inverse_transform(report.predictions)
-            return report._replace(predictions=decoded)
-        else:
-            return report
+        if self.label_encoder is not None:
+            predictions = self.label_encoder.inverse_transform(predictions)
+
+        return PredictionReport(predictions, probabilities)
 
     def _predict_window(self, report, X):
         X = scipy.sparse.csr_matrix(X)
@@ -67,6 +68,14 @@ class Pipeline:
             report.probabilities.extend(p for p in y)
         else:
             report.predictions.extend(self.estimator.predict(X))
+
+    def _format_probabilities(self, probs):
+        decode = lambda i: self.label_encoder.inverse_transform([i])[0]
+        pairs = [(s, decode(i)) for i, s in enumerate(probs) if s > 0]
+        top3 = sorted(pairs, reverse=True)[:3]
+
+        # Return the top three pairs.
+        return [(label, score) for score, label in top3]
 
 
 class PipelineContext:

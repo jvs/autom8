@@ -3,9 +3,9 @@ import sklearn.metrics
 
 
 Evaluation = namedtuple('Evaluation', 'general, train, test')
-PredictionSection = namedtuple('PredictionSection', 'predictions, metrics')
-ProbabilitySection = namedtuple('ProbabilitySection',
-    'predictions, probabilities, classes, metrics')
+
+PredictionSection = namedtuple('PredictionSection',
+    'predictions, probabilities, metrics')
 
 
 def evaluate_pipeline(ctx, pipeline):
@@ -36,12 +36,7 @@ def _evaluate(ctx, pipeline, X, y):
         predicted = pipeline.label_encoder.transform(outputs.predictions)
         metrics = _evaluate_classifier(ctx, y, predicted)
 
-    if hasattr(outputs, 'probabilities'):
-        return ProbabilitySection(
-            outputs.predictions, outputs.probabilities, outputs.classes, metrics
-        )
-    else:
-        return PredictionSection(outputs.predictions, metrics)
+    return PredictionSection(outputs.predictions, outputs.probabilities, metrics)
 
 
 def _evaluate_regressor(ctx, actual, predicted):
