@@ -48,9 +48,9 @@ def search(ctx):
         if has_room(): then.square_columns(ctx)
         if has_room(): then.divide_columns(ctx)
         if has_room(): then.binarize_signs(ctx)
-        if has_room(): then.binarize_fractions(ctx)
         if has_room(): then.logarithm_columns(ctx)
         if has_room(): then.sqrt_columns(ctx)
+        if has_room(): then.binarize_fractions(ctx)
 
         then_finish_up_preprocessing(ctx)
         then_fit_estimators(ctx, boosted_trees=False, classical=True)
