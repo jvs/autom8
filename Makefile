@@ -42,10 +42,6 @@ wine-test: clean virtualenv
 
 
 clean:
-	rm -rf \
-		./autom8/__pycache__/*.pyc \
-		./tests/blackbox-tests/__pycache__/*.pyc \
-		./tests/unit-tests/__pycache__/*.pyc
-
+	rm -rf ./autom8/__pycache__/*.pyc ./tests/*/__pycache__/*.pyc
 
 .PHONY: blackbox-tests boston-test clean coverage repl test unit-tests virtualenv
