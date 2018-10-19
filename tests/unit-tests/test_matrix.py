@@ -14,53 +14,11 @@ def test_invalid_arguments():
 
     with pytest.raises(autom8.Autom8Exception) as excinfo:
         autom8.create_matrix({})
-    excinfo.match('Expected.*rows')
-
-    with pytest.raises(autom8.Autom8Exception) as excinfo:
-        autom8.create_matrix({'schema': []})
-    excinfo.match('Expected.*rows')
-
-    with pytest.raises(autom8.Autom8Exception) as excinfo:
-        autom8.create_matrix({'metadata': None})
-    excinfo.match('Expected.*rows')
-
-    with pytest.raises(autom8.Autom8Exception) as excinfo:
-        autom8.create_matrix({'rows': [[1]], 'schema': ['']})
-    excinfo.match('Expected.*schema.*dict')
-
-    with pytest.raises(autom8.Autom8Exception) as excinfo:
-        autom8.create_matrix({'rows': [[1]], 'schema': [{}]})
-    excinfo.match('Expected.*schema.*name')
-
-    with pytest.raises(autom8.Autom8Exception) as excinfo:
-        autom8.create_matrix({'rows': [[1]], 'schema': [{}]})
-    excinfo.match('Expected.*schema.*role')
-
-    with pytest.raises(autom8.Autom8Exception) as excinfo:
-        autom8.create_matrix({'rows': [[1]], 'schema': [{'role': None}]})
-    excinfo.match('Expected.*schema.*name')
-
-    with pytest.raises(autom8.Autom8Exception) as excinfo:
-        autom8.create_matrix({'rows': [[1]], 'schema': [{'name': 'count'}]})
-    excinfo.match('Expected.*schema.*role')
-
-    with pytest.raises(autom8.Autom8Exception) as excinfo:
-        autom8.create_matrix({
-            'rows': 'hi',
-            'schema': [{'name': 'msg', 'role': 'textual'}],
-        })
     excinfo.match('Expected.*list')
-
-    with pytest.raises(autom8.Autom8Exception) as excinfo:
-        autom8.create_matrix({
-            'rows': [[-1]],
-            'schema': [{'name': 'count', 'role': 'int'}],
-        })
-    excinfo.match('Expected.*role in')
 
 
 def test_empty_datasets():
-    for data in [[], (), {'rows': [], 'schema': []}, np.array([])]:
+    for data in [[], (), np.array([]), autom8.Matrix([])]:
         acc = autom8.Accumulator()
         matrix = autom8.create_matrix(data, receiver=acc)
         assert len(matrix.columns) == 0
@@ -115,13 +73,9 @@ def test_extra_columns_warning_message():
 def test_creating_simple_matrix_with_schema():
     acc = autom8.Accumulator()
     matrix = autom8.create_matrix(
-        {
-            'rows': [['hi', True], ['bye', False]],
-            'schema': [
-                {'name': 'msg', 'role': 'textual'},
-                {'name': 'flag', 'role': 'encoded'},
-            ],
-        },
+        dataset=[['hi', True], ['bye', False]],
+        column_names=['msg', 'flag'],
+        column_roles=['textual', 'encoded'],
         receiver=acc,
     )
 
@@ -228,23 +182,25 @@ def test_copy_method():
 
 
 def test_schema_property():
-    schema = [
+    matrix = autom8.create_matrix(
+        dataset=[[1, 2, 3]],
+        column_names=['A', 'B', 'C'],
+        column_roles=['textual', 'encoded', None],
+    )
+    assert matrix.schema == [
         {'name': 'A', 'role': 'textual', 'dtype': 'int64'},
         {'name': 'B', 'role': 'encoded', 'dtype': 'int64'},
         {'name': 'C', 'role': None, 'dtype': 'int64'},
     ]
-    matrix = autom8.create_matrix({'rows': [[1, 2, 3]], 'schema': schema})
-    assert matrix.schema == schema
 
 
 def test_tolist_method():
-    m1 = autom8.create_matrix({
-        'rows': [['hi', True], ['bye', False]],
-        'schema': [
-            {'name': 'msg', 'role': 'textual'},
-            {'name': 'flag', 'role': 'encoded'},
-        ],
-    })
+    m1 = autom8.create_matrix(
+        dataset=[['hi', True], ['bye', False]],
+        column_names=['msg', 'flag'],
+        column_roles=['textual', 'encoded'],
+    )
+
     m2 = autom8.create_matrix([[1, 2.0], [3, 4.0], [5, 6.0]])
 
     assert m1.tolist() == [

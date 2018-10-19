@@ -101,23 +101,16 @@ def test_training_and_testing_data():
 
 
 def test_sandbox():
-    dataset = {
-        'rows': [
+    ctx = autom8.create_context(
+        dataset=[
             [1, 5, True, 9, 10],
             [2, 6, False, 10, 20],
             [3, 7, False, 11, 30],
             [4, 8, True, 12, 40],
         ],
-        'schema': [
-            {'name': 'A', 'role': 'numerical'},
-            {'name': 'B', 'role': 'numerical'},
-            {'name': 'C', 'role': 'encoded'},
-            {'name': 'D', 'role': 'numerical'},
-            {'name': 'E', 'role': 'numerical'},
-        ]
-    }
-
-    ctx = autom8.create_context(dataset)
+        column_names=['A', 'B', 'C', 'D', 'E'],
+        column_roles=['numerical'] * 2 + ['encoded'] + ['numerical'] * 2,
+    )
     autom8.add_column_of_ones(ctx)
 
     assert len(ctx.steps) == 1
