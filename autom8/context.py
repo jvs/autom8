@@ -110,8 +110,9 @@ def create_context(
 class FittingContext:
     def __init__(
             self, matrix, labels, test_indices, problem_type,
-            allow_multicore, executor_class, receiver, steps=None,
+            allow_multicore, executor_class, receiver,
         ):
+        self.input_columns = [col.name for col in matrix]
         self.matrix = matrix.copy()
         self.labels = labels
         self.test_indices = test_indices
@@ -119,7 +120,7 @@ class FittingContext:
         self.allow_multicore = allow_multicore
         self.executor_class = executor_class
         self.receiver = receiver
-        self.steps = list(steps) if steps else []
+        self.steps = []
         self.pool = None
 
     @property
