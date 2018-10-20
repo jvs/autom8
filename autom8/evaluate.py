@@ -2,7 +2,7 @@ from collections import namedtuple
 import sklearn.metrics
 
 
-Evaluation = namedtuple('Evaluation', 'preprocessing, estimator, train, test')
+Evaluation = namedtuple('Evaluation', 'preprocessing, train, test')
 
 PredictionSection = namedtuple('PredictionSection',
     'predictions, probabilities, metrics')
@@ -15,19 +15,9 @@ def evaluate_pipeline(ctx, pipeline):
             'output': ctx.matrix.formulas,
             'steps': [s.func.__name__ for s in pipeline.steps],
         },
-        estimator=_estimator_attributes(ctx, pipeline),
         train=_evaluate(ctx, pipeline, *ctx.training_data()),
         test=_evaluate(ctx, pipeline, *ctx.testing_data()),
     )
-
-
-def _estimator_attributes(ctx, pipeline):
-    estimator = pipeline.estimator
-    result = {'class': type(estimator).__name__}
-    for key in ['feature_importances_', 'coef_']:
-        if hasattr(estimator, key):
-            result[key] = getattr(estimator, key)
-    return result
 
 
 def _evaluate(ctx, pipeline, X, y):
