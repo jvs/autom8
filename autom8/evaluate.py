@@ -2,27 +2,31 @@ from collections import namedtuple
 import sklearn.metrics
 
 
-Evaluation = namedtuple('Evaluation', 'general, train, test')
+Evaluation = namedtuple('Evaluation', 'preprocessing, estimator, train, test')
 
 PredictionSection = namedtuple('PredictionSection',
     'predictions, probabilities, metrics')
 
 
 def evaluate_pipeline(ctx, pipeline):
-    general = _general_stats(ctx, pipeline)
-    train = _evaluate(ctx, pipeline, *ctx.training_data())
-    test = _evaluate(ctx, pipeline, *ctx.testing_data())
-    return Evaluation(general, train, test)
+    return Evaluation(
+        preprocessing = {
+            'input': ctx.initial_formulas,
+            'output': ctx.matrix.formulas,
+            'steps': [s.func.__name__ for s in pipeline.steps],
+        },
+        estimator=_estimator_attributes(ctx, pipeline),
+        train=_evaluate(ctx, pipeline, *ctx.training_data()),
+        test=_evaluate(ctx, pipeline, *ctx.testing_data()),
+    )
 
 
-def _general_stats(ctx, pipeline):
-    result = {
-        'num_steps': len(pipeline.steps),
-        'num_columns': len(ctx.matrix.columns),
-    }
-    for attr in dir(pipeline.estimator):
-        if attr.endswith('_') and not attr.endswith('__'):
-            result[attr] = getattr(pipeline.estimator, attr)
+def _estimator_attributes(ctx, pipeline):
+    estimator = pipeline.estimator
+    result = {'class': type(estimator).__name__}
+    for key in ['feature_importances_', 'coef_']:
+        if hasattr(estimator, key):
+            result[key] = getattr(estimator, key)
     return result
 
 
