@@ -200,21 +200,9 @@ def test_tolist_method():
         column_names=['msg', 'flag'],
         column_roles=['textual', 'encoded'],
     )
-
     m2 = autom8.create_matrix([[1, 2.0], [3, 4.0], [5, 6.0]])
-
-    assert m1.tolist() == [
-        ['msg', 'flag'],
-        ['hi', True],
-        ['bye', False],
-    ]
-
-    assert m2.tolist() == [
-        ['Column-1', 'Column-2'],
-        [1, 2.0],
-        [3, 4.0],
-        [5, 6.0],
-    ]
+    assert m1.tolist() == [['hi', True], ['bye', False]]
+    assert m2.tolist() == [[1, 2.0], [3, 4.0], [5, 6.0]]
 
 
 def test_to_array_method():
@@ -245,42 +233,40 @@ def test_drop_columns_by_index():
     assert len(m1.columns) == 1
     assert len(m2.columns) == 2
     assert np.array_equal(m1.columns[0].values, np.array([2, 5, 8]))
-    assert m1.tolist() == [['Column-2'], [2], [5], [8]]
-    assert m2.tolist() == [['Column-1', 'Column-4'], [1, 4], [5, 8], [9, 12]]
+    assert m1.tolist() == [[2], [5], [8]]
+    assert m2.tolist() == [[1, 4], [5, 8], [9, 12]]
 
 
 def test_select_rows():
     mat = autom8.create_matrix([[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]])
     m1 = mat.select_rows([0, 2, 4])
     m2 = mat.select_rows([1, 3])
-    head = ['Column-1', 'Column-2']
-    assert m1.tolist() == [head, [1, 2], [5, 6], [9, 10]]
-    assert m2.tolist() == [head, [3, 4], [7, 8]]
+    assert m1.tolist() == [[1, 2], [5, 6], [9, 10]]
+    assert m2.tolist() == [[3, 4], [7, 8]]
 
 
 def test_exclude_rows():
     mat = autom8.create_matrix([[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]])
     m1 = mat.exclude_rows([0, 2, 4])
     m2 = mat.exclude_rows([1, 3])
-    head = ['Column-1', 'Column-2']
-    assert m1.tolist() == [head, [3, 4], [7, 8]]
-    assert m2.tolist() == [head, [1, 2], [5, 6], [9, 10]]
+    assert m1.tolist() == [[3, 4], [7, 8]]
+    assert m2.tolist() == [[1, 2], [5, 6], [9, 10]]
 
 
 def test_select_columns():
     mat = autom8.create_matrix([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]])
     m1 = mat.select_columns([0, 2, 3])
     m2 = mat.select_columns([1])
-    assert m1.tolist()[1:] == [[1, 3, 4], [5, 7, 8], [9, 11, 12]]
-    assert m2.tolist()[1:] == [[2], [6], [10]]
+    assert m1.tolist() == [[1, 3, 4], [5, 7, 8], [9, 11, 12]]
+    assert m2.tolist() == [[2], [6], [10]]
 
 
 def test_exclude_columns():
     mat = autom8.create_matrix([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]])
     m1 = mat.exclude_columns([0, 2, 3])
     m2 = mat.exclude_columns([1])
-    assert m1.tolist()[1:] == [[2], [6], [10]]
-    assert m2.tolist()[1:] == [[1, 3, 4], [5, 7, 8], [9, 11, 12]]
+    assert m1.tolist() == [[2], [6], [10]]
+    assert m2.tolist() == [[1, 3, 4], [5, 7, 8], [9, 11, 12]]
 
 
 def test_column_indices_where():

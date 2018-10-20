@@ -52,7 +52,12 @@ def _create_matrix(dataset, names, roles, receiver):
             ' the same number of columns.'
         )
 
-    matrix = Matrix([_make_column(rows, i) for i in range(mincols)])
+    def make(index):
+        values = create_array([row[index] for row in rows])
+        formula = f'Column-{index + 1}'
+        return Column(values=values, formula=formula, role=None, is_original=True)
+
+    matrix = Matrix([make(i) for i in range(mincols)])
     _name_columns(matrix, names)
     _update_roles(matrix, roles)
     return matrix
@@ -68,24 +73,18 @@ class Matrix:
     def schema(self):
         return [col.schema for col in self.columns]
 
+    @property
+    def formulas(self):
+        return [col.formula for col in self.columns]
+
     def __len__(self):
         return len(self.columns[0]) if self.columns else 0
-
-    def __repr__(self):
-        if len(self) == 0:
-            return 'Matrix([])'
-        try:
-            return f'Matrix({repr(self.tolist())})'
-        except Exception:
-            return '<Matrix>'
 
     def copy(self):
         return Matrix([i.copy() for i in self.columns])
 
     def tolist(self):
-        result = [[c.name for c in self.columns]]
-        result.extend(self.stack_columns().tolist())
-        return result
+        return self.stack_columns().tolist()
 
     def stack_columns(self):
         return np.column_stack([col.values.astype(object) for col in self.columns])
@@ -96,14 +95,14 @@ class Matrix:
         else:
             raise expected('matrix with only one column', len(self.columns))
 
-    def append_column(self, values, name, role, is_original=False):
+    def append_column(self, values, formula, role, is_original=False):
         if not hasattr(values, 'shape'):
             raise expected('numpy array', type(values))
 
         if len(values.shape) != 1:
             raise expected('array of values', values.shape)
 
-        col = Column(values=values, name=name, role=role, is_original=is_original)
+        col = Column(values, formula=formula, role=role, is_original=is_original)
         self.columns.append(col)
 
     def drop_columns_by_index(self, indices):
@@ -154,19 +153,32 @@ class Matrix:
 
 
 class Column:
-    def __init__(self, values, name, role, is_original):
+    def __init__(self, values, formula, role, is_original):
         assert len(values.shape) == 1
-        assert isinstance(name, str)
+        assert isinstance(formula, (str, list))
         assert role is None or isinstance(role, str)
         assert isinstance(is_original, bool)
         self.values = values
-        self.name = name
+
+        if isinstance(formula, str):
+            self.formula = formula
+        else:
+            self.formula = [getattr(col, 'formula', col) for col in formula]
+
         self._role = None
         self.role = role
         self.is_original = is_original
 
     def __len__(self):
         return len(self.values)
+
+    @property
+    def name(self):
+        if isinstance(self.formula, str):
+            return self.formula
+        else:
+            # TODO: Pretty-print the formula. Maybe put "=" in front.
+            return repr(self.formula)
 
     @property
     def schema(self):
@@ -206,7 +218,7 @@ class Column:
 
         return Column(
             values=values,
-            name=self.name,
+            formula=self.formula,
             role=role,
             is_original=self.is_original,
         )
@@ -240,12 +252,6 @@ def _is_blank(obj):
         return obj == '' or obj.isspace()
     else:
         return obj is None
-
-
-def _make_column(rows, index):
-    values = create_array([row[index] for row in rows])
-    name = f'Column-{index + 1}'
-    return Column(values=values, name=name, role=None, is_original=True)
 
 
 def _name_columns(matrix, names):
@@ -311,7 +317,7 @@ def _extract_column_names(matrix):
 
     for col in matrix.columns:
         # Use the first value, even if it's not a string.
-        col.name = str(col.values[0])
+        col.formula = str(col.values[0])
 
         # Let numpy infer a (potentially) new dtype.
         col.values = create_array(col.values[1:].tolist())
@@ -319,7 +325,7 @@ def _extract_column_names(matrix):
 
 def _generate_column_names(matrix):
     for i, col in enumerate(matrix.columns):
-        col.name = f'Column-{i + 1}'
+        col.formula = f'Column-{i + 1}'
 
 
 def _update_column_names(matrix, names):
@@ -332,7 +338,7 @@ def _update_column_names(matrix, names):
         raise expected('column names to be a list of strings', repr(names))
 
     for col, name in zip(matrix.columns, names):
-        col.name = name
+        col.formula = name
 
 
 def _update_roles(matrix, roles):

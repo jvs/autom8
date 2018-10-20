@@ -115,7 +115,7 @@ def test_sandbox():
 
     assert len(ctx.steps) == 1
     assert len(ctx.matrix.columns) == 4+1
-    assert ctx.matrix.tolist()[1:] == [
+    assert ctx.matrix.tolist() == [
         [1, 5, True, 9, 1],
         [2, 6, False, 10, 1],
         [3, 7, False, 11, 1],
@@ -126,7 +126,7 @@ def test_sandbox():
         autom8.multiply_columns(ctx)
         assert len(ctx.steps) == 2
         assert len(ctx.matrix.columns) == 4+1+3
-        assert ctx.matrix.tolist()[1:] == [
+        assert ctx.matrix.tolist() == [
             [1, 5, True, 9, 1, 1*5, 1*9, 5*9],
             [2, 6, False, 10, 1, 2*6, 2*10, 6*10],
             [3, 7, False, 11, 1, 3*7, 3*11, 7*11],
@@ -136,7 +136,7 @@ def test_sandbox():
     # Now check that the context has been restored to its previous state.
     assert len(ctx.steps) == 1
     assert len(ctx.matrix.columns) == 4+1
-    assert ctx.matrix.tolist()[1:] == [
+    assert ctx.matrix.tolist() == [
         [1, 5, True, 9, 1],
         [2, 6, False, 10, 1],
         [3, 7, False, 11, 1],

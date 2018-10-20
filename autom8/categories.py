@@ -39,39 +39,27 @@ def encode(ctx, encoder, indices):
             ctx.receiver.warn('Failed to encode categorical data.')
 
     if isinstance(encoder, OneHotEncoder):
-        column_names = _rename_one_hot_encoded_columns(df.columns, found)
+        formulas = _one_hot_encoded_formulas(df.columns, found)
     else:
-        column_names = [f'ENCODED {col.name}' for col in found.columns]
+        formulas = [['encode', col] for col in found.columns]
 
     for i in range(df.shape[1]):
         ctx.matrix.append_column(
             values=df.iloc[:, i].values,
-            name=column_names[i],
+            formula=formulas[i],
             role='encoded',
         )
 
 
-def _rename_one_hot_encoded_columns(df_columns, found):
-    # TODO: Replace the last "= -1" suffix with "IS UNKNOWN" or something.
+def _one_hot_encoded_formulas(df_columns, found):
     result = []
-    visited = set()
-    for i, col in enumerate(df_columns):
+    for i, dfcol in enumerate(df_columns):
         try:
-            orig, val = col.split('_')
-            orig = found.columns[int(orig)].name
+            col, val = dfcol.split('_')
+            col = found.columns[int(col)]
         except Exception:
-            orig, val = 'X', i
-
-        # Make sure we don't have any duplicate names.
-        # (It can happen when -1 is one of the values.)
-        name = f'{orig} = {val}'
-        count = 1
-        while name in visited:
-            count += 1
-            name = f'{orig} = {val} [{count}]'
-
-        visited.add(name)
-        result.append(name)
+            col, val = 'X', i
+        result.append([f'equals({val})', col])
     return result
 
 

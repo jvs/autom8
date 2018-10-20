@@ -112,7 +112,7 @@ class FittingContext:
             self, matrix, labels, test_indices, problem_type,
             allow_multicore, executor_class, receiver,
         ):
-        self.input_columns = [col.name for col in matrix]
+        self.initial_formulas = matrix.formulas
         self.matrix = matrix.copy()
         self.labels = labels
         self.test_indices = test_indices

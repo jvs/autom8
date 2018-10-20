@@ -192,7 +192,7 @@ def _flag_missing_values(ctx, index, replacement):
     ctx.matrix.columns.append(col.copy_with(create_array(new_values)))
     ctx.matrix.append_column(
         values=col.values != None,
-        name=f'PRESENT ({col.name})',
+        formula=['is-defined', col],
         role='encoded',
         is_original=True,
     )
@@ -211,14 +211,14 @@ def _bipartition_strings(ctx, index):
 
     ctx.matrix.append_column(
         values=create_array(numbers),
-        name=f'NUMBERS ({col.name})',
+        formula=['number', col],
         role=None,
         is_original=True,
     )
 
     ctx.matrix.append_column(
         values=create_array(strings),
-        name=f'STRINGS ({col.name})',
+        formula=['string', col],
         role=None,
         is_original=True,
     )

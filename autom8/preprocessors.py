@@ -53,7 +53,7 @@ def add_column_of_ones(ctx):
     num_rows = len(columns[0]) if columns else 0
     ctx.matrix.append_column(
         values=np.full(num_rows, 1),
-        name='CONSTANT',
+        formula=['constant(1)'],
         role='numerical',
     )
 
@@ -73,7 +73,7 @@ def _binarize_fractions(ctx, indices):
     for col in found.columns:
         ctx.matrix.append_column(
             values=np.absolute(col.values) < 1,
-            name=f'{col.name} IS A FRACTION',
+            formula=['is-fraction', col],
             role='encoded',
         )
 
@@ -93,7 +93,7 @@ def _binarize_signs(ctx, indices):
     for col in found.columns:
         ctx.matrix.append_column(
             values=col.values > 0,
-            name=f'{col.name} IS POSITIVE',
+            formula=['is-positive', col],
             role='encoded',
         )
 
@@ -147,7 +147,7 @@ def _divide_columns(ctx, numerators, denominators):
             # Use 0 if we see a denominator that equals 0.
             ctx.matrix.append_column(
                 values=np.divide(x, y, out=np.zeros_like(x), where=y != 0),
-                name=f'{col_x.name} DIVIDED BY {col_y.name}',
+                formula=['divide', col_x, col_y],
                 role='numerical',
             )
 
@@ -246,7 +246,7 @@ def _encode_text(ctx, encoder, indices):
     for i in range(result.shape[1]):
         ctx.matrix.append_column(
             values=result[:, i],
-            name=f'ENCODED TEXT {i + 1}',
+            formula=['encode-text'] + found.columns,
             role='encoded',
         )
 
@@ -272,7 +272,7 @@ def _logarithm_columns(ctx, indices):
         v = col.values
         ctx.matrix.append_column(
             values=np.log(v, out=np.zeros_like(v), where=v > 0),
-            name=f'LOG {col.name}',
+            formula=['log', col],
             role='numerical',
         )
 
@@ -292,7 +292,7 @@ def _multiply_columns(ctx, indices):
     for x, y in itertools.combinations(found.columns, 2):
         ctx.matrix.append_column(
             values=x.values * y.values,
-            name=f'{x.name} TIMES {y.name}',
+            formula=['multiply', x, y],
             role='numerical',
         )
 
@@ -327,7 +327,7 @@ def _scale_columns(ctx, scaler, indices):
     for i in range(result.shape[1]):
         ctx.matrix.append_column(
             values=result[:, i],
-            name=f'SCALED ({found.columns[i].name})',
+            formula=['scale', found.columns[i]],
             role='numerical',
         )
 
@@ -347,7 +347,7 @@ def _square_columns(ctx, indices):
     for col in found.columns:
         ctx.matrix.append_column(
             values=col.values * col.values,
-            name=f'{col.name} SQUARED',
+            formula=['square', col],
             role='numerical',
         )
 
@@ -373,7 +373,7 @@ def _sqrt_columns(ctx, indices):
         v = col.values
         ctx.matrix.append_column(
             values=np.sqrt(v, out=np.zeros_like(v), where=v >= 0),
-            name=f'SQRT {col.name}',
+            formula=['square-root', col],
             role='numerical',
         )
 
