@@ -107,6 +107,7 @@ def coerce_columns(ctx):
 
 @preprocessor
 def _coerce_columns(ctx, dtypes):
+    """Forces each column to have the expected type."""
     if ctx.is_fitting:
         return
 

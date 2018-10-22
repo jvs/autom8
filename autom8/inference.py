@@ -9,6 +9,7 @@ def infer_roles(ctx):
 
 @preprocessor
 def _set_roles(ctx, roles):
+    """Records the type of each column."""
     for col, role in zip(ctx.matrix.columns, roles):
         col.role = role
 
