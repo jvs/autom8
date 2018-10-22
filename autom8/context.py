@@ -122,10 +122,7 @@ class FittingContext:
         self.receiver = receiver
         self.steps = []
         self.pool = None
-
-    @property
-    def is_fitting(self):
-        return True
+        self.is_fitting = True
 
     @property
     def is_classification(self):

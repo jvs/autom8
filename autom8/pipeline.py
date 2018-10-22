@@ -82,7 +82,4 @@ class PipelineContext:
     def __init__(self, matrix, receiver):
         self.matrix = matrix
         self.receiver = receiver
-
-    @property
-    def is_fitting(self):
-        return False
+        self.is_fitting = False

@@ -32,7 +32,8 @@ def preprocessor(f):
     @functools.wraps(f)
     def wrapper(ctx, *a, **k):
         f(ctx, *a, **k)
-        ctx.steps.append(Step(f, a, k))
+        if ctx.is_fitting:
+            ctx.steps.append(Step(wrapper, a, k))
     return wrapper
 
 
