@@ -5,7 +5,7 @@ import chardet
 from .parsing import parse_number
 
 
-def load_csv(path):
+def read_csv(path):
     with open(path, 'rb') as f:
         return decode_csv(f.read())
 

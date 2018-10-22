@@ -7,7 +7,7 @@ import autom8
 def load(name):
     testdir = os.path.dirname(os.path.dirname(__file__))
     path = os.path.join(testdir, 'datasets', name)
-    return autom8.load_csv(path)
+    return autom8.read_csv(path)
 
 
 def fit(name):

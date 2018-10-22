@@ -3,7 +3,7 @@ import autom8
 
 
 def test_boston():
-    boston = _load_csv('boston.csv')
+    boston = _read_csv('boston.csv')
     assert len(boston) == 507
 
     head = 'CRIM,ZN,INDUS,CHAS,NOX,RM,AGE,DIS,RAD,TAX,PTRATIO,B,LSTAT,MEDV'
@@ -19,7 +19,7 @@ def test_boston():
 
 
 def test_iris():
-    iris = _load_csv('iris.csv')
+    iris = _read_csv('iris.csv')
     assert len(iris) == 151
 
     head = 'sepal length (cm),sepal width (cm),petal length (cm),petal width (cm),class'
@@ -29,7 +29,7 @@ def test_iris():
 
 
 def test_wine():
-    wine = _load_csv('wine.csv')
+    wine = _read_csv('wine.csv')
     assert len(wine) == 179
 
     head = ('alcohol,malic_acid,ash,alcalinity_of_ash,magnesium,'
@@ -71,7 +71,7 @@ def test_decode_csv_with_hex_numbers():
     assert isinstance(dataset[2][2], int)
 
 
-def _load_csv(name):
+def _read_csv(name):
     testdir = os.path.dirname(os.path.dirname(__file__))
     path = os.path.join(testdir, 'datasets', name)
-    return autom8.load_csv(path)
+    return autom8.read_csv(path)
