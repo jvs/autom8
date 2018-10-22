@@ -4,7 +4,7 @@ import sklearn.metrics
 
 Evaluation = namedtuple('Evaluation', 'preprocessing, train, test')
 
-PredictionSection = namedtuple('PredictionSection',
+EvaluationSection = namedtuple('EvaluationSection',
     'predictions, probabilities, metrics')
 
 
@@ -30,7 +30,7 @@ def _evaluate(ctx, pipeline, X, y):
         predicted = pipeline.label_encoder.transform(outputs.predictions)
         metrics = _evaluate_classifier(ctx, y, predicted)
 
-    return PredictionSection(outputs.predictions, outputs.probabilities, metrics)
+    return EvaluationSection(outputs.predictions, outputs.probabilities, metrics)
 
 
 def _evaluate_regressor(ctx, actual, predicted):
