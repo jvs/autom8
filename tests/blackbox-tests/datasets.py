@@ -41,6 +41,10 @@ def check_classifier_reports(acc, valid_labels):
             if section.probabilities is not None:
                 assert len(section.predictions) == len(section.probabilities)
 
+            # Make sure that we got the extended metrics.
+            assert 'normalized_confusion_matrix' in section.metrics
+            assert 'precision_recall_fscore_support' in section.metrics
+
     # Make sure that we can literalize and encode each report.
     for _, report in acc.pipelines:
         json.dumps(autom8.literalize(report))

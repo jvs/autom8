@@ -9,6 +9,7 @@ from .fit import fit
 from .inference import infer_roles
 from .literalize import literalize
 from .matrix import create_matrix, Matrix
+from .pipeline import Pipeline
 
 from .preprocessors import (
     add_column_of_ones,
