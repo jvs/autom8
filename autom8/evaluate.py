@@ -3,9 +3,9 @@ import numpy as np
 import sklearn.metrics
 
 
-Evaluation = namedtuple('Evaluation', 'context, preprocessing, train, test')
-ContextSection = namedtuple('Section', 'problem_type, test_indices, classes')
-PreprocessingSection = namedtuple('PreprocessingSection', 'input, output, steps')
+Evaluation = namedtuple('Evaluation',
+    'problem_type, test_indices, classes, input, output, steps, train, test',
+)
 
 EvaluationSection = namedtuple('EvaluationSection',
     'predictions, probabilities, metrics')
@@ -14,12 +14,12 @@ EvaluationSection = namedtuple('EvaluationSection',
 def evaluate_pipeline(ctx, pipeline):
     classes = pipeline.label_encoder.classes_ if ctx.is_classification else []
     return Evaluation(
-        context=ContextSection(ctx.problem_type, ctx.test_indices, classes),
-        preprocessing=PreprocessingSection(
-            input=ctx.initial_formulas,
-            output=ctx.matrix.formulas,
-            steps=[s.func.__name__ for s in pipeline.steps],
-        ),
+        problem_type=ctx.problem_type,
+        test_indices=ctx.test_indices,
+        classes=classes,
+        input=ctx.initial_formulas,
+        output=ctx.matrix.formulas,
+        steps=[s.func.__name__ for s in pipeline.steps],
         train=_evaluate_predictions(ctx, pipeline, *ctx.training_data()),
         test=_evaluate_predictions(ctx, pipeline, *ctx.testing_data()),
     )
