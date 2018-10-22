@@ -44,7 +44,7 @@ def create_context(
     if num_cols == 1:
         raise expected('dataset with more than one column', num_cols)
 
-    if target_column is None:
+    if target_column is None or target_column == -1:
         target_column = num_cols - 1
 
     if not isinstance(target_column, (int, str)):
