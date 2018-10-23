@@ -17,7 +17,7 @@ def evaluate_pipeline(ctx, pipeline):
         problem_type=ctx.problem_type,
         test_indices=ctx.test_indices,
         classes=classes,
-        input=ctx.initial_formulas,
+        input=pipeline.input_columns,
         output=ctx.matrix.formulas,
         steps=[s.func.__name__ for s in pipeline.steps],
         train=_evaluate_predictions(ctx, pipeline, *ctx.training_data()),

@@ -112,7 +112,7 @@ class FittingContext:
             self, matrix, labels, test_indices, problem_type,
             allow_multicore, executor_class, receiver,
         ):
-        self.initial_formulas = matrix.formulas
+        self.input_columns = [col.name for col in matrix.columns]
         self.matrix = matrix.copy()
         self.labels = labels
         self.test_indices = test_indices
@@ -155,7 +155,13 @@ class FittingContext:
             logging.getLogger('autom8').exception('Failure in fit method')
             return
 
-        pipeline = Pipeline(list(self.steps), estimator, self.labels.encoder)
+        pipeline = Pipeline(
+            input_columns=self.input_columns,
+            steps=list(self.steps),
+            estimator=estimator,
+            label_encoder=self.labels.encoder,
+        )
+
         report = evaluate_pipeline(self, pipeline)
         self.receiver.receive_pipeline(pipeline, report)
 
@@ -208,12 +214,7 @@ class FittingContext:
             )
 
 
-class LabelContext(namedtuple('LabelContext', 'name, original, encoded, encoder')):
-    def decode(self, encoded_labels):
-        if self.encoder is None:
-            return encoded_labels
-        else:
-            return self.encoder.inverse_transform(encoded_labels)
+LabelContext = namedtuple('LabelContext', 'name, original, encoded, encoder')
 
 
 class SynchronousExecutor:

@@ -3,7 +3,7 @@ import numpy as np
 import scipy.sparse
 
 from .matrix import create_matrix, Matrix
-from .exceptions import expected, typename
+from .exceptions import Autom8Exception, expected, typename
 from .preprocessors import playback
 from .receiver import Receiver
 
@@ -12,7 +12,8 @@ PredictionReport = namedtuple('PredictionReport', 'predictions, probabilities')
 
 
 class Pipeline:
-    def __init__(self, steps, estimator, label_encoder):
+    def __init__(self, input_columns, steps, estimator, label_encoder):
+        self.input_columns = input_columns
         self.steps = steps
         self.estimator = estimator
         self.label_encoder = label_encoder
@@ -24,11 +25,14 @@ class Pipeline:
         if receiver is None:
             receiver = Receiver()
 
-        # TODO: Swizzle the input vectors to match the pipeline's schema.
         if isinstance(features, list):
             features = create_matrix(features, receiver=receiver)
 
-        ctx = PipelineContext(features, receiver)
+        # Rearrange the matrix so that the columns are in the right order.
+        assert isinstance(features, Matrix)
+        swizzled = self._swizzle(features, receiver)
+
+        ctx = PipelineContext(swizzled, receiver)
         playback(self.steps, ctx)
 
         X = ctx.matrix.stack_columns()
@@ -59,16 +63,6 @@ class Pipeline:
 
         return PredictionReport(predictions, probabilities)
 
-    def _predict_window(self, report, X):
-        X = scipy.sparse.csr_matrix(X)
-
-        if hasattr(self.estimator, 'predict_proba'):
-            y = self.estimator.predict_proba(X)
-            report.predictions.extend(np.argmax(p) for p in y)
-            report.probabilities.extend(p for p in y)
-        else:
-            report.predictions.extend(self.estimator.predict(X))
-
     def _format_probabilities(self, probs):
         decode = lambda i: self.label_encoder.inverse_transform([i])[0]
         pairs = [(s, decode(i)) for i, s in enumerate(probs) if s > 0]
@@ -76,6 +70,31 @@ class Pipeline:
 
         # Return the top three pairs.
         return [(label, score) for score, label in top3]
+
+    def _swizzle(self, matrix, receiver):
+        assert isinstance(matrix, Matrix)
+
+        c1 = len(matrix.columns)
+        c2 = len(self.input_columns)
+
+        if c1 < c2:
+            raise expected(f'matrix with at least {c2} columns', c1)
+
+        try:
+            return matrix.swizzle(self.input_columns)
+        except Autom8Exception:
+            pass
+
+        receiver.warn(
+            'Cannot match column names'
+            f' from {[col.name for col in matrix.columns]}'
+            f' to {self.input_columns}.'
+        )
+
+        if c1 == c2:
+            return matrix
+        else:
+            return Matrix([col.copy() for col in matrix.columns[:c2]])
 
 
 class PipelineContext:

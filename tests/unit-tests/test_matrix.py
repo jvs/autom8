@@ -329,3 +329,93 @@ def test_setting_an_invalid_column_role():
     with pytest.raises(autom8.Autom8Exception) as excinfo:
         col.role = 'foo'
     excinfo.match('Expected.*role in')
+
+
+def test_duplicate_column_names():
+    acc = autom8.Accumulator()
+    matrix = autom8.create_matrix(
+        dataset=[[1, 2, 3]],
+        column_names=['A', 'B', 'A'],
+        receiver=acc,
+    )
+    assert len(acc.warnings) == 1
+    assert 'Column names are not unique' in acc.warnings[0]
+
+
+def test_swizzle_with_superset():
+    dataset = [
+        ['hi', 1, True, 10.5],
+        ['so', 2, True, 15.5],
+        ['bye', 3, False, 20.5],
+    ]
+    matrix = autom8.create_matrix(dataset, column_names=['A', 'B', 'C', 'D'])
+    received = matrix.swizzle(['C', 'B'])
+    assert received.tolist() == [[True, 1], [True, 2], [False, 3]]
+
+
+def test_swizzle_with_invalid_arguments():
+    dataset = [
+        ['hi', 1, True, 10.5],
+        ['so', 2, True, 15.5],
+        ['bye', 3, False, 20.5],
+    ]
+    matrix = autom8.create_matrix(dataset, column_names=['A', 'B', 'C', 'D'])
+    with pytest.raises(autom8.Autom8Exception) as excinfo:
+        matrix.swizzle(['C', 'Z'])
+    excinfo.match('Expected column names')
+
+
+def test_creating_a_matrix_with_list_of_roles():
+    dataset = [
+        ['hi', 1, True, 10.5],
+        ['so', 2, True, 15.5],
+        ['bye', 3, False, 20.5],
+    ]
+    matrix = autom8.create_matrix(dataset,
+        column_roles=['textual', 'categorical', 'encoded', 'numerical']
+    )
+    assert matrix.columns[0].role == 'textual'
+    assert matrix.columns[1].role == 'categorical'
+    assert matrix.columns[2].role == 'encoded'
+    assert matrix.columns[3].role == 'numerical'
+
+
+def test_creating_a_matrix_with_map_of_roles():
+    dataset = [
+        ['hi', 1, True, 10.5],
+        ['so', 2, True, 15.5],
+        ['bye', 3, False, 20.5],
+    ]
+    matrix = autom8.create_matrix(dataset,
+        column_names=['A', 'B', 'C', 'D'],
+        column_roles={
+            'D': 'numerical',
+            'C': 'encoded',
+            1: 'categorical',
+            'A': 'textual',
+        },
+    )
+    assert matrix.columns[0].role == 'textual'
+    assert matrix.columns[1].role == 'categorical'
+    assert matrix.columns[2].role == 'encoded'
+    assert matrix.columns[3].role == 'numerical'
+
+    with pytest.raises(autom8.Autom8Exception) as excinfo:
+        autom8.create_matrix(dataset,
+            column_names=['A', 'B', 'C', 'D'],
+            column_roles={'Z': 'numerical'},
+        )
+    excinfo.match('Expected column')
+
+    with pytest.raises(autom8.Autom8Exception) as excinfo:
+        autom8.create_matrix(dataset,
+            column_names=['A', 'B', 'C', 'D'],
+            column_roles={object(): 'numerical'},
+        )
+    excinfo.match('Expected valid column')
+
+
+def test_coerce_values_to_numbers_with_weird_values():
+    matrix = autom8.create_matrix([[1], [2.0], ['3'], ['hi'], [object()], [4]])
+    matrix.coerce_values_to_numbers(default=100, as_type=int)
+    assert matrix.tolist() == [[1], [2], [3], [100], [100], [4]]
