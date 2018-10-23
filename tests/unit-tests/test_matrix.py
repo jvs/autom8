@@ -342,18 +342,18 @@ def test_duplicate_column_names():
     assert 'Column names are not unique' in acc.warnings[0]
 
 
-def test_swizzle_with_superset():
+def test_select_columns_by_name_with_superset():
     dataset = [
         ['hi', 1, True, 10.5],
         ['so', 2, True, 15.5],
         ['bye', 3, False, 20.5],
     ]
     matrix = autom8.create_matrix(dataset, column_names=['A', 'B', 'C', 'D'])
-    received = matrix.swizzle(['C', 'B'])
+    received = matrix.select_columns_by_name(['C', 'B'])
     assert received.tolist() == [[True, 1], [True, 2], [False, 3]]
 
 
-def test_swizzle_with_invalid_arguments():
+def test_select_columns_by_name_with_invalid_arguments():
     dataset = [
         ['hi', 1, True, 10.5],
         ['so', 2, True, 15.5],
@@ -361,7 +361,7 @@ def test_swizzle_with_invalid_arguments():
     ]
     matrix = autom8.create_matrix(dataset, column_names=['A', 'B', 'C', 'D'])
     with pytest.raises(autom8.Autom8Exception) as excinfo:
-        matrix.swizzle(['C', 'Z'])
+        matrix.select_columns_by_name(['C', 'Z'])
     excinfo.match('Expected column names')
 
 

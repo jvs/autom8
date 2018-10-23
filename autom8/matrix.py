@@ -89,20 +89,6 @@ class Matrix:
     def stack_columns(self):
         return np.column_stack([col.values.astype(object) for col in self.columns])
 
-    def swizzle(self, names):
-        current = [col.name for col in self.columns]
-
-        # If the names match exactly, then return the matrix as-is.
-        if current == names:
-            return self
-
-        # If this matrix has the requested columns, then make a new matrix with them.
-        if set(current).issuperset(names):
-            lookup = {col.name: col for col in self.columns}
-            return Matrix([lookup[n].copy() for n in names])
-
-        raise expected(f'column names to be in {current}', repr(names))
-
     def to_array(self):
         if len(self.columns) == 1:
             return self.columns[0].values
@@ -138,6 +124,20 @@ class Matrix:
         return Matrix([col.copy()
             for i, col in enumerate(self.columns)
                 if i not in indices])
+
+    def select_columns_by_name(self, names):
+        current = [col.name for col in self.columns]
+
+        # If the names match exactly, then return the matrix as-is.
+        if current == names:
+            return self
+
+        # If this matrix has the requested columns, then make a new matrix with them.
+        if set(current).issuperset(names):
+            lookup = {col.name: col for col in self.columns}
+            return Matrix([lookup[n].copy() for n in names])
+
+        raise expected(f'column names to be in {current}', repr(names))
 
     def column_indices_where(self, predicate):
         return [i for i, col in enumerate(self.columns) if predicate(col)]

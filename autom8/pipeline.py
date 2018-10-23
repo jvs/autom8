@@ -30,9 +30,9 @@ class Pipeline:
 
         # Rearrange the matrix so that the columns are in the right order.
         assert isinstance(features, Matrix)
-        swizzled = self._swizzle(features, receiver)
+        selected = self._select_columns(features, receiver)
 
-        ctx = PipelineContext(swizzled, receiver)
+        ctx = PipelineContext(selected, receiver)
         playback(self.steps, ctx)
 
         X = ctx.matrix.stack_columns()
@@ -71,7 +71,7 @@ class Pipeline:
         # Return the top three pairs.
         return [(label, score) for score, label in top3]
 
-    def _swizzle(self, matrix, receiver):
+    def _select_columns(self, matrix, receiver):
         assert isinstance(matrix, Matrix)
 
         c1 = len(matrix.columns)
@@ -81,7 +81,7 @@ class Pipeline:
             raise expected(f'matrix with at least {c2} columns', c1)
 
         try:
-            return matrix.swizzle(self.input_columns)
+            return matrix.select_columns_by_name(self.input_columns)
         except Autom8Exception:
             pass
 
