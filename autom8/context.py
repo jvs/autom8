@@ -59,8 +59,7 @@ def create_context(
                 break
 
     if isinstance(target_column, str):
-        colnames = {col.name for col in matrix.columns}
-        raise expected('target_column to be one of: {colnames}',
+        raise expected(f'target_column to be one of: {matrix.column_names}',
             repr(target_column))
 
     if isinstance(target_column, int) and target_column >= len(matrix.columns):
@@ -112,7 +111,7 @@ class FittingContext:
             self, matrix, labels, test_indices, problem_type,
             allow_multicore, executor_class, receiver,
         ):
-        self.input_columns = [col.name for col in matrix.columns]
+        self.input_columns = matrix.column_names
         self.matrix = matrix.copy()
         self.labels = labels
         self.test_indices = test_indices

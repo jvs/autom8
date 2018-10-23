@@ -13,7 +13,7 @@ def create_matrix(dataset, column_names=None, column_roles=None, receiver=None):
     matrix = _create_matrix(dataset, column_names, column_roles, receiver)
 
     # Warn the user if the column names are not unique.
-    names = [col.name for col in matrix.columns]
+    names = matrix.column_names
     if len(names) != len(set(names)):
         receiver.warn(f'Column names are not unique in {repr(names)}')
 
@@ -74,6 +74,10 @@ class Matrix:
         return [col.schema for col in self.columns]
 
     @property
+    def column_names(self):
+        return [col.name for col in self.columns]
+
+    @property
     def formulas(self):
         return [col.formula for col in self.columns]
 
@@ -126,18 +130,16 @@ class Matrix:
                 if i not in indices])
 
     def select_columns_by_name(self, names):
-        current = [col.name for col in self.columns]
-
         # If the names match exactly, then return the matrix as-is.
-        if current == names:
+        if self.column_names == names:
             return self
 
         # If this matrix has the requested columns, then make a new matrix with them.
-        if set(current).issuperset(names):
+        if set(self.column_names).issuperset(names):
             lookup = {col.name: col for col in self.columns}
             return Matrix([lookup[n].copy() for n in names])
 
-        raise expected(f'column names to be in {current}', repr(names))
+        raise expected(f'column names to be in {self.column_names}', names)
 
     def column_indices_where(self, predicate):
         return [i for i, col in enumerate(self.columns) if predicate(col)]

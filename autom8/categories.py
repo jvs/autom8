@@ -67,7 +67,7 @@ def _create_failed_encoding(matrix, encoder):
     if isinstance(encoder, OneHotEncoder):
         cols = _create_one_hot_column_names(encoder)
     else:
-        cols = [i.name for i in matrix.columns]
+        cols = matrix.column_names
 
     return pd.DataFrame(0, index=np.arange(len(matrix)), columns=cols)
 
