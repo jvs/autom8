@@ -10,7 +10,7 @@ import sklearn.preprocessing
 from .evaluate import evaluate_pipeline
 from .exceptions import expected, typename
 from .inference import _infer_role
-from .matrix import create_matrix
+from .matrix import create_matrix, Matrix
 from .pipeline import Pipeline
 from .receiver import Receiver
 
@@ -30,12 +30,17 @@ def create_context(
     if receiver is None:
         receiver = Receiver()
 
-    matrix = create_matrix(
-        dataset=dataset,
-        column_names=column_names,
-        column_roles=column_roles,
-        receiver=receiver,
-    )
+    # Small optimization: don't copy the matrix if we don't need to.
+    if isinstance(dataset, Matrix) and column_names is None and column_roles is None:
+        matrix = dataset
+    else:
+        matrix = create_matrix(
+            dataset=dataset,
+            column_names=column_names,
+            column_roles=column_roles,
+            receiver=receiver,
+        )
+
     num_cols = len(matrix.columns)
 
     if num_cols == 0:
