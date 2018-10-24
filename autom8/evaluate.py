@@ -1,6 +1,7 @@
 from collections import namedtuple
 import numpy as np
 import sklearn.metrics
+from .exceptions import expected
 
 
 Evaluation = namedtuple('Evaluation',
@@ -30,6 +31,7 @@ def _evaluate_predictions(ctx, pipeline, X, y):
 
     if ctx.is_regression:
         metrics = _evaluate_regressor(ctx, y, outputs.predictions)
+        metrics.update(_extra_regressor_metrics(ctx, pipeline, metrics, len(y)))
     else:
         encoder = pipeline.label_encoder
         # MAY: Eventually use the probabilities, too.
@@ -49,6 +51,11 @@ def _evaluate_regressor(ctx, actual, predicted):
         sklearn.metrics.r2_score,
     ]
     return _apply_metrics(funcs, actual, predicted)
+
+
+def _extra_regressor_metrics(ctx, pipeline, initial_metrics, num_rows):
+    funcs = [adjusted_r2_score]
+    return _apply_metrics(funcs, ctx, pipeline, initial_metrics, num_rows)
 
 
 def _evaluate_classifier(ctx, actual, predicted, encoder):
@@ -106,3 +113,26 @@ def precision_recall_fscore_support(actual, predicted, encoder):
             'support': support,
         })
     return result
+
+
+def adjusted_r2_score(ctx, pipeline, initial_metrics, num_rows):
+    roots = _nonzero_root_columns(ctx, pipeline)
+    num_cols = len(roots)
+    ratio = (num_rows - 1) / (num_rows - num_cols - 1)
+
+    if ratio > 0:
+        r2 = initial_metrics['r2_score']
+        return 1 - (1 - r2) * ratio
+
+    raise expected('more rows than columns',
+        f'{num_rows} rows and {num_cols} columns.')
+
+
+def _nonzero_root_columns(ctx, pipeline):
+    est = pipeline.estimator
+    weights = getattr(est, 'coef_', getattr(est, 'feature_importances_', None))
+    columns = ctx.matrix.columns
+    nonzeros = columns if weights is None else [
+        c for c, w in zip(columns, weights) if w != 0
+    ]
+    return {i for c in nonzeros for i in c.root_columns()}

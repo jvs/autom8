@@ -245,6 +245,19 @@ class Column:
     def exclude_rows(self, indices):
         return self.copy_with(np.delete(self.values, indices))
 
+    def root_columns(self):
+        roots = set()
+        stack = [self.formula]
+        while stack:
+            f = stack.pop()
+            if isinstance(f, str):
+                roots.add(f)
+            else:
+                assert isinstance(f, (list, tuple))
+                assert isinstance(f[0], str)
+                stack.extend(f[1:])
+        return roots
+
 
 def _copy_and_update_matrix(matrix, names, roles):
     matrix = matrix.copy()
