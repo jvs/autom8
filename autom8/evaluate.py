@@ -116,6 +116,13 @@ def precision_recall_fscore_support(actual, predicted, encoder):
 
 
 def adjusted_r2_score(ctx, pipeline, initial_metrics, num_rows):
+    """
+    Calculates the Adjusted R2 Score.
+    See: https://en.wikipedia.org/wiki/Coefficient_of_determination#Adjusted_R2
+    """
+    # Only count root columns that end up in a formula with a nonzero weight.
+    # (A "root column" in a column that appeared in the initial matrix, before
+    # any preprocessing, and was used to derive other columns.)
     roots = _nonzero_root_columns(ctx, pipeline)
     num_cols = len(roots)
     ratio = (num_rows - 1) / (num_rows - num_cols - 1)
