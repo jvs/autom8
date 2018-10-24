@@ -12,8 +12,9 @@ PredictionReport = namedtuple('PredictionReport', 'predictions, probabilities')
 
 
 class Pipeline:
-    def __init__(self, input_columns, steps, estimator, label_encoder):
+    def __init__(self, input_columns, predicts_column, steps, estimator, label_encoder):
         self.input_columns = input_columns
+        self.predicts_column = predicts_column
         self.steps = steps
         self.estimator = estimator
         self.label_encoder = label_encoder

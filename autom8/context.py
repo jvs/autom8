@@ -161,6 +161,7 @@ class FittingContext:
 
         pipeline = Pipeline(
             input_columns=self.input_columns,
+            predicts_column=self.labels.name,
             steps=list(self.steps),
             estimator=estimator,
             label_encoder=self.labels.encoder,
