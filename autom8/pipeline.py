@@ -19,6 +19,10 @@ class Pipeline:
         self.estimator = estimator
         self.label_encoder = label_encoder
 
+    @property
+    def predicts_classes(self):
+        return self.label_encoder.classes_ if self.label_encoder else None
+
     def run(self, features, receiver=None):
         if not isinstance(features, (list, Matrix)):
             raise expected('list or Matrix', typename(features))

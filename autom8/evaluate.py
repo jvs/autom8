@@ -5,7 +5,7 @@ from .exceptions import expected
 
 
 Evaluation = namedtuple('Evaluation',
-    'problem_type, test_indices, classes, input, output, steps, train, test',
+    'problem_type, test_indices, derived_columns, train, test',
 )
 
 EvaluationSection = namedtuple('EvaluationSection',
@@ -13,14 +13,10 @@ EvaluationSection = namedtuple('EvaluationSection',
 
 
 def evaluate_pipeline(ctx, pipeline):
-    classes = pipeline.label_encoder.classes_ if ctx.is_classification else []
     return Evaluation(
         problem_type=ctx.problem_type,
         test_indices=ctx.test_indices,
-        classes=classes,
-        input=pipeline.input_columns,
-        output=ctx.matrix.formulas,
-        steps=[s.func.__name__ for s in pipeline.steps],
+        derived_columns=ctx.matrix.formulas,
         train=_evaluate_predictions(ctx, pipeline, *ctx.training_data()),
         test=_evaluate_predictions(ctx, pipeline, *ctx.testing_data()),
     )
