@@ -38,6 +38,9 @@ def encode(ctx, encoder, indices):
             df = _create_failed_encoding(found, encoder)
             ctx.receiver.warn('Failed to encode categorical data.')
 
+    if not isinstance(df, pd.DataFrame):
+        df = pd.DataFrame(df)
+
     if isinstance(encoder, OneHotEncoder):
         formulas = _one_hot_encoded_formulas(df.columns, found)
     else:
@@ -55,11 +58,11 @@ def _one_hot_encoded_formulas(df_columns, found):
     result = []
     for i, dfcol in enumerate(df_columns):
         try:
-            col, val = dfcol.split('_')
-            col = found.columns[int(col)]
+            index, val = dfcol.split('_')
+            col = found.columns[int(index)]
+            result.append([f'equals({val})', col])
         except Exception:
-            col, val = 'X', i
-        result.append([f'equals({val})', col])
+            result.append(['one-hot-encode'] + found.columns)
     return result
 
 
