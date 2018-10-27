@@ -20,6 +20,14 @@ def decode_csv(payload):
     return [[_convert_csv_cell(i) for i in row] for row in reader]
 
 
+def encode_csv(dataset):
+    result = StringIO()
+    writer = csv.writer(result, quoting=csv.QUOTE_MINIMAL)
+    for row in dataset:
+        writer.writerow(row)
+    return result.getvalue()
+
+
 def _convert_csv_cell(cell):
     try:
         return parse_number(cell)

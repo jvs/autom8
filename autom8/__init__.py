@@ -2,7 +2,7 @@ __version__ = '0.0.1'
 
 from .cleaning import clean_dataset
 from .context import create_context
-from .csv_utils import decode_csv, read_csv
+from .csv_utils import decode_csv, encode_csv, read_csv
 from .evaluate import evaluate_pipeline
 from .exceptions import Autom8Exception, Autom8Warning
 from .fit import fit
