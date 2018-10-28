@@ -60,7 +60,7 @@ def _one_hot_encoded_formulas(df_columns, found):
         try:
             index, val = dfcol.split('_')
             col = found.columns[int(index)]
-            result.append([f'equals({val})', col])
+            result.append([f'equals[{val}]', col])
         except Exception:
             result.append(['one-hot-encode'] + found.columns)
     return result

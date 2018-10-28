@@ -261,11 +261,12 @@ def test_one_hot_encode_categories():
     assert len(ctx.steps) == 1
     assert ctx.matrix.formulas == [
         'A',
-        ['equals(10)', 'B'], ['equals(20)', 'B'], ['equals(30)', 'B'], ['equals(-1)', 'B'],
-        ['equals(foo)', 'C'], ['equals(bar)', 'C'], ['equals(-1)', 'C'],
-        ['equals(bar)', 'D'], ['equals(foo)', 'D'], ['equals(-1)', 'D'],
-        ['equals(-1.0)', 'E'], ['equals(-1)', 'E'],
+        ['equals[10]', 'B'], ['equals[20]', 'B'], ['equals[30]', 'B'], ['equals[-1]', 'B'],
+        ['equals[foo]', 'C'], ['equals[bar]', 'C'], ['equals[-1]', 'C'],
+        ['equals[bar]', 'D'], ['equals[foo]', 'D'], ['equals[-1]', 'D'],
+        ['equals[-1.0]', 'E'], ['equals[-1]', 'E'],
     ]
+
     assert ctx.matrix.tolist() == [
         [1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
         [2, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0],
