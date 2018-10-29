@@ -5,8 +5,7 @@ from .exceptions import expected
 
 
 Evaluation = namedtuple('Evaluation',
-    'problem_type, test_indices, derived_columns, train, test',
-)
+    'problem_type, test_indices, derived_columns, train, test',)
 
 EvaluationSection = namedtuple('EvaluationSection',
     'predictions, probabilities, metrics')
