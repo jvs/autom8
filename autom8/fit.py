@@ -37,6 +37,12 @@ def fit(*args, **kwargs):
         then_fit_estimators(ctx, boosted_trees=True, classical=True)
 
     with ctx.sandbox():
+        then.encode_categories(ctx, method='ordinal', only_strings=True)
+        then.multiply_columns(ctx)
+        then.add_column_of_ones(ctx)
+        then_fit_estimators(ctx, boosted_trees=True, classical=False)
+
+    with ctx.sandbox():
         # This time around, use one-hot encoding and skip the boosted trees.
         then.encode_categories(ctx, method='one-hot', only_strings=False)
 
@@ -128,8 +134,9 @@ def fit_classifiers(ctx, boosted_trees=True, classical=True):
             class_weight='balanced', n_jobs=n_jobs(ctx), random_state=1,
         )
 
-    # Always fit a decision tree.
-    ctx << sklearn.tree.DecisionTreeClassifier(random_state=1)
+    # Always fit a decision tree, as long as the dataset is not too big.
+    if not is_big(ctx):
+        ctx << sklearn.tree.DecisionTreeClassifier(random_state=1)
 
     if classical:
         ctx << sklearn.neighbors.KNeighborsClassifier()
