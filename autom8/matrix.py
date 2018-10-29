@@ -90,8 +90,8 @@ class Matrix:
     def tolist(self):
         return self.stack_columns().tolist()
 
-    def stack_columns(self):
-        return np.column_stack([col.values.astype(object) for col in self.columns])
+    def stack_columns(self, as_type=object):
+        return np.column_stack([col.values.astype(as_type) for col in self.columns])
 
     def to_array(self):
         if len(self.columns) == 1:
