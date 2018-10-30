@@ -40,6 +40,9 @@ iris-test: clean virtualenv
 wine-test: clean virtualenv
 	$(TEST) tests/blackbox-tests/test_wine_dataset.py
 
+summarize-test: clean virtualenv
+	$(TEST) tests/blackbox-tests/test_summarize_boston.py
+
 
 clean:
 	rm -rf ./autom8/__pycache__/*.pyc ./tests/*/__pycache__/*.pyc
