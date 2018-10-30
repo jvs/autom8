@@ -29,7 +29,6 @@ setup(
         'pandas>=0.23.4',
         'scikit-learn>=0.19.1',
         'scipy>=1.1.0',
-        'statsmodels>=0.9.0',
     ],
     tests_require=['coverage', 'pytest>=3'],
     extras_require={
