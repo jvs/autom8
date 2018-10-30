@@ -133,6 +133,17 @@ def test_columns_with_numbers_as_strings():
     assert out.matrix.columns[1].dtype == float
 
 
+def test_columns_with_numbers_with_commas():
+    dataset = [['A'], ['1,100.0'], ['2,200'], ['3,300'], ['50']]
+    acc = autom8.Accumulator()
+    matrix = autom8.create_matrix(_add_labels(dataset), receiver=acc)
+    ctx = autom8.create_context(matrix, receiver=acc)
+    autom8.clean_dataset(ctx)
+    assert len(acc.warnings) == 0
+    assert len(ctx.steps) == 1
+    assert ctx.matrix.tolist() == [[1100], [2200], [3300], [50]]
+
+
 def test_column_of_all_strings():
     dataset = [
         ['A', 'B'],

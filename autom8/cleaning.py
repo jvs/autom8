@@ -125,7 +125,7 @@ def _coerce_column(ctx, index, typ, replacement):
         col.values = np.array([replacement for _ in col.values], dtype=typ)
 
 
-_string_to_number_regex = re.compile(r'^\$*(\-?[0-9\.]+)\%*$')
+_string_to_number_regex = re.compile(r'^\$*(\-?[0-9,\.]+)\%*$')
 
 
 def _can_coerce_all_strings_to_numbers(values):

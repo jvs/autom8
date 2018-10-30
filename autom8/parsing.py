@@ -1,4 +1,7 @@
 def parse_number(obj):
+    # Strip commas.
+    obj = obj.replace(',', '')
+
     try:
         return int(obj)
     except Exception:
