@@ -8,7 +8,11 @@ from .exceptions import Autom8Exception, Autom8Warning
 from .fit import fit
 from .inference import infer_roles
 from .literalize import literalize
-from .matrix import create_matrix, Matrix
+
+from .matrix import (
+    create_matrix, excel_column_index, excel_column_name, Matrix,
+)
+
 from .pipeline import Pipeline
 
 from .preprocessors import (

@@ -1,3 +1,4 @@
+from functools import reduce
 import re
 import numpy as np
 
@@ -414,3 +415,19 @@ def _assign_roles(matrix, roles):
 def create_array(values):
     has_str = any(isinstance(i, str) for i in values)
     return np.array(values, dtype=object if has_str else None)
+
+
+def excel_column_index(name):
+    A = ord('A')
+    return reduce(lambda acc, c: acc * 26 + (ord(c) - A + 1), name, 0) - 1
+
+
+def excel_column_name(num):
+    A = ord('A')
+    result = []
+    remaining = num + 1
+    while remaining > 0:
+        modulo = (remaining - 1) % 26
+        result.append(chr(A + modulo))
+        remaining = (remaining - modulo) // 26
+    return ''.join(reversed(result))
