@@ -114,9 +114,9 @@ def test_creating_simple_matrix_from_list():
     assert np.array_equal(c2.values, e2)
     assert np.array_equal(c3.values, e3)
 
-    assert c1.name == 'Column-1'
-    assert c2.name == 'Column-2'
-    assert c3.name == 'Column-3'
+    assert c1.name == 'A'
+    assert c2.name == 'B'
+    assert c3.name == 'C'
 
     assert c1.role is None
     assert c2.role is None
@@ -271,7 +271,7 @@ def test_exclude_columns():
 
 def test_column_indices_where():
     matrix = autom8.create_matrix([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]])
-    pred = lambda x: x.name == 'Column-2' or x.name == 'Column-4'
+    pred = lambda x: x.name == 'B' or x.name == 'D'
     indices = matrix.column_indices_where(pred)
     assert indices == [1, 3]
 

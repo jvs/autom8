@@ -55,7 +55,7 @@ def _create_matrix(dataset, names, roles, receiver):
 
     def make(index):
         values = create_array([row[index] for row in rows])
-        formula = f'Column-{index + 1}'
+        formula = excel_column_name(index)
         return Column(values=values, formula=formula, role=None, is_original=True)
 
     matrix = Matrix([make(i) for i in range(mincols)])
@@ -355,7 +355,7 @@ def _extract_column_names(matrix):
 
 def _generate_column_names(matrix):
     for i, col in enumerate(matrix.columns):
-        col.formula = f'Column-{i + 1}'
+        col.formula = excel_column_name(i)
 
 
 def _update_column_names(matrix, names):
