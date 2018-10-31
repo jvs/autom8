@@ -1,5 +1,4 @@
 def parse_number(obj):
-    # Strip commas.
     obj = obj.replace(',', '')
 
     try:
