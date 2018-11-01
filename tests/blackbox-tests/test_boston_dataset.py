@@ -1,4 +1,3 @@
-import json
 import autom8
 import datasets
 
@@ -17,10 +16,6 @@ def test_boston_dataset():
         assert s2 <= 1.0
         assert isinstance(s1.tolist(), float)
         assert isinstance(s2.tolist(), float)
-
-    # Make sure that we can literalize and encode each report.
-    for _, report in acc.pipelines:
-        json.dumps(autom8.literalize(report))
 
     # Assert that the best test score is better than 0.6.
     best = max(i.test.metrics['r2_score'] for _, i in acc.pipelines)

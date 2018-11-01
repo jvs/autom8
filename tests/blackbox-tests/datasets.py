@@ -1,4 +1,3 @@
-import json
 import os
 import warnings
 import autom8
@@ -45,19 +44,12 @@ def check_classifier_reports(acc, valid_labels):
             assert 'normalized_confusion_matrix' in section.metrics
             assert 'precision_recall_fscore_support' in section.metrics
 
-    # Make sure that we can literalize and encode each report.
-    for _, report in acc.pipelines:
-        json.dumps(autom8.literalize(report))
-
 
 def check_classifier_predictions(acc, valid_labels, vectors):
     for pipeline, _ in acc.pipelines:
         tmp = autom8.Accumulator()
         pred = pipeline.run(vectors, receiver=tmp)
         assert not tmp.warnings
-
-        # Make sure that we can literalize and encode the predictions.
-        json.dumps(autom8.literalize(pred))
 
         assert len(pred.predictions) == len(vectors) - 1
         for label in pred.predictions:
