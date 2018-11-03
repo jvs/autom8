@@ -21,6 +21,10 @@ def create_matrix(dataset, column_names=None, column_roles=None, receiver=None):
     return matrix
 
 
+def drop_empty_rows(rows):
+    return [row for row in rows if any(not _is_blank(i) for i in row)]
+
+
 def _create_matrix(dataset, names, roles, receiver):
     if not isinstance(dataset, (list, tuple, np.ndarray, Matrix)):
         raise expected('list, tuple, numpy array, or Matrix', typename(dataset))
@@ -29,7 +33,7 @@ def _create_matrix(dataset, names, roles, receiver):
         return _copy_and_update_matrix(dataset, names, roles)
 
     # Drop empty rows.
-    rows = _drop_empty_rows(dataset)
+    rows = drop_empty_rows(dataset)
     num_dropped = len(dataset) - len(rows)
 
     # Warn the users if we dropped some rows.
@@ -270,11 +274,6 @@ def _copy_and_update_matrix(matrix, names, roles):
         _update_roles(matrix, roles)
 
     return matrix
-
-
-def _drop_empty_rows(rows):
-    # This is phrased a bit awkwardly to also filter out empty rows.
-    return [row for row in rows if any(not _is_blank(i) for i in row)]
 
 
 def _is_blank(obj):

@@ -9,7 +9,7 @@ from .fit import fit
 from .inference import infer_roles
 
 from .matrix import (
-    create_matrix, excel_column_index, excel_column_name, Matrix,
+    create_matrix, drop_empty_rows, excel_column_index, excel_column_name, Matrix,
 )
 
 from .pipeline import Pipeline
