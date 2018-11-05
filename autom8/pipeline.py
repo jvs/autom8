@@ -40,7 +40,9 @@ class Pipeline:
         ctx = PipelineContext(selected, receiver)
         playback(self.steps, ctx)
 
-        X = ctx.matrix.stack_columns()
+        # TODO: Notify the receiver when the features need a lot of coercion.
+        ctx.matrix.coerce_values_to_numbers()
+        X = ctx.matrix.stack_columns(float)
         return self._predict(X)
 
     def _predict(self, X):
