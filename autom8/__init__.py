@@ -3,7 +3,6 @@ __version__ = '0.0.1'
 from .cleaning import clean_dataset
 from .context import create_context
 from .csv_utils import decode_csv, encode_csv, read_csv
-from .evaluate import evaluate_pipeline
 from .exceptions import Autom8Exception, Autom8Warning
 from .fit import fit
 from .inference import infer_roles
@@ -12,6 +11,7 @@ from .matrix import (
     create_matrix, drop_empty_rows, excel_column_index, excel_column_name, Matrix,
 )
 
+from .packager import create_package
 from .pipeline import Pipeline
 
 from .preprocessors import (
@@ -34,3 +34,4 @@ from .preprocessors import (
 )
 
 from .receiver import Accumulator, Receiver
+from .report import create_report

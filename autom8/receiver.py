@@ -2,7 +2,7 @@ from . import exceptions
 
 
 class Receiver:
-    def receive_pipeline(self, pipeline, report):
+    def receive_report(self, report):
         pass
 
     def warn(self, message):
@@ -12,10 +12,10 @@ class Receiver:
 class Accumulator(Receiver):
     def __init__(self):
         self.warnings = []
-        self.pipelines = []
+        self.reports = []
 
-    def receive_pipeline(self, pipeline, report):
-        self.pipelines.append((pipeline, report))
+    def receive_report(self, report):
+        self.reports.append(report)
 
     def warn(self, message):
         self.warnings.append(message)

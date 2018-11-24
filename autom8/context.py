@@ -7,12 +7,12 @@ import numpy as np
 import scipy.sparse
 import sklearn.preprocessing
 
-from .evaluate import evaluate_pipeline
 from .exceptions import expected, typename
 from .inference import _infer_role
 from .matrix import create_matrix, Matrix
 from .pipeline import Pipeline
 from .receiver import Receiver
+from .report import create_report
 
 
 def create_context(
@@ -167,8 +167,8 @@ class FittingContext:
             label_encoder=self.labels.encoder,
         )
 
-        report = evaluate_pipeline(self, pipeline)
-        self.receiver.receive_pipeline(pipeline, report)
+        report = create_report(self, pipeline)
+        self.receiver.receive_report(report)
 
     def submit(self, func, *args, **kwargs):
         if self.pool is None:

@@ -4,18 +4,14 @@ import sklearn.metrics
 from .exceptions import expected
 
 
-Evaluation = namedtuple('Evaluation',
-    'problem_type, test_indices, derived_columns, train, test',)
-
-EvaluationSection = namedtuple('EvaluationSection',
-    'predictions, probabilities, metrics')
+Report = namedtuple('Report', 'context, pipeline, train, test')
+Section = namedtuple('Section', 'predictions, probabilities, metrics')
 
 
-def evaluate_pipeline(ctx, pipeline):
-    return Evaluation(
-        problem_type=ctx.problem_type,
-        test_indices=ctx.test_indices,
-        derived_columns=ctx.matrix.formulas,
+def create_report(ctx, pipeline):
+    return Report(
+        context=ctx,
+        pipeline=pipeline,
         train=_evaluate_predictions(ctx, pipeline, *ctx.training_data()),
         test=_evaluate_predictions(ctx, pipeline, *ctx.testing_data()),
     )
@@ -33,7 +29,7 @@ def _evaluate_predictions(ctx, pipeline, X, y):
         predicted = encoder.transform(outputs.predictions)
         metrics = _evaluate_classifier(ctx, y, predicted, encoder)
 
-    return EvaluationSection(outputs.predictions, outputs.probabilities, metrics)
+    return Section(outputs.predictions, outputs.probabilities, metrics)
 
 
 def _evaluate_regressor(ctx, actual, predicted):

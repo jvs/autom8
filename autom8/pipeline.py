@@ -66,7 +66,7 @@ class Pipeline:
                 predictions.extend(self.estimator.predict(window))
 
         if self.label_encoder is not None:
-            predictions = self.label_encoder.inverse_transform(predictions)
+            predictions = self.label_encoder.inverse_transform(predictions).tolist()
 
         return PredictionReport(predictions, probabilities)
 

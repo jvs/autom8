@@ -22,7 +22,7 @@ def fit(name):
 
 def check_classifier_reports(acc, valid_labels):
     # Make sure each report has a valid f1_score.
-    for _, report in acc.pipelines:
+    for report in acc.reports:
         s1 = report.train.metrics['f1_score']
         s2 = report.test.metrics['f1_score']
         assert isinstance(s1.tolist(), float)
@@ -31,7 +31,7 @@ def check_classifier_reports(acc, valid_labels):
         assert 0 <= s2 <= 1.0
 
     # Make sure each report has valid predictions.
-    for _, report in acc.pipelines:
+    for report in acc.reports:
         for section in [report.train, report.test]:
             for label in section.predictions:
                 assert label in valid_labels
@@ -46,9 +46,9 @@ def check_classifier_reports(acc, valid_labels):
 
 
 def check_classifier_predictions(acc, valid_labels, vectors):
-    for pipeline, _ in acc.pipelines:
+    for report in acc.reports:
         tmp = autom8.Accumulator()
-        pred = pipeline.run(vectors, receiver=tmp)
+        pred = report.pipeline.run(vectors, receiver=tmp)
         assert not tmp.warnings
 
         assert len(pred.predictions) == len(vectors) - 1
