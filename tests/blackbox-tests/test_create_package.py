@@ -19,6 +19,7 @@ def test_create_package():
 
     with zipfile.ZipFile(io.BytesIO(package_bytes)) as z:
         assert sorted(z.namelist()) == sorted([
+            'autom8-test/.dockerignore',
             'autom8-test/Dockerfile',
             'autom8-test/LICENSE',
             'autom8-test/Makefile',

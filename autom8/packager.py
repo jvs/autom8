@@ -37,6 +37,7 @@ def create_package(package_name, pipeline, dataset, test_indices, receiver=None)
     args = _template_args(package_name, pipeline, sample_input)
     result = io.BytesIO()
     templates = {
+        '.dockerignore': dockerignore,
         'Dockerfile': dockerfile,
         'LICENSE': license,
         'Makefile': makefile,
@@ -107,10 +108,18 @@ WORKDIR /deploy
 COPY requirements.txt /deploy
 RUN pip3 install --no-cache-dir --disable-pip-version-check -r requirements.txt
 
+COPY LICENSE /deploy
 COPY service.py /deploy
 COPY pipeline.pickle /deploy
 
 CMD ["gunicorn", "service:app", "--workers=1", "--bind", "0.0.0.0:80"]
+'''
+
+
+dockerignore = '''
+.pytest_cache
+.virtualenv
+__pycache__
 '''
 
 
