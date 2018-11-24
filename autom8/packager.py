@@ -192,7 +192,7 @@ $README_INPUT_COLUMNS
 - virtualenv
 
 
-## Quick Start
+## Example
 
 Run the command `make container` to start the web service.
 
