@@ -97,7 +97,7 @@ def _template_args(package_name, pipeline, sample_input):
 
 
 def pformat(obj):
-    return pprint.pformat(obj, indent=2).replace('\n', '\n  ')
+    return pprint.pformat(obj).replace('\n', '\n  ')
 
 
 dockerfile = '''
@@ -304,6 +304,6 @@ def test_predict():
     client = service.app.test_client()
     response = client.post('/predict', json={'rows': SAMPLE_INPUT})
     doc = response.get_json()
-    assert doc['columnName'] == PREDICTED_COLUMN_REPR
+    assert doc['columnName'] == $PREDICTED_COLUMN_REPR
     assert doc['predictions'] == SAMPLE_PREDICTIONS
 '''
