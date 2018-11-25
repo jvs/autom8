@@ -77,9 +77,9 @@ def _template_args(package_name, pipeline, sample_input):
     return {
         # Use github for now, until autom8 is published to PyPI.
         'AUTOM8_PACKAGE': 'git+git://github.com/jvs/autom8.git@380b6f610432d3d805e43d4bf504e5275a0bcc42#egg=autom8',
+        'DOCKER_NAME': package_name,
         'ESTIMATOR_CLASS': type(pipeline.estimator).__name__,
         'EXTRA_PACKAGES': '\n'.join(extra_packages),
-        'IMAGE_NAME': package_name,
         'PACKAGE_NAME': package_name,
         'PACKAGE_NAME_REPR': repr(package_name),
         'PREDICTED_COLUMN': pipeline.predicts_column,
@@ -155,17 +155,17 @@ clean:
     rm -rf __pycache__/*.pyc
 
 image:
-    docker build -t $IMAGE_NAME .
+    docker build -t $DOCKER_NAME .
 
 container: image
     docker run \\
-        --name $IMAGE_NAME \\
+        --name $DOCKER_NAME \\
         --rm \\
         -p 0.0.0.0:5118:80 \\
-        $IMAGE_NAME
+        $DOCKER_NAME
 
 stop:
-    docker stop $IMAGE_NAME
+    docker stop $DOCKER_NAME
 
 test: clean virtualenv
     .virtualenv/bin/pytest -s -v -W "ignore::PendingDeprecationWarning" tests.py
@@ -201,9 +201,18 @@ $README_INPUT_COLUMNS
 - virtualenv
 
 
+## Commands
+
+- `make container` -- Runs the web service in a docker container.
+- `make image` -- Builds the docker image.
+- `make stop` -- Stops the container.
+- `make test` -- Runs the unit tests in a virtual environment.
+
+
 ## Example
 
-Run the command `make container` to start the web service.
+Run the command `make container` to start the web service. This command maps
+local port 5118 to the container's port 80.
 
 To get predictions, send a POST request to `/predict`:
 
@@ -214,19 +223,6 @@ To get predictions, send a POST request to `/predict`:
 This will return:
 
     $README_OUTPUT_EXAMPLE
-
-
-## Commands
-
-- `make container`
-  - Runs the web service in a docker container.
-  - Maps local port 5118 to the container's port 80.
-- `make stop`
-  - Stops the container.
-- `make image`
-  - Builds the docker image.
-- `make test`
-  - Runs the test script in a virtual environment.
 '''
 
 
