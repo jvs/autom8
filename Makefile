@@ -37,6 +37,9 @@ boston-test: clean virtualenv
 iris-test: clean virtualenv
 	$(TEST) tests/blackbox-tests/test_iris_dataset.py
 
+package-test: clean virtualenv
+	$(TEST) tests/blackbox-tests/test_create_package.py
+
 wine-test: clean virtualenv
 	$(TEST) tests/blackbox-tests/test_wine_dataset.py
 
