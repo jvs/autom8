@@ -184,10 +184,12 @@ virtualenv: .virtualenv/bin/activate
 readme = '''
 # $PACKAGE_NAME
 
-This project provides a web service for predicting `$PREDICTED_COLUMN`.
+This project provides a stateless web service that hosts a machine learning model.
+The web service provides a `/predict` URL for running the model and predicting
+`$PREDICTED_COLUMN` values.
 
 
-## Summary
+## Model Summary
 
 - Estimator: $ESTIMATOR_CLASS
 - Predicts: $PREDICTED_COLUMN
@@ -210,7 +212,14 @@ $README_INPUT_COLUMNS
 - `make test` -- Runs the unit tests in a virtual environment.
 
 
-## Example
+## URLs
+
+- `GET /` -- Simply returns the string `$PACKAGE_NAME`. May be used as a health-check.
+- `GET /describe` -- Returns some metadata about the machine learning model.
+- `POST /predict` -- Runs the model on the provided rows and returns the predictions.
+
+
+## Usage
 
 Run the command `make container` to start the web service. This command maps
 local port 5118 to the container's port 80.
