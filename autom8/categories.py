@@ -96,6 +96,9 @@ class OneHotEncoder:
     def __init__(self):
         self._encoder = None
 
+    def __repr__(self):
+        return 'OneHotEncoder'
+
     @property
     def mapping(self):
         return self._encoder.mapping
