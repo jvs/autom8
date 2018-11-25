@@ -6,7 +6,6 @@ from datetime import date
 from string import Template
 from zipfile import ZipFile
 
-import category_encoders
 import numpy
 import pandas
 import sklearn
@@ -241,7 +240,6 @@ $EXTRA_NOTES
 
 requirements = f'''
 $AUTOM8_PACKAGE
-category-encoders=={category_encoders.__version__}
 flask==1.0.2
 gunicorn==19.8.1
 numpy=={numpy.__version__}

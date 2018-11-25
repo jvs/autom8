@@ -23,7 +23,6 @@ setup(
     platforms='any',
     python_requires='>=3.6.0',
     install_requires=[
-        'category-encoders>=1.2.8',
         'chardet>=3.0.4',
         'numpy>=1.14.4',
         'pandas>=0.23.4',
