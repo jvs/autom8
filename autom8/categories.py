@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from category_encoders.one_hot import OneHotEncoder
 
 
 def select_indices(ctx, only_strings=False):
@@ -16,11 +15,7 @@ def select_indices(ctx, only_strings=False):
 
 
 def create_encoder(ctx, method, indices):
-    if method == 'one-hot':
-        cols = list(range(len(indices)))
-        return OneHotEncoder(cols=cols, use_cat_names=True)
-    else:
-        return OrdinalEncoder()
+    return OneHotEncoder() if method == 'one-hot' else OrdinalEncoder()
 
 
 def encode(ctx, encoder, indices):
@@ -34,14 +29,14 @@ def encode(ctx, encoder, indices):
         try:
             df = encoder.transform(array)
         except Exception:
-            df = _create_failed_encoding(found, encoder)
+            df = _create_failed_encoding(encoder, found)
             ctx.receiver.warn('Failed to encode categorical data.')
 
     if not isinstance(df, pd.DataFrame):
         df = pd.DataFrame(df)
 
     if isinstance(encoder, OneHotEncoder):
-        formulas = _one_hot_encoded_formulas(df.columns, found)
+        formulas = _one_hot_encoded_formulas(encoder, found)
     else:
         formulas = [['encode', col] for col in found.columns]
 
@@ -53,35 +48,21 @@ def encode(ctx, encoder, indices):
         )
 
 
-def _one_hot_encoded_formulas(df_columns, found):
+def _one_hot_encoded_formulas(encoder, found):
     result = []
-    for i, dfcol in enumerate(df_columns):
-        try:
-            index, val = dfcol.split('_')
-            col = found.columns[int(index)]
-            result.append([f'equals[{val}]', col])
-        except Exception:
-            result.append(['one-hot-encode'] + found.columns)
+    for series, column in zip(encoder.mapping, found.columns):
+        for value in series.index:
+            result.append([f'equals[{value}]', column])
     return result
 
 
-def _create_failed_encoding(matrix, encoder):
+def _create_failed_encoding(encoder, found):
+    num_rows = len(found)
     if isinstance(encoder, OneHotEncoder):
-        cols = _create_one_hot_column_names(encoder)
+        num_cols = sum(len(s) for s in encoder.mapping)
     else:
-        cols = matrix.column_names
-
-    return pd.DataFrame(0, index=np.arange(len(matrix)), columns=cols)
-
-
-def _create_one_hot_column_names(encoder):
-    columns = []
-    for m in encoder.category_mapping:
-        prefix = m['col']
-        for oldval, newval in m['mapping']:
-            columns.append(f'{prefix}_{oldval}')
-        columns.append(f'{prefix}_-1')
-    return columns
+        num_cols = len(found.columns)
+    return pd.DataFrame(0, index=range(num_rows), columns=range(num_cols))
 
 
 class OrdinalEncoder:
@@ -109,3 +90,31 @@ def _ordinally_map_series(series):
     index = [x for x in pd.unique(series) if x is not None]
     data = list(range(1, len(index) + 1))
     return pd.Series(data=data, index=index)
+
+
+class OneHotEncoder:
+    def __init__(self):
+        self._encoder = None
+
+    @property
+    def mapping(self):
+        return self._encoder.mapping
+
+    def fit_transform(self, X):
+        X = pd.DataFrame(X)
+        self._encoder = OrdinalEncoder()
+        X = self._encoder.fit_transform(X)
+        return self._elaborate(X)
+
+    def transform(self, X):
+        if not isinstance(X, pd.DataFrame):
+            X = pd.DataFrame(X)
+        X = self._encoder.transform(X)
+        return self._elaborate(X)
+
+    def _elaborate(self, X):
+        cols = []
+        for i, series in enumerate(self.mapping):
+            for value in series:
+                cols.append((X[i] == value).rename(len(cols)).astype(int))
+        return pd.concat(cols, axis=1)

@@ -261,16 +261,16 @@ def test_one_hot_encode_categories():
     assert len(ctx.steps) == 1
     assert ctx.matrix.formulas == [
         'A',
-        ['equals[10]', 'B'], ['equals[20]', 'B'], ['equals[30]', 'B'], ['equals[-1]', 'B'],
-        ['equals[foo]', 'C'], ['equals[bar]', 'C'], ['equals[-1]', 'C'],
-        ['equals[bar]', 'D'], ['equals[foo]', 'D'], ['equals[-1]', 'D'],
-        ['equals[-1.0]', 'E'], ['equals[-1]', 'E'],
+        ['equals[10]', 'B'], ['equals[20]', 'B'], ['equals[30]', 'B'],
+        ['equals[foo]', 'C'], ['equals[bar]', 'C'],
+        ['equals[bar]', 'D'], ['equals[foo]', 'D'],
+        ['equals[-1.0]', 'E'],
     ]
 
     assert ctx.matrix.tolist() == [
-        [1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
-        [2, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0],
-        [3, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0],
+        [1, 1, 0, 0, 1, 0, 1, 0, 1],
+        [2, 0, 1, 0, 0, 1, 0, 1, 1],
+        [3, 0, 0, 1, 1, 0, 0, 1, 1],
     ]
 
     # Try replaying it on the original data.
@@ -283,9 +283,9 @@ def test_one_hot_encode_categories():
         [6, 20, 'bar', 'bar', -1.0],
     ])
     assert m2 == [
-        [4, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0],
-        [5, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0],
-        [6, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0],
+        [4, 0, 0, 1, 0, 1, 1, 0, 1],
+        [5, 1, 0, 0, 1, 0, 0, 1, 1],
+        [6, 0, 1, 0, 0, 1, 1, 0, 1],
     ]
 
     # Now try a case where some of the values are unexpected.
@@ -295,9 +295,9 @@ def test_one_hot_encode_categories():
         [6, 10, 'bar', 'zim', -1.1],
     ])
     assert m3 == [
-        [4, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
-        [5, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0],
-        [6, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+        [4, 0, 0, 0, 1, 0, 1, 0, 1],
+        [5, 0, 1, 0, 0, 0, 0, 1, 1],
+        [6, 1, 0, 0, 0, 1, 0, 0, 0],
     ]
 
     # Now try a case where some of the columns have the wrong type.
@@ -307,9 +307,9 @@ def test_one_hot_encode_categories():
         [6, False, 'bar', 9, 'C'],
     ])
     assert m4 == [
-        [4, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-        [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [6, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+        [4, 0, 0, 0, 1, 0, 0, 0, 0],
+        [5, 0, 0, 0, 0, 0, 0, 0, 0],
+        [6, 0, 0, 0, 0, 1, 0, 0, 0],
     ]
 
 
@@ -378,9 +378,9 @@ def test_one_hot_encode_categories_when_something_goes_wrong():
     autom8.categories.encode(plc, encoder, [1, 2, 3, 4])
     assert ctx.matrix.formulas == plc.matrix.formulas
     assert plc.matrix.tolist() == [
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0],
+        [2, 0, 0, 0, 0, 0, 0, 0, 0],
+        [3, 0, 0, 0, 0, 0, 0, 0, 0],
     ]
     assert len(acc.warnings) == 1
 
