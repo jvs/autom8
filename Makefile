@@ -1,6 +1,6 @@
 COVERAGE := .virtualenv/bin/coverage
 PYTHON := .virtualenv/bin/python -W "ignore::PendingDeprecationWarning"
-TEST_FLAGS := -s -v -W "ignore::PendingDeprecationWarning"
+TEST_FLAGS := -s -vv -W "ignore::PendingDeprecationWarning"
 TEST := .virtualenv/bin/pytest $(TEST_FLAGS)
 
 blackbox-tests: clean virtualenv
