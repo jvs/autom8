@@ -11,7 +11,7 @@ from .matrix import (
     create_matrix, drop_empty_rows, excel_column_index, excel_column_name, Matrix,
 )
 
-from .packager import create_package
+from .packager import create_example_input, create_package
 from .pipeline import Pipeline
 
 from .preprocessors import (

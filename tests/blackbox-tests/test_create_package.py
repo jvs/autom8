@@ -10,11 +10,18 @@ import datasets
 def test_create_package():
     acc = datasets.fit('iris.csv')
     report = acc.reports[-1]
+
+    example = autom8.create_example_input(
+        pipeline=report.pipeline,
+        dataset=datasets.load('iris.csv'),
+        indices=report.context.test_indices[1:3],
+    )
+
     package_bytes = autom8.create_package(
         package_name='autom8-test',
         pipeline=report.pipeline,
-        dataset=datasets.load('iris.csv'),
-        test_indices=report.context.test_indices,
+        example_input=example,
+        extra_notes='foo bar baz',
     )
 
     with zipfile.ZipFile(io.BytesIO(package_bytes)) as z:
@@ -41,6 +48,8 @@ def test_create_package():
             pipeline = pickle.load(f)
 
         readme = read('README.md')
+        assert 'foo bar baz' in readme
+
         sample_input = _extract_json(readme, '--data \'')
         expected_output = _extract_json(readme, '\nThis will return:\n')
         received_output = pipeline.run(sample_input['rows'])

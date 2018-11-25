@@ -25,16 +25,17 @@ except ImportError:
 from .matrix import create_matrix, drop_empty_rows, Matrix
 
 
-def create_package(package_name, pipeline, dataset, test_indices, receiver=None):
+def create_example_input(pipeline, dataset, indices, receiver=None):
     if not isinstance(dataset, Matrix):
         dataset = drop_empty_rows(dataset)
-
     matrix = create_matrix(dataset, receiver=receiver)
     target_column = matrix.column_names.index(pipeline.predicts_column)
     matrix.drop_columns_by_index(target_column)
-    sample_input = matrix.select_rows(test_indices[:2]).tolist()
+    return [pipeline.input_columns] + matrix.select_rows(indices).tolist()
 
-    args = _template_args(package_name, pipeline, sample_input)
+
+def create_package(package_name, pipeline, example_input, extra_notes=None):
+    args = _template_args(package_name, pipeline, example_input, extra_notes)
     result = io.BytesIO()
     templates = {
         '.dockerignore': dockerignore,
@@ -54,7 +55,7 @@ def create_package(package_name, pipeline, dataset, test_indices, receiver=None)
     return result.getvalue()
 
 
-def _template_args(package_name, pipeline, sample_input):
+def _template_args(package_name, pipeline, example_input, extra_notes):
     est = pipeline.estimator
     extra_packages = []
 
@@ -66,12 +67,11 @@ def _template_args(package_name, pipeline, sample_input):
         if isinstance(est, (xgboost.XGBRegressor, xgboost.XGBClassifier)):
             extra_packages.append(f'xgboost=={xgboost.__version__}')
 
-    sample_input = [pipeline.input_columns] + sample_input
-    sample_result = pipeline.run(sample_input)
-    sample_output = {
+    example_result = pipeline.run(example_input)
+    example_output = {
         'columnName': f'Predicted {pipeline.predicts_column}',
-        'predictions': sample_result.predictions,
-        'probabilities': sample_result.probabilities,
+        'predictions': example_result.predictions,
+        'probabilities': example_result.probabilities,
     }
 
     return {
@@ -79,6 +79,7 @@ def _template_args(package_name, pipeline, sample_input):
         'AUTOM8_PACKAGE': 'git+git://github.com/jvs/autom8.git@380b6f610432d3d805e43d4bf504e5275a0bcc42#egg=autom8',
         'DOCKER_NAME': package_name,
         'ESTIMATOR_CLASS': type(pipeline.estimator).__name__,
+        'EXTRA_NOTES': extra_notes or '',
         'EXTRA_PACKAGES': '\n'.join(extra_packages),
         'PACKAGE_NAME': package_name,
         'PACKAGE_NAME_REPR': repr(package_name),
@@ -87,13 +88,13 @@ def _template_args(package_name, pipeline, sample_input):
         'README_INPUT_COLUMNS': '\n'.join(f'  -  {c}'
             for c in pipeline.input_columns),
         'README_INPUT_EXAMPLE': json
-            .dumps({'rows': sample_input}, sort_keys=True, indent=2)
+            .dumps({'rows': example_input}, sort_keys=True, indent=2)
             .replace("'", '\'\"\'\"\'').replace('\n', '\n        '),
         'README_OUTPUT_EXAMPLE': json
-            .dumps(sample_output, sort_keys=True, indent=2)
+            .dumps(example_output, sort_keys=True, indent=2)
             .replace('\n', '\n    '),
-        'TEST_INPUT': pformat(sample_input),
-        'TEST_OUTPUT_PREDICTIONS': pformat(sample_result.predictions),
+        'TEST_INPUT': pformat(example_input),
+        'TEST_OUTPUT_PREDICTIONS': pformat(example_result.predictions),
     }
 
 
@@ -223,6 +224,9 @@ To get predictions, send a POST request to `/predict`:
 This will return:
 
     $README_OUTPUT_EXAMPLE
+
+
+$EXTRA_NOTES
 '''
 
 
