@@ -75,7 +75,7 @@ def _template_args(package_name, pipeline, example_input, extra_notes):
 
     return {
         # Use github for now, until autom8 is published to PyPI.
-        'AUTOM8_PACKAGE': 'git+git://github.com/jvs/autom8.git@380b6f610432d3d805e43d4bf504e5275a0bcc42#egg=autom8',
+        'AUTOM8_PACKAGE': 'git+git://github.com/jvs/autom8.git@925790feaf86f9b21ccbcb2715266a1961b5baeb#egg=autom8',
         'DOCKER_NAME': package_name,
         'ESTIMATOR_CLASS': type(pipeline.estimator).__name__,
         'EXTRA_NOTES': extra_notes or '',
