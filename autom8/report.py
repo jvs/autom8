@@ -4,7 +4,7 @@ import sklearn.metrics
 from .exceptions import expected
 
 
-Report = namedtuple('Report', 'context, pipeline, train, test')
+Report = namedtuple('Report', 'context, pipeline, formulas, train, test')
 Section = namedtuple('Section', 'predictions, probabilities, metrics')
 
 
@@ -12,6 +12,7 @@ def create_report(ctx, pipeline):
     return Report(
         context=ctx,
         pipeline=pipeline,
+        formulas=ctx.matrix.formulas,
         train=_evaluate_predictions(ctx, pipeline, *ctx.training_data()),
         test=_evaluate_predictions(ctx, pipeline, *ctx.testing_data()),
     )
