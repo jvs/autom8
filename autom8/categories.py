@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from category_encoders import OrdinalEncoder
 from category_encoders.one_hot import OneHotEncoder
 
 
@@ -17,11 +16,11 @@ def select_indices(ctx, only_strings=False):
 
 
 def create_encoder(ctx, method, indices):
-    cols = list(range(len(indices)))
     if method == 'one-hot':
+        cols = list(range(len(indices)))
         return OneHotEncoder(cols=cols, use_cat_names=True)
     else:
-        return OrdinalEncoder(cols=cols)
+        return OrdinalEncoder()
 
 
 def encode(ctx, encoder, indices):
@@ -83,3 +82,30 @@ def _create_one_hot_column_names(encoder):
             columns.append(f'{prefix}_{oldval}')
         columns.append(f'{prefix}_-1')
     return columns
+
+
+class OrdinalEncoder:
+    def __init__(self):
+        self.mapping = None
+
+    def __repr__(self):
+        return 'OrdinalEncoder'
+
+    def fit_transform(self, X):
+        X = pd.DataFrame(X)
+        self.mapping = [_ordinally_map_series(X[i]) for i in X.columns]
+        return self.transform(X)
+
+    def transform(self, X):
+        if not isinstance(X, pd.DataFrame):
+            X = pd.DataFrame(X)
+        for i, series in enumerate(self.mapping):
+            X[i] = X[i].map(series)
+            X[i].fillna(0, inplace=True)
+        return X
+
+
+def _ordinally_map_series(series):
+    index = [x for x in pd.unique(series) if x is not None]
+    data = list(range(1, len(index) + 1))
+    return pd.Series(data=data, index=index)
