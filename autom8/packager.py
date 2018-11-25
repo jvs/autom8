@@ -305,6 +305,21 @@ def test_index():
     assert response.data.decode('utf-8') == $PACKAGE_NAME_REPR
 
 
+def test_describe():
+    client = service.app.test_client()
+    response = client.get('/describe')
+    doc = response.get_json()
+    expected_keys = [
+        'inputColumns',
+        'predictsColumn',
+        'predictsClasses',
+        'estimatorClass',
+        'estimator',
+    ]
+    for key in expected_keys:
+        assert key in doc
+
+
 def test_predict():
     client = service.app.test_client()
     response = client.post('/predict', json={'rows': SAMPLE_INPUT})
