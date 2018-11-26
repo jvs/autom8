@@ -1,5 +1,6 @@
 __version__ = '0.0.1'
 
+from .candidate import create_report
 from .cleaning import clean_dataset
 from .context import create_context
 from .csv_utils import decode_csv, encode_csv, read_csv
@@ -34,4 +35,3 @@ from .preprocessors import (
 )
 
 from .receiver import Accumulator, Receiver
-from .report import create_report

@@ -7,12 +7,12 @@ import numpy as np
 import scipy.sparse
 import sklearn.preprocessing
 
+from .candidate import create_report
 from .exceptions import expected, typename
 from .inference import _infer_role
 from .matrix import create_matrix, Matrix
 from .pipeline import Pipeline
 from .receiver import Receiver
-from .report import create_report
 
 
 def create_context(
