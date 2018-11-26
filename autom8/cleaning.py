@@ -11,6 +11,29 @@ int_type = (int, np.int64)
 
 @planner
 def clean_dataset(ctx):
+    """Cleans the context's dataset, and records the steps for later playback.
+
+    This function peforms a handful of steps:
+
+    - Drops columns that contain unexpected values. A value is unexpected if is
+      is not a boolean, a number, a string, or None.
+    - Drops columns that only contain None values.
+    - Coerces columns to have numeric types whenever possible.
+    - In columns of strings, replaces None values with the empty string.
+    - In a column of numbers, if any numbers are missing, replace the missing
+      number with zero, and add a second column of booleans that indicates which
+      values were missing.
+    - Replace a column of mixed strings and numbers with two columns: one for
+      the string values and another for the number values.
+
+    After running these steps, each column in the dataset should have a uniform
+    type for all the values in that column. For example, if a column has one
+    boolean value, then all the values in the column will be booleans.
+
+    Parameters:
+        ctx (FittingContext): The current context.
+    """
+
     for col in ctx.matrix.columns:
         _clean_column(ctx, col)
 

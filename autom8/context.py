@@ -8,6 +8,7 @@ import scipy.sparse
 import sklearn.preprocessing
 
 from .candidate import create_candidate
+from .docstrings import render_docstring
 from .exceptions import expected, typename
 from .inference import _infer_role
 from .matrix import create_matrix, Matrix
@@ -15,6 +16,7 @@ from .pipeline import Pipeline
 from .receiver import Receiver
 
 
+@render_docstring
 def create_context(
     dataset,
     column_names=None,
@@ -26,6 +28,12 @@ def create_context(
     executor_class=None,
     receiver=None,
 ):
+    """Returns a new FittingContext object, ready to create candidate pipelines.
+
+    Parameters:
+        $all_context_parameters
+    """
+
     # Create a default receiver if the user didn't provide one.
     if receiver is None:
         receiver = Receiver()

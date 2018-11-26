@@ -1,7 +1,14 @@
+from .docstrings import render_docstring
 from .receiver import Receiver
 
 
+@render_docstring
 def create_selector(selector=None):
+    """"Returns an `autom8.Receiver` that selects the best candidate pipeline.
+
+    Parameters:
+        $selector_parameters
+    """
     if selector is None:
         return DefaultSelector()
 

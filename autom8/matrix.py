@@ -2,12 +2,20 @@ from functools import reduce
 import re
 import numpy as np
 
+from .docstrings import render_docstring
 from .exceptions import expected, typename
 from .parsing import parse_number
 from .receiver import Receiver
 
 
+@render_docstring
 def create_matrix(dataset, column_names=None, column_roles=None, receiver=None):
+    """Returns a new Matrix object from the provided dataset.
+
+    Parameters:
+        $dataset_parameters
+        $receiver_parameter
+    """
     if receiver is None:
         receiver = Receiver()
 

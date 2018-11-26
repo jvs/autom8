@@ -9,6 +9,15 @@ MetricsReport = namedtuple('MetricsReport', 'predictions, probabilities, metrics
 
 
 def create_candidate(ctx, pipeline):
+    """Creates a Candidate object from the provided context and pipeline.
+
+    Parameters:
+        ctx (FittingContext): The current context.
+        pipeline (Pipeline): The newly created pipeline.
+
+    Returns:
+        Candidate: The candidate object, containing the pipeline and its metrics.
+    """
     return Candidate(
         pipeline=pipeline,
         formulas=ctx.matrix.formulas,
@@ -111,10 +120,20 @@ def precision_recall_fscore_support(actual, predicted, encoder):
 
 
 def adjusted_r2_score(ctx, pipeline, initial_metrics, num_rows):
-    """
-    Calculates the Adjusted R2 Score.
+    """Calculates the Adjusted R2 Score.
+
     See: https://en.wikipedia.org/wiki/Coefficient_of_determination#Adjusted_R2
+
+    Parameters:
+        ctx (FittingContext): The current context.
+        pipeline (Pipeline): The pipeline being evaluated.
+        initial_metrics (dict): A dict of the metrics we've collected so far.
+        num_rows (int): The number of rows in this segment of the dataset.
+
+    Returns:
+        float: The Adjusted R2 Score.
     """
+
     # Only count root columns that end up in a formula with a nonzero weight.
     # (A "root column" in a column that appeared in the initial matrix, before
     # any preprocessing, and was used to derive other columns.)

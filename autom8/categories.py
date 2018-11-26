@@ -3,6 +3,8 @@ import pandas as pd
 
 
 def select_indices(ctx, only_strings=False):
+    """Returns the column indices that should be categorically encoded."""
+
     def should_be_encoded(col):
         if col.role != 'categorical':
             return False

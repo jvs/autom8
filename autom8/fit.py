@@ -16,22 +16,51 @@ except ImportError:
     xgboost = None
 
 from .cleaning import clean_dataset
+from .docstrings import render_docstring
 from .inference import infer_roles
 from . import preprocessors as then
 from .context import create_context
 from .selector import create_selector
 
 
+@render_docstring
 def fit(*args, **kwargs):
+    """Runs autom8 with the provided settings and returns the best pipeline.
+
+    Parameters:
+        $common_context_parameters
+        $selector_parameters
+
+    Returns:
+        autom8.Pipeline: The best pipeline, as indicated by the `selector`
+            parameter.
+    """
+
     if 'receiver' in kwargs:
         raise TypeError("fit() got an unexpected keyword argument 'receiver'")
 
     selector = create_selector(kwargs.pop('selector', None))
     run(*args, **kwargs, receiver=selector)
-    return selector.best.pipeline
+    return None if selector.best is None else selector.best.pipeline
 
 
+@render_docstring
 def run(*args, **kwargs):
+    """Runs autom8 with the provided settings.
+
+    After creating the `FittingContext` object, autom8 passes the context to
+    the receiver's `receive_context` method. The allows the receive to copy any
+    information that it may need later, like the context's `test_indices`
+    attribute, for example.
+
+    As autom8 creates candidate pipelines, it passes each candidate to the
+    receiver's `receive_candidate` method. At that point, the receiver is free
+    to do whatever it wants with the candidate.
+
+    Parameters:
+        $all_context_parameters
+    """
+
     ctx = create_context(*args, **kwargs)
     ctx.receiver.receive_context(ctx)
 
