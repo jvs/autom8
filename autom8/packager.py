@@ -240,8 +240,8 @@ $EXTRA_NOTES
 
 requirements = f'''
 $AUTOM8_PACKAGE
-flask==1.0.2
-gunicorn==19.8.1
+flask==1.*
+gunicorn==19.*
 numpy=={numpy.__version__}
 pandas=={pandas.__version__}
 scikit-learn=={sklearn.__version__}
