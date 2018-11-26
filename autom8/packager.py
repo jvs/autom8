@@ -188,7 +188,24 @@ The web service provides a `/predict` URL for running the model and predicting
 `$PREDICTED_COLUMN` values.
 
 
+## Files
+
+This package includes a handful of files:
+
+- `.dockerignore` -- Prevents Docker from loading unnecessary files into its context.
+- `Dockerfile` -- Defines the Docker image for your web service.
+- `LICENSE` -- The MIT license for this software.
+- `Makefile` -- Defines commands for starting and stopping the container, and running tests.
+- `pipeline.pickle` -- The Python pickle file of your machine learning model.
+- `README.md` -- This file. Provides some basic documentation.
+- `requirements.txt` -- The Python dependencies for the web service.
+- `service.py` -- Defines a flask application.
+- `tests.py` -- Defines unit tests for your application. Run them with `make test`.
+
+
 ## Model Summary
+
+The machine learning model is serialized in the `pipeline.pickle` file.
 
 - Estimator: $ESTIMATOR_CLASS
 - Predicts: $PREDICTED_COLUMN
@@ -218,7 +235,7 @@ $README_INPUT_COLUMNS
 - `POST /predict` -- Runs the model on the provided rows and returns the predictions.
 
 
-## Usage
+## Using the Container
 
 Run the command `make container` to start the web service. This command maps
 local port 5118 to the container's port 80.
