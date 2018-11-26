@@ -20,19 +20,19 @@ def run(name):
     return acc
 
 
-def check_classifier_reports(acc, valid_labels):
-    # Make sure each report has a valid f1_score.
-    for report in acc.reports:
-        s1 = report.train.metrics['f1_score']
-        s2 = report.test.metrics['f1_score']
+def check_classifier_candidates(acc, valid_labels):
+    # Make sure each candidate has a valid f1_score.
+    for candidate in acc.candidates:
+        s1 = candidate.train.metrics['f1_score']
+        s2 = candidate.test.metrics['f1_score']
         assert isinstance(s1, float)
         assert isinstance(s2, float)
         assert 0 <= s1 <= 1.0
         assert 0 <= s2 <= 1.0
 
-    # Make sure each report has valid predictions.
-    for report in acc.reports:
-        for section in [report.train, report.test]:
+    # Make sure each candidate has valid predictions.
+    for candidate in acc.candidates:
+        for section in [candidate.train, candidate.test]:
             for label in section.predictions:
                 assert label in valid_labels
 
@@ -46,9 +46,9 @@ def check_classifier_reports(acc, valid_labels):
 
 
 def check_classifier_predictions(acc, valid_labels, vectors):
-    for report in acc.reports:
+    for candidate in acc.candidates:
         tmp = autom8.Accumulator()
-        pred = report.pipeline.run(vectors, receiver=tmp)
+        pred = candidate.pipeline.run(vectors, receiver=tmp)
         assert not tmp.warnings
 
         assert len(pred.predictions) == len(vectors) - 1

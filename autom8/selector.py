@@ -26,11 +26,11 @@ class Comparator(Receiver):
         self._compare = compare
         self.best = None
 
-    def receive_report(self, report):
+    def receive_candidate(self, candidate):
         if self.best is None:
-            self.best = report
+            self.best = candidate
         else:
-            self.best = self._compare(self.best, report)
+            self.best = self._compare(self.best, candidate)
 
 
 class DefaultSelector(Receiver):
@@ -41,34 +41,34 @@ class DefaultSelector(Receiver):
     def best(self):
         return None if self._selector is None else self._selector.best
 
+    def receive_candidate(self, candidate):
+        self._selector.receive_candidate(candidate)
+
     def receive_context(self, context):
         is_cls = context.problem_type == 'classification'
         metric = 'f1_score' if is_cls else 'r2_score'
         self._selector = create_selector([metric, 'step_count', 'column_count'])
         self._selector.receive_context(context)
 
-    def receive_report(self, report):
-        self._selector.receive_report(report)
 
-
-def _optimize_metrics(metrics, report1, report2):
+def _optimize_metrics(metrics, candidate1, candidate2):
     for metric in metrics:
-        x1 = _read_metric(report1, metric)
-        x2 = _read_metric(report2, metric)
+        x1 = _read_metric(candidate1, metric)
+        x2 = _read_metric(candidate2, metric)
 
-        # If it's not a tie, then return the report with the better score.
+        # If it's not a tie, then return the candidate with the better score.
         if x1 != x2:
             is_better = x1 > x2 if metric.endswith('_score') else x1 < x2
-            return report1 if is_better else report2
+            return candidate1 if is_better else candidate2
 
     # The reigning champion wins ties.
-    return report1
+    return candidate1
 
 
-def _read_metric(report, metric):
+def _read_metric(candidate, metric):
     if metric == 'column_count':
-        return len(report.formulas)
+        return len(candidate.formulas)
     elif metric == 'step_count':
-        return len(report.pipeline.steps)
+        return len(candidate.pipeline.steps)
     else:
-        return report.test.metrics[metric]
+        return candidate.test.metrics[metric]

@@ -9,17 +9,17 @@ import datasets
 
 def test_create_package():
     acc = datasets.run('iris.csv')
-    report = acc.reports[-1]
+    candidate = acc.candidates[-1]
 
     example = autom8.create_example_input(
-        pipeline=report.pipeline,
+        pipeline=candidate.pipeline,
         dataset=datasets.load('iris.csv'),
         indices=acc.test_indices[1:3],
     )
 
     package_bytes = autom8.create_package(
         package_name='autom8-test',
-        pipeline=report.pipeline,
+        pipeline=candidate.pipeline,
         example_input=example,
         extra_notes='foo bar baz',
     )

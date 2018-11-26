@@ -1,6 +1,6 @@
 __version__ = '0.0.1'
 
-from .candidate import create_report
+from .candidate import create_candidate
 from .cleaning import clean_dataset
 from .context import create_context
 from .csv_utils import decode_csv, encode_csv, read_csv

@@ -4,14 +4,14 @@ import datasets
 def test_wine_dataset():
     acc = datasets.run('wine.csv')
 
-    # Assert that we at least got 7 reports.
-    assert len(acc.reports) >= 7
+    # Assert that we at least got 7 candidates.
+    assert len(acc.candidates) >= 7
 
     valid_labels = {'class_0', 'class_1', 'class_2'}
-    datasets.check_classifier_reports(acc, valid_labels)
+    datasets.check_classifier_candidates(acc, valid_labels)
 
     # Assert that the best test score is better than 0.6.
-    best = max(i.test.metrics['f1_score'] for i in acc.reports)
+    best = max(i.test.metrics['f1_score'] for i in acc.candidates)
     assert best > 0.6
 
     # Make sure each pipeline can make predictions.

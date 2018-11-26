@@ -17,24 +17,24 @@ def test_evaluate_pipeline():
 
     autom8.add_column_of_ones(ctx)
     ctx << sklearn.linear_model.LinearRegression()
-    assert len(acc.reports) == 1
+    assert len(acc.candidates) == 1
 
-    report = acc.reports[0]
-    assert report.train.metrics['r2_score'] == 1.0
-    assert report.test.metrics['r2_score'] == 1.0
+    candidate = acc.candidates[0]
+    assert candidate.train.metrics['r2_score'] == 1.0
+    assert candidate.test.metrics['r2_score'] == 1.0
 
     assert np.allclose(
-        report.train.predictions,
+        candidate.train.predictions,
         np.array([1+2, 3+4, 7+8, 9+10, 13+14, 15+16]),
     )
 
     assert np.allclose(
-        report.test.predictions,
+        candidate.test.predictions,
         np.array([5+6, 11+12]),
     )
 
     # Try using the pipeline to make some predictions.
-    result = report.pipeline.run([[17, 18], [19, 20], [21, 22]], receiver=acc)
+    result = candidate.pipeline.run([[17, 18], [19, 20], [21, 22]], receiver=acc)
 
     assert np.allclose(result.predictions, np.array([17+18, 19+20, 21+22]))
     assert result.probabilities is None

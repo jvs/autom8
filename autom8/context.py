@@ -7,7 +7,7 @@ import numpy as np
 import scipy.sparse
 import sklearn.preprocessing
 
-from .candidate import create_report
+from .candidate import create_candidate
 from .exceptions import expected, typename
 from .inference import _infer_role
 from .matrix import create_matrix, Matrix
@@ -167,8 +167,8 @@ class FittingContext:
             label_encoder=self.labels.encoder,
         )
 
-        report = create_report(self, pipeline)
-        self.receiver.receive_report(report)
+        candidate = create_candidate(self, pipeline)
+        self.receiver.receive_candidate(candidate)
 
     def submit(self, func, *args, **kwargs):
         if self.pool is None:

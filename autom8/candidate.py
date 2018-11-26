@@ -4,12 +4,12 @@ import sklearn.metrics
 from .exceptions import expected
 
 
-PipelineReport = namedtuple('PipelineReport', 'pipeline, formulas, train, test')
+Candidate = namedtuple('Candidate', 'pipeline, formulas, train, test')
 MetricsReport = namedtuple('MetricsReport', 'predictions, probabilities, metrics')
 
 
-def create_report(ctx, pipeline):
-    return PipelineReport(
+def create_candidate(ctx, pipeline):
+    return Candidate(
         pipeline=pipeline,
         formulas=ctx.matrix.formulas,
         train=_evaluate_predictions(ctx, pipeline, *ctx.training_data()),

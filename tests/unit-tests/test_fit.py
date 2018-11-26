@@ -32,18 +32,18 @@ def test_run():
         warnings.simplefilter('ignore')
         autom8.run(dataset, receiver=acc)
 
-    # Assert that we at least got 10 reports.
-    assert len(acc.reports) >= 10
+    # Assert that we at least got 10 candidates.
+    assert len(acc.candidates) >= 10
 
     # Make sure they all have an r2_score.
-    for report in acc.reports:
-        s1 = report.train.metrics['r2_score']
-        s2 = report.test.metrics['r2_score']
+    for candidate in acc.candidates:
+        s1 = candidate.train.metrics['r2_score']
+        s2 = candidate.test.metrics['r2_score']
         assert isinstance(s1, float)
         assert isinstance(s2, float)
 
     # Make sure the best scores are at least 0.5.
-    best_train = max(r.train.metrics['r2_score'] for r in acc.reports)
-    best_test = max(r.test.metrics['r2_score'] for r in acc.reports)
+    best_train = max(r.train.metrics['r2_score'] for r in acc.candidates)
+    best_test = max(r.test.metrics['r2_score'] for r in acc.candidates)
     assert best_train > 0.5
     assert best_test > 0.5
