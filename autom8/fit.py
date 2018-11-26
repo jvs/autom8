@@ -23,6 +23,7 @@ from .context import create_context
 
 def fit(*args, **kwargs):
     ctx = create_context(*args, **kwargs)
+    ctx.receiver.receive_context(ctx)
 
     clean_dataset(ctx)
     infer_roles(ctx)

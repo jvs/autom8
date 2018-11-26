@@ -14,7 +14,7 @@ def test_create_package():
     example = autom8.create_example_input(
         pipeline=report.pipeline,
         dataset=datasets.load('iris.csv'),
-        indices=report.context.test_indices[1:3],
+        indices=acc.test_indices[1:3],
     )
 
     package_bytes = autom8.create_package(
