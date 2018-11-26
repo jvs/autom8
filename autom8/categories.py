@@ -24,25 +24,22 @@ def encode(ctx, encoder, indices):
     ctx.matrix.drop_columns_by_index(indices)
 
     if ctx.is_fitting:
-        df = encoder.fit_transform(array)
+        result = encoder.fit_transform(array)
     else:
         try:
-            df = encoder.transform(array)
+            result = encoder.transform(array)
         except Exception:
-            df = _create_failed_encoding(encoder, found)
+            result = _create_failed_encoding(encoder, found)
             ctx.receiver.warn('Failed to encode categorical data.')
-
-    if not isinstance(df, pd.DataFrame):
-        df = pd.DataFrame(df)
 
     if isinstance(encoder, OneHotEncoder):
         formulas = _one_hot_encoded_formulas(encoder, found)
     else:
         formulas = [['encode', col] for col in found.columns]
 
-    for i in range(df.shape[1]):
+    for i in range(result.shape[1]):
         ctx.matrix.append_column(
-            values=df.iloc[:, i].values,
+            values=result[:, i],
             formula=formulas[i],
             role='encoded',
         )
@@ -62,7 +59,7 @@ def _create_failed_encoding(encoder, found):
         num_cols = sum(len(s) for s in encoder.mapping)
     else:
         num_cols = len(found.columns)
-    return pd.DataFrame(0, index=range(num_rows), columns=range(num_cols))
+    return np.zeros((num_rows, num_cols))
 
 
 class OrdinalEncoder:
@@ -83,7 +80,7 @@ class OrdinalEncoder:
         for i, series in enumerate(self.mapping):
             X[i] = X[i].map(series)
             X[i].fillna(0, inplace=True)
-        return X
+        return X.values
 
 
 def _ordinally_map_series(series):
@@ -104,20 +101,15 @@ class OneHotEncoder:
         return self._encoder.mapping
 
     def fit_transform(self, X):
-        X = pd.DataFrame(X)
         self._encoder = OrdinalEncoder()
-        X = self._encoder.fit_transform(X)
-        return self._elaborate(X)
+        return self._elaborate(self._encoder.fit_transform(X))
 
     def transform(self, X):
-        if not isinstance(X, pd.DataFrame):
-            X = pd.DataFrame(X)
-        X = self._encoder.transform(X)
-        return self._elaborate(X)
+        return self._elaborate(self._encoder.transform(X))
 
     def _elaborate(self, X):
         cols = []
         for i, series in enumerate(self.mapping):
             for value in series:
-                cols.append((X[i] == value).rename(len(cols)).astype(int))
-        return pd.concat(cols, axis=1)
+                cols.append((X[:, i] == value).astype(int))
+        return np.stack(cols, axis=1)
