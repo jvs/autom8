@@ -149,14 +149,18 @@ SOFTWARE.
 
 
 makefile = '''
-.PHONY: image container stop
+# This file defines commands for running and testing your web service. Use the
+# `make` program to run them (for example, type `make test` to run the unit
+# tests).
 
+
+# Removes any compiled Python files that may be lying around.
 clean:
     rm -rf __pycache__/*.pyc
 
-image:
-    docker build -t $DOCKER_NAME .
 
+# Runs your web service in a Docker container. Maps local port 5118 to the
+# container's port 80.
 container: image
     docker run \\
         --name $DOCKER_NAME \\
@@ -164,19 +168,36 @@ container: image
         -p 0.0.0.0:5118:80 \\
         $DOCKER_NAME
 
+
+# Builds the Docker image for your web service.
+image:
+    docker build -t $DOCKER_NAME .
+
+
+# Stops the Docker cotainer.
 stop:
     docker stop $DOCKER_NAME
 
+
+# Runs the unit tests. (But first it runs `make clean` and `make virtualenv`.)
 test: clean virtualenv
     .virtualenv/bin/pytest -s -v -W "ignore::PendingDeprecationWarning" tests.py
 
+
+# Creates the `activate` script for your virtual environment.
 virtualenv: .virtualenv/bin/activate
 
+
+# Creates your virtual environment and installs the required dependencies.
 .virtualenv/bin/activate: requirements.txt
     test -d .virtualenv || virtualenv .virtualenv
     .virtualenv/bin/pip install -U -r requirements.txt
     .virtualenv/bin/pip install -U pytest
     touch .virtualenv/bin/activate
+
+
+# Tells `make` which commands don't actaully produce any files.
+.PHONY: clean container image stop test
 '''.replace('    ', '\t')
 
 
