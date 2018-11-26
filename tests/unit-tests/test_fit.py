@@ -9,11 +9,28 @@ def test_fit():
     y = np.sin(2 * np.pi * x)
 
     dataset = np.column_stack([x, y])
+
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        pipeline = autom8.fit(dataset)
+
+    assert isinstance(pipeline, autom8.Pipeline)
+
+    result = pipeline.run([[0.5]])
+    assert len(result.predictions) == 1
+    assert isinstance(result.predictions[0], float)
+
+
+def test_run():
+    x = np.arange(0.0, 1, 0.01)
+    y = np.sin(2 * np.pi * x)
+
+    dataset = np.column_stack([x, y])
     acc = autom8.Accumulator()
 
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        autom8.fit(dataset, receiver=acc)
+        autom8.run(dataset, receiver=acc)
 
     # Assert that we at least got 10 reports.
     assert len(acc.reports) >= 10
@@ -22,8 +39,8 @@ def test_fit():
     for report in acc.reports:
         s1 = report.train.metrics['r2_score']
         s2 = report.test.metrics['r2_score']
-        assert isinstance(s1.tolist(), float)
-        assert isinstance(s2.tolist(), float)
+        assert isinstance(s1, float)
+        assert isinstance(s2, float)
 
     # Make sure the best scores are at least 0.5.
     best_train = max(r.train.metrics['r2_score'] for r in acc.reports)

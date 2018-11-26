@@ -66,9 +66,11 @@ class Pipeline:
                 predictions.extend(self.estimator.predict(window))
 
         if self.label_encoder is not None:
-            predictions = self.label_encoder.inverse_transform(predictions).tolist()
+            predictions = self.label_encoder.inverse_transform(predictions)
 
-        return PredictionReport(predictions, probabilities)
+        tolist = lambda x: x.tolist() if hasattr(x, 'tolist') else x
+        conv = lambda xs: None if xs is None else [tolist(x) for x in xs]
+        return PredictionReport(conv(predictions), conv(probabilities))
 
     def _format_probabilities(self, probs):
         decode = lambda i: self.label_encoder.inverse_transform([i])[0]

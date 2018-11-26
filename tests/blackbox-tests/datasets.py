@@ -9,13 +9,13 @@ def load(name):
     return autom8.read_csv(path)
 
 
-def fit(name):
+def run(name):
     dataset = load(name)
     acc = autom8.Accumulator()
 
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        autom8.fit(dataset, receiver=acc)
+        autom8.run(dataset, receiver=acc)
 
     return acc
 
@@ -25,8 +25,8 @@ def check_classifier_reports(acc, valid_labels):
     for report in acc.reports:
         s1 = report.train.metrics['f1_score']
         s2 = report.test.metrics['f1_score']
-        assert isinstance(s1.tolist(), float)
-        assert isinstance(s2.tolist(), float)
+        assert isinstance(s1, float)
+        assert isinstance(s2, float)
         assert 0 <= s1 <= 1.0
         assert 0 <= s2 <= 1.0
 

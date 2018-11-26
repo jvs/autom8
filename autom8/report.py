@@ -4,12 +4,12 @@ import sklearn.metrics
 from .exceptions import expected
 
 
-Report = namedtuple('Report', 'pipeline, formulas, train, test')
-Section = namedtuple('Section', 'predictions, probabilities, metrics')
+PipelineReport = namedtuple('PipelineReport', 'pipeline, formulas, train, test')
+MetricsReport = namedtuple('MetricsReport', 'predictions, probabilities, metrics')
 
 
 def create_report(ctx, pipeline):
-    return Report(
+    return PipelineReport(
         pipeline=pipeline,
         formulas=ctx.matrix.formulas,
         train=_evaluate_predictions(ctx, pipeline, *ctx.training_data()),
@@ -29,7 +29,7 @@ def _evaluate_predictions(ctx, pipeline, X, y):
         predicted = encoder.transform(outputs.predictions)
         metrics = _evaluate_classifier(ctx, y, predicted, encoder)
 
-    return Section(outputs.predictions, outputs.probabilities, metrics)
+    return MetricsReport(outputs.predictions, outputs.probabilities, metrics)
 
 
 def _evaluate_regressor(ctx, actual, predicted):
@@ -69,11 +69,15 @@ def _evaluate_classifier(ctx, actual, predicted, encoder):
     }
 
 
+def _tolist(x):
+    return x.tolist() if hasattr(x, 'tolist') else x
+
+
 def _apply_metrics(funcs, *a, **k):
     result = {}
     for f in funcs:
         try:
-            result[f.__name__] = f(*a, **k)
+            result[f.__name__] = _tolist(f(*a, **k))
         except Exception:
             pass
     return result

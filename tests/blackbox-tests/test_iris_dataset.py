@@ -2,7 +2,7 @@ import datasets
 
 
 def test_iris_dataset():
-    acc = datasets.fit('iris.csv')
+    acc = datasets.run('iris.csv')
 
     # Assert that we at least got 7 reports.
     assert len(acc.reports) >= 7

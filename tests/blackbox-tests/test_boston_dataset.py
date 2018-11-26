@@ -3,7 +3,7 @@ import datasets
 
 
 def test_boston_dataset():
-    acc = datasets.fit('boston.csv')
+    acc = datasets.run('boston.csv')
 
     # Assert that we at least got 10 reports.
     assert len(acc.reports) >= 10
@@ -14,8 +14,8 @@ def test_boston_dataset():
         s2 = report.test.metrics['r2_score']
         assert s1 <= 1.0
         assert s2 <= 1.0
-        assert isinstance(s1.tolist(), float)
-        assert isinstance(s2.tolist(), float)
+        assert isinstance(s1, float)
+        assert isinstance(s2, float)
 
     # Assert that the best test score is better than 0.6.
     best = max(i.test.metrics['r2_score'] for i in acc.reports)
@@ -34,6 +34,6 @@ def test_boston_dataset():
         tmp = autom8.Accumulator()
         pred = report.pipeline.run(vectors, receiver=tmp)
         assert len(pred.predictions) == 2
-        assert isinstance(pred.predictions[0].tolist(), float)
-        assert isinstance(pred.predictions[1].tolist(), float)
+        assert isinstance(pred.predictions[0], float)
+        assert isinstance(pred.predictions[1], float)
         assert not tmp.warnings

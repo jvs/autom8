@@ -2,7 +2,7 @@ import datasets
 
 
 def test_wine_dataset():
-    acc = datasets.fit('wine.csv')
+    acc = datasets.run('wine.csv')
 
     # Assert that we at least got 7 reports.
     assert len(acc.reports) >= 7

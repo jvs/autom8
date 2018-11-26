@@ -19,9 +19,19 @@ from .cleaning import clean_dataset
 from .inference import infer_roles
 from . import preprocessors as then
 from .context import create_context
+from .selector import create_selector
 
 
 def fit(*args, **kwargs):
+    if 'receiver' in kwargs:
+        raise TypeError("fit() got an unexpected keyword argument 'receiver'")
+
+    selector = create_selector(kwargs.pop('selector', None))
+    run(*args, **kwargs, receiver=selector)
+    return selector.best.pipeline
+
+
+def run(*args, **kwargs):
     ctx = create_context(*args, **kwargs)
     ctx.receiver.receive_context(ctx)
 

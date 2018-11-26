@@ -8,7 +8,7 @@ import datasets
 
 
 def test_create_package():
-    acc = datasets.fit('iris.csv')
+    acc = datasets.run('iris.csv')
     report = acc.reports[-1]
 
     example = autom8.create_example_input(
