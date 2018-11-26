@@ -1,5 +1,6 @@
 from string import Template
 
+_render = lambda docstring: _strip(Template(docstring).substitute(globals()))
 _strip = lambda section: section.strip() + '\n'
 
 
@@ -143,10 +144,6 @@ selector_parameters = _strip("""
 
             If `selector` is a callable object....
 """)
-
-
-def _render(docstring):
-    return _strip(Template(docstring).substitute(globals()))
 
 
 common_context_parameters = _render("""
