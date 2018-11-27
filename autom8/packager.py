@@ -21,9 +21,11 @@ try:
 except ImportError:
     xgboost = None
 
+from .docstrings import render_docstring
 from .matrix import create_matrix
 
 
+@render_docstring
 def create_example_input(pipeline, dataset, indices, receiver=None):
     """Creates an example input object that you can pass to `create_package`.
 
