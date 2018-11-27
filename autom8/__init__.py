@@ -4,8 +4,8 @@ from .cleaning import clean_dataset
 from .context import create_context, FittingContext, LabelContext
 from .csv_utils import decode_csv, encode_csv, read_csv
 from .exceptions import Autom8Exception, Autom8Warning
-from .fit import fit, run
 from .inference import infer_roles
+from .main import fit, run
 
 from .matrix import (
     create_matrix,

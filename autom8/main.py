@@ -33,7 +33,7 @@ def fit(*args, **kwargs):
 
     Returns:
         autom8.Pipeline: The best pipeline, as indicated by the `selector`
-            parameter.
+        parameter.
     """
 
     if 'receiver' in kwargs:

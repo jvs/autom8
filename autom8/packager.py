@@ -37,8 +37,8 @@ def create_example_input(pipeline, dataset, indices, receiver=None):
         $receiver_parameter
 
     Returns:
-        list: A list of rows that can be passed to `autom8.create_package()`
-            as the `example_input` argument.
+        list: A list of rows that can be passed to ``autom8.create_package()``
+        as the `example_input` argument.
     """
 
     matrix = create_matrix(dataset, receiver=receiver)
@@ -77,8 +77,8 @@ def create_package(package_name, pipeline, example_input, extra_notes=None):
     Returns:
         bytes: The contents of the generated zip archive.
 
-            You may write the bytes to disk as a zip file, or transmit the
-            bytes over the network.
+        You may write the bytes to disk as a zip file, or transmit the bytes
+        over the network.
     """
 
     args = _template_args(package_name, pipeline, example_input, extra_notes)

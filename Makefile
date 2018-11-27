@@ -1,8 +1,11 @@
-COVERAGE := .virtualenv/bin/coverage
-PYTHON := .virtualenv/bin/python -W "ignore::PendingDeprecationWarning"
+BIN := .virtualenv/bin
+COVERAGE := $(BIN)/coverage
+PIP := $(BIN)/pip
+PYTHON := $(BIN)/python -W "ignore::PendingDeprecationWarning"
+
 TEST_FLAGS := -s -vv -W "ignore::PendingDeprecationWarning" \
 	--doctest-modules --doctest-continue-on-failure
-TEST := .virtualenv/bin/pytest $(TEST_FLAGS)
+TEST := $(BIN)/pytest $(TEST_FLAGS)
 
 blackbox-tests: clean virtualenv
 	$(TEST) tests/blackbox-tests
@@ -25,8 +28,9 @@ virtualenv: .virtualenv/bin/activate
 
 .virtualenv/bin/activate: setup.py
 	test -d .virtualenv || virtualenv .virtualenv
-	.virtualenv/bin/pip install -U -e .
-	.virtualenv/bin/pip install -U xgboost coverage pytest
+	$(PIP) install -U -e .
+	$(PIP) install -U xgboost coverage pytest
+	$(PIP) install -U sphinx recommonmark sphinxcontrib-napoleon sphinx_rtd_theme
 	touch .virtualenv/bin/activate
 
 
@@ -43,6 +47,10 @@ package-test: clean virtualenv
 
 wine-test: clean virtualenv
 	$(TEST) tests/blackbox-tests/test_wine_dataset.py
+
+
+html-docs:
+	$(BIN)/sphinx-build -M "html" docs docs/build
 
 
 clean:
