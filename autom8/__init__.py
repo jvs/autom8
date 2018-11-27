@@ -8,7 +8,11 @@ from .fit import fit, run
 from .inference import infer_roles
 
 from .matrix import (
-    create_matrix, drop_empty_rows, excel_column_index, excel_column_name, Matrix,
+    create_matrix,
+    drop_empty_rows,
+    excel_column_index,
+    excel_column_name,
+    Matrix,
 )
 
 from .packager import create_example_input, create_package
