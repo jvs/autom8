@@ -70,7 +70,7 @@ def test_extra_columns_warning_message():
     ]
 
 
-def test_creating_simple_matrix_with_schema():
+def test_creating_simple_matrix_with_names_and_roles():
     acc = autom8.Accumulator()
     matrix = autom8.create_matrix(
         dataset=[['hi', True], ['bye', False]],
@@ -179,19 +179,6 @@ def test_copy_method():
         assert a.role == b.role
         assert a.is_original == b.is_original
         assert np.array_equal(a.values, b.values)
-
-
-def test_schema_property():
-    matrix = autom8.create_matrix(
-        dataset=[[1, 2, 3]],
-        column_names=['A', 'B', 'C'],
-        column_roles=['textual', 'encoded', None],
-    )
-    assert matrix.schema == [
-        {'name': 'A', 'role': 'textual', 'dtype': 'int64'},
-        {'name': 'B', 'role': 'encoded', 'dtype': 'int64'},
-        {'name': 'C', 'role': None, 'dtype': 'int64'},
-    ]
 
 
 def test_tolist_method():

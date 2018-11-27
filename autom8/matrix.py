@@ -96,10 +96,6 @@ class Matrix:
         self.columns = columns
 
     @property
-    def schema(self):
-        return [col.schema for col in self.columns]
-
-    @property
     def column_names(self):
         return [col.name for col in self.columns]
 
@@ -221,10 +217,6 @@ class Column:
         else:
             # TODO: Pretty-print the formula. Maybe put "=" in front.
             return repr(self.formula)
-
-    @property
-    def schema(self):
-        return {'name': self.name, 'role': self.role, 'dtype': self.dtype.name}
 
     @property
     def dtype(self):
