@@ -12,6 +12,7 @@ from .matrix import (
     drop_empty_rows,
     excel_column_index,
     excel_column_name,
+    Column,
     Matrix,
 )
 
