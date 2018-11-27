@@ -16,6 +16,7 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+import autom8
 from recommonmark.parser import CommonMarkParser
 
 # -- Project information -----------------------------------------------------
@@ -25,10 +26,10 @@ copyright = '2018, Machinate, Inc'
 author = 'Machinate, Inc'
 
 # The short X.Y version
-version = '0.0.1'
+version = autom8.__version__
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.1-alpha'
+release = version
 
 
 # -- General configuration ---------------------------------------------------
