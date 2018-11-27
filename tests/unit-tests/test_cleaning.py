@@ -268,6 +268,38 @@ def test_columns_with_some_empty_strings():
     ]
 
 
+def test_column_with_some_blank_strings():
+    # Repeat the previous test, only replace most of the empty strings with
+    # blank strings.
+    dataset = [
+        ['A', 'B', 'C'],
+        [True, 1.1, 20],
+        [' ', 2.2, 30],
+        [False, '\t', 40],
+        [False, 3.3, ' \t \r \n\t'],
+        ['', 4.4, '    '],
+    ]
+
+    acc = autom8.Accumulator()
+    matrix = autom8.create_matrix(_add_labels(dataset), receiver=acc)
+    ctx = autom8.create_context(matrix, receiver=acc)
+
+    autom8.clean_dataset(ctx)
+
+    assert ctx.matrix.tolist() == [
+        [True, True, 1.1, True, 20, True],
+        [False, False, 2.2, True, 30, True],
+        [False, True, 0.0, False, 40, True],
+        [False, True, 3.3, True, 0, False],
+        [False, False, 4.4, True, 0, False],
+    ]
+    assert ctx.matrix.formulas == [
+        'A', ['is-defined', 'A'],
+        'B', ['is-defined', 'B'],
+        'C', ['is-defined', 'C'],
+    ]
+
+
 def test_mixed_up_columns_with_strings_and_numbers():
     # bool, float, int, str
     dataset = [

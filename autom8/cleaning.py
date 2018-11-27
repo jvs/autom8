@@ -109,6 +109,13 @@ def _clean_column(ctx, col):
         _clean_column(ctx, col)
         return
 
+    # If any strings are blank, then replace them with the empty string and
+    # recur.
+    if any(i.isspace() for i in values if isinstance(i, str)):
+        _replace_blank_strings(ctx, index)
+        _clean_column(ctx, col)
+        return
+
     # If all of the strings are the empty string, then replace the empty
     # strings with None and recur.
     if num_strings > 0 and all(i == '' for i in values if isinstance(i, str)):
@@ -194,6 +201,15 @@ def _replace_none_values(ctx, index, replacement):
 def _coerce_ints_to_floats(ctx, index):
     col = ctx.matrix.columns[index]
     new_values = [float(i) if isinstance(i, int_type) else i for i in col.values]
+    col.values = create_array(new_values)
+
+
+@preprocessor
+def _replace_blank_strings(ctx, index):
+    col = ctx.matrix.columns[index]
+    new_values = [
+        '' if isinstance(i, str) and i.isspace() else i for i in col.values
+    ]
     col.values = create_array(new_values)
 
 
