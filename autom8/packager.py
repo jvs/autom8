@@ -21,12 +21,10 @@ try:
 except ImportError:
     xgboost = None
 
-from .matrix import create_matrix, drop_empty_rows, Matrix
+from .matrix import create_matrix
 
 
 def create_example_input(pipeline, dataset, indices, receiver=None):
-    if not isinstance(dataset, Matrix):
-        dataset = drop_empty_rows(dataset)
     matrix = create_matrix(dataset, receiver=receiver)
     target_column = matrix.column_names.index(pipeline.predicts_column)
     matrix.drop_columns_by_index(target_column)
