@@ -18,6 +18,7 @@ def create_candidate(ctx, pipeline):
     Returns:
         Candidate: The candidate object, containing the pipeline and its metrics.
     """
+
     return Candidate(
         pipeline=pipeline,
         formulas=ctx.matrix.formulas,

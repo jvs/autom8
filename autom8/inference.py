@@ -3,6 +3,23 @@ from .preprocessors import planner, preprocessor
 
 @planner
 def infer_roles(ctx):
+    """Infers the role of each column.
+
+    autom8 uses a handful of roles: `categorical`, `encoded`, `numerical`, and
+    `textual`.
+
+    autom8 infers that a column contains categorical data when the column
+    contains fewer than 50 unique values, and when less than 25% of the values
+    are unique.
+
+    autom8 infers that a column contains encoded data when the column only
+    contains boolean values.
+
+    Otherwise, if a column contains strings, then autom8 infers that it
+    contains textual data. And if it contains numbers, then autom8 infers that
+    it contains numerical data.
+    """
+
     roles = [_infer_role(col, ctx.receiver) for col in ctx.matrix.columns]
     _set_roles(ctx, roles)
 

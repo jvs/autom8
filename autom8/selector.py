@@ -9,6 +9,7 @@ def create_selector(selector=None):
     Parameters:
         $selector_parameters
     """
+
     if selector is None:
         return DefaultSelector()
 

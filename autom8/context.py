@@ -28,7 +28,13 @@ def create_context(
     executor_class=None,
     receiver=None,
 ):
-    """Returns a new FittingContext object, ready to create candidate pipelines.
+    """Returns a new `autom8.FittingContext` object, ready to create pipelines.
+
+    Note:
+        If you are not writing your own preprocessing or training logic, then
+        you do not need to create your own context. You can use either
+        `autom8.fit()` or `autom8.run()`, either of which will automatically
+        create a context for you.
 
     Parameters:
         $all_context_parameters
@@ -120,6 +126,39 @@ def create_context(
 
 
 class FittingContext:
+    """Keep track of autom8's internal state as it generates candidate
+    pipelines.
+
+    Notes:
+        You can get a reference to this object in your receiver's
+        `receive_context` method. If you keep your reference to the context
+        around, keep in mind that autom8 mutates the context as it generates
+        pipelines. Specically, the `matrix` and `steps` attributes frequently
+        change while `autom8.run()` is running.
+
+    Attributes:
+        matrix (Matrix): The current feature matrix.
+        labels (LabelContext): The labels that we're trying to predict.
+
+            This is essentially the target column, but the values may be
+            encoded, depending on whether or the data is categorical or
+            numerical.
+
+        test_indices (list[int]): A list of indices. Indicates which rows in
+            should be used in the test dataset.
+        problem_type (str): Either `classification` or `regression`.
+        allow_multicore (bool): Indicates if estimators may use multiple cores.
+        executor_class (class): The executor class that autom8 should use when
+            it wants to run tasks in parallel.
+        receiver (Receiver): An object that receives out-of-band data, like
+            candidate pipelines and warnings.
+        steps (list[Step]): A list of all the preprocessing steps that have
+            been applied to the feature matrix.
+        pool (Executor): The current executor, for executing tasks in parallel.
+        is_fitting (bool, always True): Indicates that this is a
+            `FittingContext` as opposed to a `PipelineContext`.
+    """
+
     def __init__(
             self, matrix, labels, test_indices, problem_type,
             allow_multicore, executor_class, receiver,
@@ -145,6 +184,29 @@ class FittingContext:
         return self.problem_type == 'regression'
 
     def __lshift__(self, estimator):
+        """Submits `self.fit(estimator)` to the current executor.
+
+        If the context does not currently have an executor, then this method
+        simply calls `self.fit(estimator)`.
+
+        Notes:
+            This functionality is expressed as an operator in attempt to
+            improve readability (at the expense of possibly confusing new
+            readers of the source code).
+
+            The effect is that autom8's code looks like this:
+
+                ctx << xgboost.XGBRegressor(n_jobs=-1, random_state=1)
+
+            instead of:
+
+                ctx.submit(xgboost.XGBRegressor(n_jobs=-1, random_state=1))
+
+            So it's not really a big difference. The nice thing about "<<"
+            is that it takes the important part (the estimator) and pulls it
+            out of the parentheses.
+        """
+
         if self.pool is None:
             self.fit(estimator)
         elif hasattr(self.pool, 'fit'):

@@ -1,3 +1,5 @@
+"""Utility module that allows multiple functions to share documentation."""
+
 from string import Template
 
 _render = lambda docstring: _strip(Template(docstring).substitute(globals()))
@@ -31,7 +33,7 @@ dataset_parameters = _strip("""
 
             If `column_names` is the string `missing`, then autom8 will
             generate a name for each column. When generating column names,
-            autom8 follows the excel-style convention of A, B, C, ..., AA, AB,
+            autom8 follows the Excel-style convention of A, B, C, ..., AA, AB,
             ..., BA, BB, etc.
 
             If `column_names` is the string `unknown` or the value `None`, then
@@ -142,7 +144,14 @@ selector_parameters = _strip("""
             select the best pipeline. (Metrics later in the list are used when
             earlier metrics are tied.)
 
-            If `selector` is a callable object....
+            If `selector` is a callable object, then it should take two
+            `autom8.Candidate` objects, and it should return the candidate that
+            it thinks is better.
+
+            If `selector` is None, then autom8 will use an appropriate default
+            metric, based on the type of problem. For classification problems,
+            autom8 will use the `f1_score` metrics. And for regression
+            problems, autom8 will use `r2_score`.
 """)
 
 

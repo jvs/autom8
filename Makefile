@@ -1,6 +1,7 @@
 COVERAGE := .virtualenv/bin/coverage
 PYTHON := .virtualenv/bin/python -W "ignore::PendingDeprecationWarning"
-TEST_FLAGS := -s -vv -W "ignore::PendingDeprecationWarning"
+TEST_FLAGS := -s -vv -W "ignore::PendingDeprecationWarning" \
+	--doctest-modules --doctest-continue-on-failure
 TEST := .virtualenv/bin/pytest $(TEST_FLAGS)
 
 blackbox-tests: clean virtualenv
@@ -18,7 +19,7 @@ repl:
 test: unit-tests
 
 unit-tests: clean virtualenv
-	$(TEST) tests/unit-tests
+	$(TEST) autom8 tests/unit-tests
 
 virtualenv: .virtualenv/bin/activate
 
