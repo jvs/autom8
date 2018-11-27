@@ -25,6 +25,20 @@ from .matrix import create_matrix
 
 
 def create_example_input(pipeline, dataset, indices, receiver=None):
+    """Creates an example input object that you can pass to `create_package`.
+
+    Parameters:
+        pipeline (Pipeline): An `autom8.Pipeline` object.
+        dataset (list or Matrix): The dataset used to create the pipeline.
+        indices (list[int]): A list of row indices. Indicates which rows to use
+            in the example input.
+        $receiver_parameter
+
+    Returns:
+        list: A list of rows that can be passed to `autom8.create_package()`
+            as the `example_input` argument.
+    """
+
     matrix = create_matrix(dataset, receiver=receiver)
     target_column = matrix.column_names.index(pipeline.predicts_column)
     matrix.drop_columns_by_index(target_column)
@@ -32,6 +46,39 @@ def create_example_input(pipeline, dataset, indices, receiver=None):
 
 
 def create_package(package_name, pipeline, example_input, extra_notes=None):
+    """Creates a Python package for an `autom8.Pipeline` object.
+
+    This function creates a zip archive and returns it as a `bytes` object.
+    The zip archive contains a Python project that runs a web service for
+    making predictions with the provided pipeline.
+
+    The zip archive contains a pickle file of the pipeline, along with a flask
+    application, test script, Dockerfile, and Makefile.
+
+    Parameters:
+        package_name (str): The name to use for this package.
+
+            This name will be used as the archive's top-level folder. It will
+            also be used as the name of the Docker image and Docker container.
+
+        pipeline (Pipeline): The pipeline. autom8 will serialize this object
+            in the achive's `pipeline.pickle` file.
+
+        example_input (list[row]): A list of rows to use as the example input.
+
+            This list of rows will appear in the README file and in the
+            unit tests.
+
+        extra_notes (str or None): Optional content that will appear at the end
+            of the generated README file. Defaults to None.
+
+    Returns:
+        bytes: The contents of the generated zip archive.
+
+            You may write the bytes to disk as a zip file, or transmit the
+            bytes over the network.
+    """
+
     args = _template_args(package_name, pipeline, example_input, extra_notes)
     result = io.BytesIO()
     templates = {
