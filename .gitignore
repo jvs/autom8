@@ -102,7 +102,5 @@ ENV/
 
 # Custom stuff
 .DS_Store
-.vscode
 *.sublime-*
 _attic/
-.virtualenv
