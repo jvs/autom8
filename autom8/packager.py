@@ -206,13 +206,13 @@ clean:
     rm -rf __pycache__/*.pyc
 
 
-# Runs your web service in a Docker container. Maps local port 5118 to the
+# Runs your web service in a Docker container. Maps local port 55155 to the
 # container's port 80.
 container: image
     docker run \\
         --name $DOCKER_NAME \\
         --rm \\
-        -p 0.0.0.0:5118:80 \\
+        -p 0.0.0.0:55155:80 \\
         $DOCKER_NAME
 
 
@@ -306,13 +306,13 @@ $README_INPUT_COLUMNS
 ## Using the Container
 
 Run the command `make container` to start the web service. This command maps
-local port 5118 to the container's port 80.
+local port 55155 to the container's port 80.
 
 To get predictions, send a POST request to `/predict`:
 
     curl --header "Content-Type: application/json" \\
         --data '$README_INPUT_EXAMPLE' \\
-        http://localhost:5118/predict
+        http://localhost:55155/predict
 
 This will return:
 
