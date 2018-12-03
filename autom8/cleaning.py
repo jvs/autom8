@@ -1,8 +1,8 @@
 import re
 import numpy as np
+from .dataset_utils import parse_number
 from .exceptions import expected, typename
 from .matrix import create_array
-from .parsing import parse_number
 from .preprocessors import planner, preprocessor, _drop_weak_columns
 
 

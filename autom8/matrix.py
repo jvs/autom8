@@ -2,9 +2,13 @@ import re
 import numpy as np
 
 from .docstrings import render_docstring
-from .excel_utils import excel_column_index, excel_column_name
+from .dataset_utils import (
+    drop_empty_rows,
+    excel_column_index,
+    excel_column_name,
+    parse_number,
+)
 from .exceptions import expected, typename
-from .parsing import parse_number
 from .receiver import Receiver
 
 
@@ -28,16 +32,6 @@ def create_matrix(dataset, column_names=None, column_roles=None, receiver=None):
         receiver.warn(f'Column names are not unique in {repr(names)}')
 
     return matrix
-
-
-def drop_empty_rows(rows):
-    """Takes a list of rows and returns a new list without any blank rows.
-
-    autom8 considers a row to be blank if it's totally empty, or if each item
-    in the row is None, the empty string, or a string that only contain spaces.
-    """
-
-    return [row for row in rows if any(not _is_blank(i) for i in row)]
 
 
 def _create_matrix(dataset, names, roles, receiver):
@@ -287,13 +281,6 @@ def _copy_and_update_matrix(matrix, names, roles):
         _update_roles(matrix, roles)
 
     return matrix
-
-
-def _is_blank(obj):
-    if isinstance(obj, str):
-        return obj == '' or obj.isspace()
-    else:
-        return obj is None
 
 
 def _name_columns(matrix, names):
