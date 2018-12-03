@@ -3,6 +3,7 @@ __version__ = '0.0.1'
 from .cleaning import clean_dataset
 from .context import create_context, FittingContext, LabelContext
 from .csv_utils import decode_csv, encode_csv, read_csv
+from .excel_utils import excel_column_index, excel_column_name
 from .exceptions import Autom8Exception, Autom8Warning
 from .inference import infer_roles
 from .main import fit, run
@@ -10,8 +11,6 @@ from .main import fit, run
 from .matrix import (
     create_matrix,
     drop_empty_rows,
-    excel_column_index,
-    excel_column_name,
     Column,
     Matrix,
 )
