@@ -183,6 +183,14 @@ class FittingContext:
     def is_regression(self):
         return self.problem_type == 'regression'
 
+    @property
+    def predicts_column(self):
+        return self.labels.name
+
+    @property
+    def predicts_classes(self):
+        return self.labels.classes
+
     def __lshift__(self, estimator):
         """Submits `self.fit(estimator)` to the current executor.
 
@@ -231,7 +239,7 @@ class FittingContext:
 
         pipeline = Pipeline(
             input_columns=self.input_columns,
-            predicts_column=self.labels.name,
+            predicts_column=self.predicts_column,
             steps=list(self.steps),
             estimator=estimator,
             label_encoder=self.labels.encoder,
@@ -289,7 +297,11 @@ class FittingContext:
             )
 
 
-LabelContext = namedtuple('LabelContext', 'name, original, encoded, encoder')
+class LabelContext(namedtuple('LabelContext', 'name, original, encoded, encoder')):
+    @property
+    def classes(self):
+        return self.encoder.classes_ if self.encoder else None
+
 
 
 class SynchronousExecutor:
