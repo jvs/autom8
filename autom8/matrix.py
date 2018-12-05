@@ -2,13 +2,13 @@ import re
 import numpy as np
 
 from .docstrings import render_docstring
-from .dataset_utils import (
+from .exceptions import expected, typename
+from .formats import (
     drop_empty_rows,
     excel_column_index,
     excel_column_name,
     parse_number,
 )
-from .exceptions import expected, typename
 from .receiver import Receiver
 
 

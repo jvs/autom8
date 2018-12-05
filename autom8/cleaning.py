@@ -1,7 +1,7 @@
 import re
 import numpy as np
-from .dataset_utils import parse_number
 from .exceptions import expected, typename
+from .formats import parse_number
 from .matrix import create_array
 from .preprocessors import planner, preprocessor, _drop_weak_columns
 

@@ -2,8 +2,9 @@ __version__ = '0.0.1'
 
 from .cleaning import clean_dataset
 from .context import create_context, FittingContext, LabelContext
+from .exceptions import Autom8Exception, Autom8Warning
 
-from .dataset_utils import (
+from .formats import (
     decode_csv,
     drop_empty_rows,
     encode_csv,
@@ -12,7 +13,6 @@ from .dataset_utils import (
     read_csv,
 )
 
-from .exceptions import Autom8Exception, Autom8Warning
 from .inference import infer_roles
 from .main import fit, run
 
