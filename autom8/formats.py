@@ -64,6 +64,15 @@ def encode_csv(dataset):
 
     Returns:
         str: A CSV representation of the dataset.
+
+    >>> encode_csv([[1, 2, 3], [4, 5, 6]])
+    '1,2,3\\r\\n4,5,6\\r\\n'
+
+    >>> encode_csv([['a, b, c', 'xyz', None, 1.0]])
+    '"a, b, c",xyz,,1.0\\r\\n'
+
+    >>> encode_csv([['he said, "well, ok" and then left', 'foo', 'bar']])
+    '"he said, ""well, ok"" and then left",foo,bar\\r\\n'
     """
 
     result = StringIO()
