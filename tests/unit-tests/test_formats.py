@@ -1,7 +1,11 @@
 import os.path
-import autom8
 
-from autom8.formats import decode_csv, excel_column_index, excel_column_name
+from autom8.formats import (
+    decode_csv,
+    excel_column_index,
+    excel_column_name,
+    read_csv,
+)
 
 
 def test_boston():
@@ -76,7 +80,7 @@ def test_decode_csv_with_hex_numbers():
 def _read_csv(name):
     testdir = os.path.dirname(os.path.dirname(__file__))
     path = os.path.join(testdir, 'datasets', name)
-    return autom8.read_csv(path)
+    return read_csv(path)
 
 
 def test_excel_column_name():
