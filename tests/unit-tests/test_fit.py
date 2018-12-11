@@ -1,4 +1,3 @@
-import random
 import warnings
 import numpy as np
 import autom8
