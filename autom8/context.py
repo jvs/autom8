@@ -192,27 +192,24 @@ class FittingContext:
         return self.labels.classes
 
     def __lshift__(self, estimator):
+        """Provides convenient syntax for calling submit_fit.
+
+        So instead of:
+
+            ctx.submit_fit(xgboost.XGBRegressor(n_jobs=-1, random_state=1))
+
+        You can write:
+
+            ctx << xgboost.XGBRegressor(n_jobs=-1, random_state=1)
+        """
+
+        self.submit_fit(estimator)
+
+    def submit_fit(self, estimator):
         """Submits `self.fit(estimator)` to the current executor.
 
         If the context does not currently have an executor, then this method
         simply calls `self.fit(estimator)`.
-
-        Notes:
-            This functionality is expressed as an operator in attempt to
-            improve readability (at the expense of possibly confusing new
-            readers of the source code).
-
-            The effect is that autom8's code looks like this:
-
-                ctx << xgboost.XGBRegressor(n_jobs=-1, random_state=1)
-
-            instead of:
-
-                ctx.submit(xgboost.XGBRegressor(n_jobs=-1, random_state=1))
-
-            So it's not really a big difference. The nice thing about "<<"
-            is that it takes the important part (the estimator) and pulls it
-            out of the parentheses.
         """
 
         if self.pool is None:
