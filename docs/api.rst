@@ -31,11 +31,4 @@ Utility Functions
 
 CSV
 ~~~
-.. autofunction:: autom8.decode_csv
-.. autofunction:: autom8.encode_csv
 .. autofunction:: autom8.read_csv
-
-Excel
-~~~~~
-.. autofunction:: autom8.excel_column_index
-.. autofunction:: autom8.excel_column_name

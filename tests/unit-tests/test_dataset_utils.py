@@ -1,6 +1,8 @@
 import os.path
 import autom8
 
+from autom8.formats import decode_csv, excel_column_index, excel_column_name
+
 
 def test_boston():
     boston = _read_csv('boston.csv')
@@ -47,7 +49,7 @@ def test_wine():
 
 
 def test_decode_csv_with_hex_numbers():
-    dataset = autom8.decode_csv(
+    dataset = decode_csv(
         'foo,bar,baz\n'
         '1,2.2,0xfa\n'
         '3.3,4,0xfb\n'
@@ -78,72 +80,72 @@ def _read_csv(name):
 
 
 def test_excel_column_name():
-    assert autom8.excel_column_name(0) == 'A'
-    assert autom8.excel_column_name(1) == 'B'
-    assert autom8.excel_column_name(2) == 'C'
-    assert autom8.excel_column_name(25-2) == 'X'
-    assert autom8.excel_column_name(25-1) == 'Y'
-    assert autom8.excel_column_name(25-0) == 'Z'
+    assert excel_column_name(0) == 'A'
+    assert excel_column_name(1) == 'B'
+    assert excel_column_name(2) == 'C'
+    assert excel_column_name(25-2) == 'X'
+    assert excel_column_name(25-1) == 'Y'
+    assert excel_column_name(25-0) == 'Z'
 
     for index, name in enumerate('ABCDEFGHIJKLMNOPQRSTUVWXYZ'):
-        assert autom8.excel_column_name(index) == name
+        assert excel_column_name(index) == name
 
-    assert autom8.excel_column_name(26+0) == 'AA'
-    assert autom8.excel_column_name(26+1) == 'AB'
-    assert autom8.excel_column_name(26+2) == 'AC'
-    assert autom8.excel_column_name(26+25-2) == 'AX'
-    assert autom8.excel_column_name(26+25-1) == 'AY'
-    assert autom8.excel_column_name(26+25-0) == 'AZ'
-
-    for index, name in enumerate('ABCDEFGHIJKLMNOPQRSTUVWXYZ'):
-        assert autom8.excel_column_name(26+index) == 'A' + name
-
-    assert autom8.excel_column_name(26*8+0) == 'HA'
-    assert autom8.excel_column_name(26*8+1) == 'HB'
-    assert autom8.excel_column_name(26*8+2) == 'HC'
-    assert autom8.excel_column_name(26*8+25-2) == 'HX'
-    assert autom8.excel_column_name(26*8+25-1) == 'HY'
-    assert autom8.excel_column_name(26*8+25-0) == 'HZ'
+    assert excel_column_name(26+0) == 'AA'
+    assert excel_column_name(26+1) == 'AB'
+    assert excel_column_name(26+2) == 'AC'
+    assert excel_column_name(26+25-2) == 'AX'
+    assert excel_column_name(26+25-1) == 'AY'
+    assert excel_column_name(26+25-0) == 'AZ'
 
     for index, name in enumerate('ABCDEFGHIJKLMNOPQRSTUVWXYZ'):
-        assert autom8.excel_column_name(26*8+index) == 'H' + name
+        assert excel_column_name(26+index) == 'A' + name
+
+    assert excel_column_name(26*8+0) == 'HA'
+    assert excel_column_name(26*8+1) == 'HB'
+    assert excel_column_name(26*8+2) == 'HC'
+    assert excel_column_name(26*8+25-2) == 'HX'
+    assert excel_column_name(26*8+25-1) == 'HY'
+    assert excel_column_name(26*8+25-0) == 'HZ'
+
+    for index, name in enumerate('ABCDEFGHIJKLMNOPQRSTUVWXYZ'):
+        assert excel_column_name(26*8+index) == 'H' + name
 
 
 def test_excel_column_index():
-    assert autom8.excel_column_index('A') == 0
-    assert autom8.excel_column_index('B') == 1
-    assert autom8.excel_column_index('C') == 2
-    assert autom8.excel_column_index('X') == 25-2
-    assert autom8.excel_column_index('Y') == 25-1
-    assert autom8.excel_column_index('Z') == 25-0
+    assert excel_column_index('A') == 0
+    assert excel_column_index('B') == 1
+    assert excel_column_index('C') == 2
+    assert excel_column_index('X') == 25-2
+    assert excel_column_index('Y') == 25-1
+    assert excel_column_index('Z') == 25-0
 
     for index, name in enumerate('ABCDEFGHIJKLMNOPQRSTUVWXYZ'):
-        assert autom8.excel_column_index(name) == index
+        assert excel_column_index(name) == index
 
-    assert autom8.excel_column_index('AA') == 26+0
-    assert autom8.excel_column_index('AB') == 26+1
-    assert autom8.excel_column_index('AC') == 26+2
-    assert autom8.excel_column_index('AX') == 26+25-2
-    assert autom8.excel_column_index('AY') == 26+25-1
-    assert autom8.excel_column_index('AZ') == 26+25-0
-
-    for index, name in enumerate('ABCDEFGHIJKLMNOPQRSTUVWXYZ'):
-        assert autom8.excel_column_index('A' + name) == 26+index
-
-    assert autom8.excel_column_index('HA') == 26*8+0
-    assert autom8.excel_column_index('HB') == 26*8+1
-    assert autom8.excel_column_index('HC') == 26*8+2
-    assert autom8.excel_column_index('HX') == 26*8+25-2
-    assert autom8.excel_column_index('HY') == 26*8+25-1
-    assert autom8.excel_column_index('HZ') == 26*8+25-0
+    assert excel_column_index('AA') == 26+0
+    assert excel_column_index('AB') == 26+1
+    assert excel_column_index('AC') == 26+2
+    assert excel_column_index('AX') == 26+25-2
+    assert excel_column_index('AY') == 26+25-1
+    assert excel_column_index('AZ') == 26+25-0
 
     for index, name in enumerate('ABCDEFGHIJKLMNOPQRSTUVWXYZ'):
-        assert autom8.excel_column_index('H' + name) == 26*8+index
+        assert excel_column_index('A' + name) == 26+index
+
+    assert excel_column_index('HA') == 26*8+0
+    assert excel_column_index('HB') == 26*8+1
+    assert excel_column_index('HC') == 26*8+2
+    assert excel_column_index('HX') == 26*8+25-2
+    assert excel_column_index('HY') == 26*8+25-1
+    assert excel_column_index('HZ') == 26*8+25-0
+
+    for index, name in enumerate('ABCDEFGHIJKLMNOPQRSTUVWXYZ'):
+        assert excel_column_index('H' + name) == 26*8+index
 
 
 def test_excel_column_conversions():
     for i in range(2000):
-        assert autom8.excel_column_index(autom8.excel_column_name(i)) == i
+        assert excel_column_index(excel_column_name(i)) == i
 
     for s in ['FOO', 'BAR', 'BAZ', 'FIZ', 'BUZ', 'ZIM', 'ZAM', 'BIM', 'BAM']:
-        assert autom8.excel_column_name(autom8.excel_column_index(s)) == s
+        assert excel_column_name(excel_column_index(s)) == s
