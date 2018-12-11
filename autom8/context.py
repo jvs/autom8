@@ -204,7 +204,6 @@ class FittingContext:
         return ({} if self.random_state is None
             else {'random_state': self.random_state})
 
-
     def __lshift__(self, estimator):
         """Provides convenient syntax for calling submit_fit.
 
