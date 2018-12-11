@@ -24,6 +24,7 @@ def create_context(
     target_column=None,
     problem_type=None,
     test_ratio=None,
+    random_state=None,
     allow_multicore=True,
     executor_class=None,
     receiver=None,
@@ -120,8 +121,14 @@ def create_context(
         executor_class = SynchronousExecutor
 
     return FittingContext(
-        matrix, labels, test_indices, problem_type,
-        allow_multicore, executor_class, receiver,
+        matrix=matrix,
+        labels=labels,
+        test_indices=test_indices,
+        problem_type=problem_type,
+        random_state=random_state,
+        allow_multicore=allow_multicore,
+        executor_class=executor_class,
+        receiver=receiver,
     )
 
 
@@ -161,13 +168,14 @@ class FittingContext:
 
     def __init__(
             self, matrix, labels, test_indices, problem_type,
-            allow_multicore, executor_class, receiver,
+            random_state, allow_multicore, executor_class, receiver,
         ):
         self.input_columns = matrix.column_names
         self.matrix = matrix.copy()
         self.labels = labels
         self.test_indices = test_indices
         self.problem_type = problem_type
+        self.random_state = random_state
         self.allow_multicore = allow_multicore
         self.executor_class = executor_class
         self.receiver = receiver
@@ -190,6 +198,12 @@ class FittingContext:
     @property
     def predicts_classes(self):
         return self.labels.classes
+
+    @property
+    def random_state_kw(self):
+        return ({} if self.random_state is None
+            else {'random_state': self.random_state})
+
 
     def __lshift__(self, estimator):
         """Provides convenient syntax for calling submit_fit.

@@ -101,6 +101,9 @@ problem_parameters = _strip("""
             If the `test_ratio` is None, autom8 uses a reasonable default
             (currently `0.2`).
 
+        random_state (int or None): The seed used by each estimator's
+            random number generator. Defaults to None.
+
         allow_multicore (bool): Allow estimators to use multiple cores.
             Defaults to True.
 

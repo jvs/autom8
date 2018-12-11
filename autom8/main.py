@@ -121,18 +121,20 @@ def then_fit_estimators(ctx, **flags):
 
 
 def fit_regressors(ctx, boosted_trees=True, classical=True):
+    random_state = ctx.random_state_kw
+
     if boosted_trees and lightgbm is not None:
-        ctx << lightgbm.LGBMRegressor(n_jobs=n_jobs(ctx), random_state=1)
+        ctx << lightgbm.LGBMRegressor(n_jobs=n_jobs(ctx), **random_state)
 
     if boosted_trees and xgboost is not None:
-        ctx << xgboost.XGBRegressor(n_jobs=n_jobs(ctx), random_state=1)
+        ctx << xgboost.XGBRegressor(n_jobs=n_jobs(ctx), **random_state)
 
     # Always fit a linear regression.
     ctx << sklearn.linear_model.LinearRegression()
 
     # Always fit a decision tree, as long as the dataset is not too big.
     if not is_big(ctx):
-        ctx << sklearn.tree.DecisionTreeRegressor(random_state=1)
+        ctx << sklearn.tree.DecisionTreeRegressor(**random_state)
 
     # Only run SGD when the dataset is big (and when `classical` is True).
     if classical and is_big(ctx):
@@ -141,7 +143,7 @@ def fit_regressors(ctx, boosted_trees=True, classical=True):
             eta0=0.00001,
             max_iter=1000,
             tol=1e-3,
-            random_state=1,
+            **random_state,
         )
 
     # Non-SGD estimators struggle to converge when there are too many rows.
@@ -149,45 +151,47 @@ def fit_regressors(ctx, boosted_trees=True, classical=True):
         ctx << sklearn.linear_model.ElasticNetCV(
             l1_ratio=0.0,
             alphas=[0.1, 1.0, 10.0],
-            random_state=1,
+            **random_state,
         )
 
-        ctx << sklearn.linear_model.LassoCV(random_state=1)
-        ctx << sklearn.linear_model.ElasticNetCV(random_state=1)
-        ctx << sklearn.svm.LinearSVR(random_state=1)
+        ctx << sklearn.linear_model.LassoCV(**random_state)
+        ctx << sklearn.linear_model.ElasticNetCV(**random_state)
+        ctx << sklearn.svm.LinearSVR(**random_state)
 
         # TODO: Consider only running this on appropriately-sized datasets.
         ctx << sklearn.neural_network.MLPRegressor(
             hidden_layer_sizes=(10, 10),
-            random_state=1,
+            **random_state,
         )
 
 
 def fit_classifiers(ctx, boosted_trees=True, classical=True):
+    random_state = ctx.random_state_kw
+
     if boosted_trees and lightgbm is not None:
         ctx << lightgbm.LGBMClassifier(
-            class_weight='balanced', n_jobs=n_jobs(ctx), random_state=1,
+            class_weight='balanced', n_jobs=n_jobs(ctx), **random_state,
         )
 
     if boosted_trees and xgboost is not None:
         ctx << xgboost.XGBClassifier(
-            class_weight='balanced', n_jobs=n_jobs(ctx), random_state=1,
+            class_weight='balanced', n_jobs=n_jobs(ctx), **random_state,
         )
 
     # Always fit a decision tree, as long as the dataset is not too big.
     if not is_big(ctx):
-        ctx << sklearn.tree.DecisionTreeClassifier(random_state=1)
+        ctx << sklearn.tree.DecisionTreeClassifier(**random_state)
 
     if classical:
         ctx << sklearn.neighbors.KNeighborsClassifier()
         ctx << sklearn.naive_bayes.BernoulliNB(alpha=0.01)
 
         ctx << sklearn.linear_model.SGDClassifier(
-            class_weight='balanced', max_iter=1000, tol=1e-3, random_state=1,
+            class_weight='balanced', max_iter=1000, tol=1e-3, **random_state,
         )
 
         ctx << sklearn.neural_network.MLPClassifier(
-            hidden_layer_sizes=(10, 10), random_state=1,
+            hidden_layer_sizes=(10, 10), **random_state,
         )
 
 
