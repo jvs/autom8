@@ -100,12 +100,12 @@ def create_context(
         raise expected(f'problem_type in {valid_problems}', repr(problem_type))
 
     if problem_type == 'regression':
-        labels = LabelContext(label_name, label_values, label_values, None)
+        labels = Labels(label_name, label_values, label_values, None)
     else:
         assert problem_type == 'classification'
         encoder = sklearn.preprocessing.LabelEncoder()
         encoded = encoder.fit_transform(label_values)
-        labels = LabelContext(label_name, label_values, encoded, encoder)
+        labels = Labels(label_name, label_values, encoded, encoder)
 
     if test_ratio is None:
         test_ratio = 0.2
@@ -138,7 +138,7 @@ class FittingContext:
 
     Attributes:
         matrix (Matrix): The current feature matrix.
-        labels (LabelContext): The labels that we're trying to predict.
+        labels (Labels): The labels that we're trying to predict.
 
             This is essentially the target column, but the values may be
             encoded, depending on whether or the data is categorical or
@@ -294,7 +294,7 @@ class FittingContext:
             )
 
 
-class LabelContext(namedtuple('LabelContext', 'name, original, encoded, encoder')):
+class Labels(namedtuple('Labels', 'name, original, encoded, encoder')):
     @property
     def classes(self):
         return self.encoder.classes_ if self.encoder else None

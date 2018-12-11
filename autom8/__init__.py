@@ -1,7 +1,7 @@
 __version__ = '0.0.1'
 
 from .cleaning import clean_dataset
-from .context import create_context, FittingContext, LabelContext
+from .context import create_context, FittingContext, Labels
 from .exceptions import Autom8Exception, Autom8Warning
 from .formats import read_csv
 from .inference import infer_roles
