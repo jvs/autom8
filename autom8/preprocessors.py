@@ -108,11 +108,9 @@ def coerce_columns(ctx):
 @preprocessor
 def _coerce_columns(ctx, dtypes):
     """Forces each column to have the expected type."""
-    if ctx.is_recording:
-        return
 
     for col, dtype in zip(ctx.matrix.columns, dtypes):
-        if dtype == object:
+        if col.dtype == dtype or dtype == object:
             continue
         try:
             col.values = col.values.astype(dtype)
