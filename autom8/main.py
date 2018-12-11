@@ -132,10 +132,6 @@ def fit_regressors(ctx, boosted_trees=True, classical=True):
     # Always fit a linear regression.
     ctx << sklearn.linear_model.LinearRegression()
 
-    # Always fit a decision tree, as long as the dataset is not too big.
-    if not is_big(ctx):
-        ctx << sklearn.tree.DecisionTreeRegressor(**random_state)
-
     # Only run SGD when the dataset is big (and when `classical` is True).
     if classical and is_big(ctx):
         ctx << sklearn.linear_model.SGDRegressor(
@@ -148,6 +144,8 @@ def fit_regressors(ctx, boosted_trees=True, classical=True):
 
     # Non-SGD estimators struggle to converge when there are too many rows.
     if classical and not is_big(ctx):
+        ctx << sklearn.tree.DecisionTreeRegressor(**random_state)
+
         ctx << sklearn.linear_model.ElasticNetCV(
             l1_ratio=0.0,
             alphas=[0.1, 1.0, 10.0],
@@ -178,8 +176,8 @@ def fit_classifiers(ctx, boosted_trees=True, classical=True):
             class_weight='balanced', n_jobs=n_jobs(ctx), **random_state,
         )
 
-    # Always fit a decision tree, as long as the dataset is not too big.
-    if not is_big(ctx):
+    # Skip the decision tree when the dataset is large.
+    if classical and not is_big(ctx):
         ctx << sklearn.tree.DecisionTreeClassifier(**random_state)
 
     if classical:
