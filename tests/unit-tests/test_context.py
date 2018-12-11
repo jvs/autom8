@@ -2,15 +2,15 @@ import pytest
 import numpy as np
 
 import autom8
-from autom8.pipeline import PipelineContext
+from autom8.pipeline import PlaybackContext
 
 
-def test_is_fitting_property():
+def test_is_recording_property():
     matrix = autom8.create_matrix([[1, 2]])
     c1 = autom8.create_context(matrix)
-    c2 = PipelineContext(matrix, autom8.Accumulator())
-    assert c1.is_fitting
-    assert not c2.is_fitting
+    c2 = PlaybackContext(matrix, autom8.Accumulator())
+    assert c1.is_recording
+    assert not c2.is_recording
     assert hasattr(c1, 'receiver')
     assert hasattr(c2, 'receiver')
 
@@ -18,7 +18,7 @@ def test_is_fitting_property():
 def test_planner_decorator():
     matrix = autom8.create_matrix([[1, 1], [2, 2]])
     c1 = autom8.create_context(matrix)
-    c2 = PipelineContext(matrix, autom8.Accumulator())
+    c2 = PlaybackContext(matrix, autom8.Accumulator())
 
     # This should not raise an exception.
     autom8.drop_duplicate_columns(c1)
@@ -26,7 +26,7 @@ def test_planner_decorator():
     # But this should raise one.
     with pytest.raises(autom8.Autom8Exception) as excinfo:
         autom8.drop_duplicate_columns(c2)
-    excinfo.match('Expected.*FittingContext')
+    excinfo.match('Expected.*RecordingContext')
 
 
 def test_invalid_contexts():

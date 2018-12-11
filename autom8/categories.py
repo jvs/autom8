@@ -25,7 +25,7 @@ def encode(ctx, encoder, indices):
     array = found.stack_columns()
     ctx.matrix.drop_columns_by_index(indices)
 
-    if ctx.is_fitting:
+    if ctx.is_recording:
         result = encoder.fit_transform(array)
     else:
         try:

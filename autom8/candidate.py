@@ -12,7 +12,7 @@ def create_candidate(ctx, pipeline):
     """Creates a Candidate object from the provided context and pipeline.
 
     Parameters:
-        ctx (FittingContext): The current context.
+        ctx (RecordingContext): The current context.
         pipeline (Pipeline): The newly created pipeline.
 
     Returns:
@@ -126,7 +126,7 @@ def adjusted_r2_score(ctx, pipeline, initial_metrics, num_rows):
     See: https://en.wikipedia.org/wiki/Coefficient_of_determination#Adjusted_R2
 
     Parameters:
-        ctx (FittingContext): The current context.
+        ctx (RecordingContext): The current context.
         pipeline (Pipeline): The pipeline being evaluated.
         initial_metrics (dict): A dict of the metrics we've collected so far.
         num_rows (int): The number of rows in this segment of the dataset.

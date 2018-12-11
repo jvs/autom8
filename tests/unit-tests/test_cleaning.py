@@ -1,7 +1,7 @@
 import logging
 
 import autom8
-from autom8.pipeline import PipelineContext
+from autom8.pipeline import PlaybackContext
 from autom8.preprocessors import playback
 
 
@@ -32,7 +32,7 @@ def test_matrix_with_unexpected_value():
 
     vectors = [['A', 'B', 'C'], [1, 2, 'foo'], [3, 4, 'bar']]
     matrix = autom8.create_matrix(vectors, receiver=acc)
-    out = PipelineContext(matrix, receiver=acc)
+    out = PlaybackContext(matrix, receiver=acc)
     playback(ctx.steps, out)
     assert out.matrix.tolist() == [[1, 2], [3, 4]]
 
@@ -60,7 +60,7 @@ def test_primitives_with_object_dtype():
 
     vectors = [['A', 'B', 'C'], [1, 2, 3.0], [0, 4, 5.0], [1, False, 6.9]]
     matrix = autom8.create_matrix(vectors, receiver=acc)
-    out = PipelineContext(matrix, receiver=acc)
+    out = PlaybackContext(matrix, receiver=acc)
     playback(ctx.steps, out)
     assert out.matrix.tolist() == [
         [True, 2.0, 3], [False, 4.0, 5], [True, 0.0, 6]
@@ -73,7 +73,7 @@ def test_primitives_with_object_dtype():
 
     vectors = [['A', 'B', 'C'], ['1', '2', None], ['', None, ()]]
     matrix = autom8.create_matrix(vectors, receiver=acc)
-    out = PipelineContext(matrix, receiver=acc)
+    out = PlaybackContext(matrix, receiver=acc)
     playback(ctx.steps, out)
 
     # Just use repr to avoid having to fart around with nan.
@@ -101,7 +101,7 @@ def test_column_with_all_none():
 
     vectors = [['A', 'B', 'C'], [1, 2, 'foo'], [3, 4, 'bar']]
     matrix = autom8.create_matrix(vectors, receiver=acc)
-    out = PipelineContext(matrix, receiver=acc)
+    out = PlaybackContext(matrix, receiver=acc)
     playback(ctx.steps, out)
     assert out.matrix.tolist() == [[1, 'foo'], [3, 'bar']]
 
@@ -126,7 +126,7 @@ def test_columns_with_numbers_as_strings():
 
     vectors = [['A', 'B', 'C'], [1, '2%', 'foo'], ['3', 4.0, 'bar']]
     matrix = autom8.create_matrix(vectors, receiver=acc)
-    out = PipelineContext(matrix, receiver=acc)
+    out = PlaybackContext(matrix, receiver=acc)
     playback(ctx.steps, out)
     assert out.matrix.tolist() == [[1, 2, 'foo'], [3, 4, 'bar']]
     assert out.matrix.columns[0].dtype == int
@@ -181,7 +181,7 @@ def test_column_of_all_strings_and_none_values():
 
     vectors = [['A', 'B'], [None, 'bar'], ['baz', None]]
     matrix = autom8.create_matrix(vectors, receiver=acc)
-    out = PipelineContext(matrix, receiver=acc)
+    out = PlaybackContext(matrix, receiver=acc)
     playback(ctx.steps, out)
     assert out.matrix.tolist() == [['', 'bar'], ['baz', None]]
 
@@ -210,7 +210,7 @@ def test_column_of_ints_and_floats():
 
     vectors = [['A', 'B'], [None, 10], [20.0, None], [30, 40]]
     matrix = autom8.create_matrix(vectors, receiver=acc)
-    out = PipelineContext(matrix, receiver=acc)
+    out = PlaybackContext(matrix, receiver=acc)
     playback(ctx.steps, out)
     assert out.matrix.tolist() == [
         [0.0, False, 10.0, True],
@@ -255,7 +255,7 @@ def test_columns_with_some_empty_strings():
 
     vectors = [['A', 'B', 'C'], ['', 5.5, ''], [True, '', 50]]
     matrix = autom8.create_matrix(vectors, receiver=acc)
-    out = PipelineContext(matrix, receiver=acc)
+    out = PlaybackContext(matrix, receiver=acc)
     playback(ctx.steps, out)
     assert out.matrix.tolist() == [
         [False, False, 5.5, True, 0, False],
@@ -337,7 +337,7 @@ def test_mixed_up_columns_with_strings_and_numbers():
 
     vectors = [['A', 'B'], [False, 'buz'], ['zim', 10], [2, None]]
     matrix = autom8.create_matrix(vectors, receiver=acc)
-    out = PipelineContext(matrix, receiver=acc)
+    out = PlaybackContext(matrix, receiver=acc)
     playback(ctx.steps, out)
     assert out.matrix.tolist() == [
         [0.0, '', 0.0, 'buz'],

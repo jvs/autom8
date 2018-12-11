@@ -29,7 +29,7 @@ def create_context(
     executor_class=None,
     receiver=None,
 ):
-    """Returns a new `autom8.FittingContext` object, ready to create pipelines.
+    """Returns a new `autom8.RecordingContext` object, ready to create pipelines.
 
     Note:
         If you are not writing your own preprocessing or training logic, then
@@ -120,7 +120,7 @@ def create_context(
     if executor_class is None:
         executor_class = SynchronousExecutor
 
-    return FittingContext(
+    return RecordingContext(
         matrix=matrix,
         labels=labels,
         test_indices=test_indices,
@@ -132,7 +132,7 @@ def create_context(
     )
 
 
-class FittingContext:
+class RecordingContext:
     """Keep track of autom8's internal state as it generates candidate
     pipelines.
 
@@ -162,8 +162,8 @@ class FittingContext:
         steps (list[Step]): A list of all the preprocessing steps that have
             been applied to the feature matrix.
         pool (Executor): The current executor, for executing tasks in parallel.
-        is_fitting (bool, always True): Indicates that this is a
-            `FittingContext` as opposed to a `PipelineContext`.
+        is_recording (bool, always True): Indicates that this is a
+            `RecordingContext` as opposed to a `PlaybackContext`.
     """
 
     def __init__(
@@ -181,7 +181,7 @@ class FittingContext:
         self.receiver = receiver
         self.steps = []
         self.pool = None
-        self.is_fitting = True
+        self.is_recording = True
 
     @property
     def is_classification(self):
@@ -299,10 +299,10 @@ class FittingContext:
 
         if len(self.steps) != num_steps:
             self.receiver.warn(
-                'Potential race condition: The FittingContext was updated'
+                'Potential race condition: The RecordingContext was updated'
                 ' within a `parallel` context. To avoid any race conditions,'
                 ' use the `sandbox` method to create a temporary copy of the'
-                ' FittingContext. Then apply your preprocessing functions'
+                ' RecordingContext. Then apply your preprocessing functions'
                 ' to the sandboxed copy.'
             )
 

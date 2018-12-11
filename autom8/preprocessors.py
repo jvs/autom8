@@ -17,8 +17,8 @@ Step = namedtuple('Step', 'func, args, kwargs')
 def planner(f):
     @functools.wraps(f)
     def wrapper(ctx, *a, **k):
-        if not ctx.is_fitting:
-            raise expected('FittingContext', typename(ctx))
+        if not ctx.is_recording:
+            raise expected('RecordingContext', typename(ctx))
         try:
             f(ctx, *a, **k)
         except Exception as exc:
@@ -32,7 +32,7 @@ def preprocessor(f):
     @functools.wraps(f)
     def wrapper(ctx, *a, **k):
         f(ctx, *a, **k)
-        if ctx.is_fitting:
+        if ctx.is_recording:
             ctx.steps.append(Step(wrapper, a, k))
     return wrapper
 
@@ -108,7 +108,7 @@ def coerce_columns(ctx):
 @preprocessor
 def _coerce_columns(ctx, dtypes):
     """Forces each column to have the expected type."""
-    if ctx.is_fitting:
+    if ctx.is_recording:
         return
 
     for col, dtype in zip(ctx.matrix.columns, dtypes):
@@ -239,7 +239,7 @@ def _encode_text(ctx, encoder, indices):
     found.coerce_values_to_strings()
     combined = [' '.join(text) for text in found.stack_columns()]
 
-    if ctx.is_fitting:
+    if ctx.is_recording:
         result = encoder.fit_transform(combined).toarray()
     else:
         # TODO: Append the appropriate number of 0-columns when this fails.
@@ -318,7 +318,7 @@ def _scale_columns(ctx, scaler, indices):
     array = found.stack_columns()
     ctx.matrix.drop_columns_by_index(indices)
 
-    if ctx.is_fitting:
+    if ctx.is_recording:
         result = scaler.fit_transform(array)
     else:
         try:

@@ -37,7 +37,7 @@ class Pipeline:
         assert isinstance(features, Matrix)
         selected = self._select_columns(features, receiver)
 
-        ctx = PipelineContext(selected, receiver)
+        ctx = PlaybackContext(selected, receiver)
         playback(self.steps, ctx)
 
         # TODO: Notify the receiver when the features need a lot of coercion.
@@ -106,8 +106,8 @@ class Pipeline:
             return Matrix([col.copy() for col in matrix.columns[:c2]])
 
 
-class PipelineContext:
+class PlaybackContext:
     def __init__(self, matrix, receiver):
         self.matrix = matrix
         self.receiver = receiver
-        self.is_fitting = False
+        self.is_recording = False

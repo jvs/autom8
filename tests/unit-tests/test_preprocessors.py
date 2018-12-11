@@ -2,7 +2,7 @@ import math
 import numpy as np
 
 import autom8
-from autom8.pipeline import PipelineContext
+from autom8.pipeline import PlaybackContext
 from autom8.preprocessors import playback
 
 
@@ -330,7 +330,7 @@ def test_ordinal_encode_categories_when_something_goes_wrong():
 
     matrix = _create_matrix(features, roles)
     acc = autom8.Accumulator()
-    plc = PipelineContext(matrix, receiver=acc)
+    plc = PlaybackContext(matrix, receiver=acc)
 
     # For now, just monkey-patch in a "steps" list. (This is pretty terrible.)
     ctx.steps = []
@@ -366,7 +366,7 @@ def test_one_hot_encode_categories_when_something_goes_wrong():
     encoder = ctx.steps[0].args[0]
 
     acc = autom8.Accumulator()
-    plc = PipelineContext(matrix, receiver=acc)
+    plc = PlaybackContext(matrix, receiver=acc)
 
     # As in the previous test, just monkey-patch in a "steps" list.
     # (Again, this is pretty terrible.)
@@ -650,7 +650,7 @@ def _playback(fitted, roles, features, receiver=None):
         receiver = autom8.Accumulator()
 
     matrix = _create_matrix(features, roles)
-    ctx = PipelineContext(matrix, receiver=receiver)
+    ctx = PlaybackContext(matrix, receiver=receiver)
     playback(fitted.steps, ctx)
     assert fitted.matrix.formulas == ctx.matrix.formulas
     return ctx.matrix.tolist()

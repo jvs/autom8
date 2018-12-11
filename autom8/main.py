@@ -48,7 +48,7 @@ def fit(*args, **kwargs):
 def run(*args, **kwargs):
     """Runs autom8 with the provided settings.
 
-    After creating the `FittingContext` object, autom8 passes the context to
+    After creating the `RecordingContext` object, autom8 passes the context to
     the receiver's `receive_context` method. The allows the receive to copy any
     information that it may need later, like the context's `test_indices`
     attribute, for example.

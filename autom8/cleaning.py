@@ -31,7 +31,7 @@ def clean_dataset(ctx):
     boolean value, then all the values in the column will be booleans.
 
     Parameters:
-        ctx (FittingContext): The current context.
+        ctx (RecordingContext): The current context.
     """
 
     for col in ctx.matrix.columns:
