@@ -1,10 +1,9 @@
 BIN := .venv/bin
 COVERAGE := $(BIN)/coverage
 PIP := $(BIN)/pip
-PYTHON := $(BIN)/python -W "ignore::PendingDeprecationWarning"
-
-TEST_FLAGS := -s -vv -W "ignore::PendingDeprecationWarning" \
-	--doctest-modules --doctest-continue-on-failure
+IGNORES := -W "ignore::PendingDeprecationWarning" -W "ignore::DeprecationWarning"
+PYTHON := $(BIN)/python -W $(IGNORES)
+TEST_FLAGS := -s -vv $(IGNORES) --doctest-modules --doctest-continue-on-failure
 TEST := $(BIN)/pytest $(TEST_FLAGS)
 
 blackbox-tests: clean venv
