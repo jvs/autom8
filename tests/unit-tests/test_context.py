@@ -88,16 +88,16 @@ def test_training_and_testing_data():
 
     m1, a1 = ctx.testing_data()
     m2, a2 = ctx.training_data()
-    assert np.array_equal(a1, [20, 40])
-    assert np.array_equal(a2, [10, 30])
-    assert np.array_equal(m1.tolist(), [
+    assert a1.tolist() == [20, 40]
+    assert a2.tolist() == [10, 30]
+    assert m1.tolist() == [
         [2, 6, False, 10],
         [4, 8, True, 12],
-    ])
-    assert np.array_equal(m2.tolist(), [
+    ]
+    assert m2.tolist() == [
         [1, 5, True, 9],
         [3, 7, False, 11],
-    ])
+    ]
 
 
 def test_sandbox():
