@@ -57,25 +57,23 @@ class Pipeline:
 
             if has_proba:
                 y = self.estimator.predict_proba(window)
-                predictions.extend(np.argmax(p) for p in y)
-                probabilities.extend(self._format_probabilities(p) for p in y)
+                rows = [self._format_probabilities(row) for row in y]
+                predictions.extend(row[0][0] for row in rows)
+                probabilities.extend(rows)
             else:
-                predictions.extend(self.estimator.predict(window))
-
-        if self.label_encoder is not None:
-            predictions = self.label_encoder.inverse_transform(predictions)
+                y = self.estimator.predict(window)
+                if self.label_encoder is not None:
+                    y = self.label_encoder.inverse_transform(y)
+                predictions.extend(y)
 
         tolist = lambda x: x.tolist() if hasattr(x, 'tolist') else x
         conv = lambda xs: None if xs is None else [tolist(x) for x in xs]
         return PredictionReport(conv(predictions), conv(probabilities))
 
     def _format_probabilities(self, probs):
-        decode = lambda i: self.label_encoder.inverse_transform([i])[0]
-        pairs = [(s, decode(i)) for i, s in enumerate(probs) if s > 0]
-        top3 = sorted(pairs, reverse=True)[:3]
-
-        # Return the top three pairs.
-        return [(label, score) for score, label in top3]
+        classes = self.label_encoder.classes_
+        pairs = [(c, p) for c, p in zip(classes, probs) if p > 0]
+        return sorted(pairs, reverse=True, key=lambda pair: pair[1])[:3]
 
     def _select_columns(self, matrix, receiver):
         assert isinstance(matrix, Matrix)

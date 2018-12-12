@@ -64,6 +64,35 @@ def _create_failed_encoding(encoder, found):
     return np.zeros((num_rows, num_cols))
 
 
+class LabelEncoder:
+    def __init__(self):
+        self.mapping = None
+
+    def __repr__(self):
+        return 'LabelEncoder'
+
+    @property
+    def classes_(self):
+        return self.mapping.index.values
+
+    def fit_transform(self, y):
+        if not isinstance(y, pd.Series):
+            y = pd.Series(y)
+        self.mapping = _ordinally_map_series(y)
+        return self.transform(y)
+
+    def transform(self, y):
+        if not isinstance(y, pd.Series):
+            y = pd.Series(y)
+        y = y.map(self.mapping)
+        y.fillna(0, inplace=True)
+        return y.values
+
+    def inverse_transform(self, y):
+        inverse = pd.Series(data=self.mapping.index, index=self.mapping.values)
+        return pd.Series(y).map(inverse).values
+
+
 class OrdinalEncoder:
     def __init__(self):
         self.mapping = None

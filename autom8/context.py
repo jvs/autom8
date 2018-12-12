@@ -5,9 +5,9 @@ import random
 
 import numpy as np
 import scipy.sparse
-import sklearn.preprocessing
 
 from .candidate import create_candidate
+from .categories import LabelEncoder
 from .docstrings import render_docstring
 from .exceptions import expected, typename
 from .inference import _infer_role
@@ -104,7 +104,7 @@ def create_context(
         labels = Labels(label_name, label_values, label_values, None)
     else:
         assert problem_type == 'classification'
-        encoder = sklearn.preprocessing.LabelEncoder()
+        encoder = LabelEncoder()
         encoded = encoder.fit_transform(label_values)
         labels = Labels(label_name, label_values, encoded, encoder)
 
