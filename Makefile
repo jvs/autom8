@@ -58,6 +58,7 @@ html-docs:
 	$(BIN)/sphinx-build -M "html" docs docs/build
 
 publish: venv
+	rm -rf dist
 	$(PIP) install -U setuptools wheel twine
 	$(PYTHON) setup.py sdist bdist_wheel
 	$(BIN)/twine upload dist/*
