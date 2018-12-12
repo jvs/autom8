@@ -104,10 +104,11 @@ class Matrix:
         return Matrix([i.copy() for i in self.columns])
 
     def tolist(self):
-        return self.stack_columns().tolist()
+        cols = [c.values.astype(object) for c in self.columns]
+        return np.column_stack(cols).tolist()
 
-    def stack_columns(self, as_type=object):
-        return np.column_stack([col.values.astype(as_type) for col in self.columns])
+    def stack_columns(self):
+        return np.column_stack([col.values for col in self.columns])
 
     def to_array(self):
         if len(self.columns) == 1:
@@ -160,28 +161,9 @@ class Matrix:
     def column_indices_where(self, predicate):
         return [i for i, col in enumerate(self.columns) if predicate(col)]
 
-    def coerce_values_to_strings(self):
+    def coerce(self, to_type):
         for col in self.columns:
-            if not all(isinstance(i, str) for i in col.values):
-                col.values = create_array([str(i) for i in col.values])
-
-    def coerce_values_to_numbers(self, default=0, as_type=None):
-        def conv(obj):
-            if isinstance(obj, (int, float)):
-                return obj
-            try:
-                return parse_number(obj)
-            except Exception:
-                return default
-
-        for col in self.columns:
-            if col.dtype not in (int, float):
-                col.values = np.array([conv(i) for i in col.values], dtype=float)
-
-        if as_type is not None:
-            for col in self.columns:
-                if col.dtype != as_type:
-                    col.values = col.values.astype(as_type)
+            col.coerce(to_type)
 
 
 class Column:
@@ -250,6 +232,62 @@ class Column:
             role=role,
             is_original=self.is_original,
         )
+
+    def coerce(self, to_type):
+        expected = (bool, float, int, object, str)
+        if to_type not in expected:
+            raise TypeError(f'coerce() argument must be one of: {expected}')
+
+        if to_type == bool:
+            self._coerce(bool, False, bool)
+
+        elif to_type in [float, int]:
+            self.coerce_values_to_numbers(to_type)
+
+        elif to_type == object:
+            self.values = self.values.astype(object, copy=False)
+
+        elif to_type == str:
+            self.coerce_values_to_strings()
+
+        else:
+            assert False
+
+    def coerce_values_to_numbers(self, to_type=float):
+        def conv(x):
+            try:
+                return to_type(parse_number(x))
+            except Exception:
+                return to_type(x)
+
+        self._coerce(to_type, to_type(0), conv)
+
+    def coerce_values_to_strings(self):
+        def conv(x):
+            try:
+                return str(x)
+            except Exception:
+                return ''
+
+        if not all(isinstance(x, str) for x in self.values):
+            self.values = create_array([conv(x) for x in self.values])
+
+    def _coerce(self, to_type, default, coerce_func):
+        try:
+            self.values = self.values.astype(to_type, copy=False)
+            return
+        except Exception:
+            pass
+
+        def conv(x):
+            if isinstance(x, to_type):
+                return x
+            try:
+                return coerce_func(x)
+            except Exception:
+                return default
+
+        self.values = np.array([conv(x) for x in self.values], dtype=to_type)
 
     def select_rows(self, indices):
         return self.copy_with(self.values[indices])

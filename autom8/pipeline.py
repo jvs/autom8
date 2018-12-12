@@ -39,15 +39,13 @@ class Pipeline:
 
         ctx = PlaybackContext(selected, receiver)
         playback(self.steps, ctx)
-
-        # TODO: Notify the receiver when the features need a lot of coercion.
-        ctx.matrix.coerce_values_to_numbers()
-        X = ctx.matrix.stack_columns(float)
-        return self._predict(X)
+        return self._predict(ctx.matrix)
 
     def _predict(self, X):
-        if X.dtype != float:
-            X = X.astype(float)
+        # TODO: Require a receiver, and notify it when the features need a lot
+        # of coercion.
+        X.coerce(float)
+        X = X.stack_columns()
 
         has_proba = hasattr(self.estimator, 'predict_proba')
         probabilities = [] if has_proba else None

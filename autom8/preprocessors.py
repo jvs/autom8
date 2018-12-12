@@ -70,7 +70,7 @@ def binarize_fractions(ctx):
 def _binarize_fractions(ctx, indices):
     """Indicates when a column contains a fractional value."""
     found = ctx.matrix.select_columns(indices)
-    found.coerce_values_to_numbers(default=0)
+    found.coerce(float)
     for col in found.columns:
         ctx.matrix.append_column(
             values=np.absolute(col.values) < 1,
@@ -90,7 +90,7 @@ def binarize_signs(ctx):
 def _binarize_signs(ctx, indices):
     """Indicates when a column contains a positive value."""
     found = ctx.matrix.select_columns(indices)
-    found.coerce_values_to_numbers(default=0)
+    found.coerce(float)
     for col in found.columns:
         ctx.matrix.append_column(
             values=col.values > 0,
@@ -139,8 +139,8 @@ def _divide_columns(ctx, numerators, denominators):
     """
     xs = ctx.matrix.select_columns(numerators)
     ys = ctx.matrix.select_columns(denominators)
-    xs.coerce_values_to_numbers(default=0, as_type=float)
-    ys.coerce_values_to_numbers(default=0)
+    xs.coerce(float)
+    ys.coerce(float)
     for col_x, col_y in itertools.product(xs.columns, ys.columns):
         x, y = col_x.values, col_y.values
         if not np.array_equal(x, y):
@@ -182,7 +182,11 @@ def drop_weak_columns(ctx, feature_selector=None):
     if feature_selector is None and ctx.is_classification:
         feature_selector = fs.SelectFwe(fs.f_classif)
 
-    feature_selector.fit(*ctx.training_data())
+    X, y = ctx.training_data()
+    X.coerce(float)
+    X = X.stack_columns()
+
+    feature_selector.fit(X, y)
     weak_cols = np.where(np.invert(feature_selector.get_support()))[0]
 
     # For now, ignore the selector if it wants to drop every column.
@@ -234,7 +238,7 @@ def _encode_text(ctx, encoder, indices):
     ctx.matrix.drop_columns_by_index(indices)
 
     # Combine textual columns into single column.
-    found.coerce_values_to_strings()
+    found.coerce(str)
     combined = [' '.join(text) for text in found.stack_columns()]
 
     if ctx.is_recording:
@@ -267,7 +271,7 @@ def _logarithm_columns(ctx, indices):
     only contains positive numbers.
     """
     found = ctx.matrix.select_columns(indices)
-    found.coerce_values_to_numbers(default=0, as_type=float)
+    found.coerce(float)
     for col in found.columns:
         v = col.values
         ctx.matrix.append_column(
@@ -288,7 +292,7 @@ def multiply_columns(ctx):
 def _multiply_columns(ctx, indices):
     """Multiplies pairs of numerical columns."""
     found = ctx.matrix.select_columns(indices)
-    found.coerce_values_to_numbers(default=0)
+    found.coerce(float)
     for x, y in itertools.combinations(found.columns, 2):
         ctx.matrix.append_column(
             values=x.values * y.values,
@@ -311,7 +315,7 @@ def scale_columns(ctx, scaler=None):
 def _scale_columns(ctx, scaler, indices):
     """Standardizes numerical columns using different scaling strategies."""
     found = ctx.matrix.select_columns(indices)
-    found.coerce_values_to_numbers(default=0, as_type=float)
+    found.coerce(float)
 
     array = found.stack_columns()
     ctx.matrix.drop_columns_by_index(indices)
@@ -343,7 +347,7 @@ def square_columns(ctx):
 def _square_columns(ctx, indices):
     """Multiplies each numerical column by itself."""
     found = ctx.matrix.select_columns(indices)
-    found.coerce_values_to_numbers(default=0)
+    found.coerce(float)
     for col in found.columns:
         ctx.matrix.append_column(
             values=col.values * col.values,
@@ -368,7 +372,7 @@ def _sqrt_columns(ctx, indices):
     does not contain any negative numbers.
     """
     found = ctx.matrix.select_columns(indices)
-    found.coerce_values_to_numbers(default=0, as_type=float)
+    found.coerce(float)
     for col in found.columns:
         v = col.values
         ctx.matrix.append_column(

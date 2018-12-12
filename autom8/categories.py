@@ -113,5 +113,6 @@ class OneHotEncoder:
         cols = []
         for i, series in enumerate(self.mapping):
             for value in series:
+                # SHOULD: Consider leaving the columns as booleans.
                 cols.append((X[:, i] == value).astype(int))
         return np.stack(cols, axis=1)

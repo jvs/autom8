@@ -4,7 +4,7 @@ PIP := $(BIN)/pip
 PYTHON := $(BIN)/python -W "ignore::PendingDeprecationWarning"
 
 TEST_FLAGS := -s -vv -W "ignore::PendingDeprecationWarning" \
-	--doctest-modules --doctest-continue-on-failure
+	--doctest-modules --doctest-continue-on-failure --log-cli-level INFO
 TEST := $(BIN)/pytest $(TEST_FLAGS)
 
 blackbox-tests: clean venv
@@ -58,3 +58,9 @@ clean:
 	rm -rf ./autom8/__pycache__/*.pyc ./tests/*/__pycache__/*.pyc
 
 .PHONY: blackbox-tests boston-test clean coverage repl test unit-tests
+
+
+
+
+tmp-test:
+	$(TEST) tests/unit-tests/test_cleaning.py::test_column_of_ints_and_floats

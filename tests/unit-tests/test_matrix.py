@@ -404,5 +404,5 @@ def test_creating_a_matrix_with_map_of_roles():
 
 def test_coerce_values_to_numbers_with_weird_values():
     matrix = autom8.create_matrix([[1], [2.0], ['3'], ['hi'], [object()], [4]])
-    matrix.coerce_values_to_numbers(default=100, as_type=int)
-    assert matrix.tolist() == [[1], [2], [3], [100], [100], [4]]
+    matrix.coerce(int)
+    assert matrix.tolist() == [[1], [2], [3], [0], [0], [4]]

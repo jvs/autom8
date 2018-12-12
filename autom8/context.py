@@ -235,10 +235,8 @@ class RecordingContext:
     def fit(self, estimator):
         X, y = self.training_data()
 
-        # Force all the columns to be floats at this point.
-        if X.dtype != float:
-            X = X.astype(float)
-
+        X.coerce(float)
+        X = X.stack_columns()
         X = scipy.sparse.csr_matrix(X)
 
         try:
@@ -267,12 +265,12 @@ class RecordingContext:
     def testing_data(self):
         feat = self.matrix.select_rows(self.test_indices)
         lab = self.labels.encoded[self.test_indices]
-        return (feat.stack_columns(), lab)
+        return (feat, lab)
 
     def training_data(self):
         feat = self.matrix.exclude_rows(self.test_indices)
         lab = np.delete(self.labels.encoded, self.test_indices)
-        return (feat.stack_columns(), lab)
+        return (feat, lab)
 
     @contextmanager
     def sandbox(self):

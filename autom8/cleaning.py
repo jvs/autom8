@@ -70,13 +70,14 @@ def _clean_column(ctx, col):
         _drop_weak_columns(ctx, [index])
         return
 
+    # Record the number of values for each type.
+    counts = {bool: num_bools, float: num_floats, int: num_ints}
+
     # If we somehow got an array of primitives with dtype == object, then just
     # coerce it to the appropriate type.
-    casts = {bool: num_bools, float: num_floats, int: num_ints}
-    zeros = {bool: False, float: 0.0, int: 0}
-    for typ, num in casts.items():
+    for typ, num in counts.items():
         if num == num_values:
-            _coerce_column(ctx, index, typ, zeros[typ])
+            _coerce_column(ctx, index, typ)
             return
 
     # If we have all None values, then drop this column.
@@ -126,13 +127,13 @@ def _clean_column(ctx, col):
     # If we have all primitive values, but some are None, then replace None
     # values with the appropriate zero value. Add a boolean column that records
     # which values were missing.
-    for typ, num in casts.items():
+    for typ, num in counts.items():
         if num + num_none == num_values:
             ctx.receiver.warn(
                 f'Column {repr(col.name)} has {num_none} missing'
                 f' value{"" if num_none == 1 else "s"}.'
             )
-            _flag_missing_values(ctx, index, zeros[typ])
+            _flag_missing_values(ctx, index, typ(0))
             return
 
     # Now we know we have some strings, some numbers, and maybe some Nones.
@@ -146,13 +147,9 @@ def _clean_column(ctx, col):
 
 
 @preprocessor
-def _coerce_column(ctx, index, typ, replacement):
-    assert typ != str
+def _coerce_column(ctx, index, to_type):
     col = ctx.matrix.columns[index]
-    try:
-        col.values = col.values.astype(typ)
-    except Exception:
-        col.values = np.array([replacement for _ in col.values], dtype=typ)
+    col.coerce(to_type)
 
 
 _string_to_number_regex = re.compile(r'^\$*(\-?[0-9,\.]+)\%*$')
