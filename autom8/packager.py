@@ -164,7 +164,7 @@ CMD ["gunicorn", "service:app", "--workers=1", "--bind", "0.0.0.0:80"]
 
 dockerignore = '''
 .pytest_cache
-.virtualenv
+.venv
 __pycache__
 '''
 
@@ -225,21 +225,21 @@ stop:
     docker stop $DOCKER_NAME
 
 
-# Runs the unit tests. (But first it runs `make clean` and `make virtualenv`.)
-test: clean virtualenv
-    .virtualenv/bin/pytest -s -v -W "ignore::PendingDeprecationWarning" tests.py
+# Runs the unit tests. (But first it runs `make clean` and `make venv`.)
+test: clean venv
+    .venv/bin/pytest -s -v -W "ignore::PendingDeprecationWarning" tests.py
 
 
 # Creates the `activate` script for your virtual environment.
-virtualenv: .virtualenv/bin/activate
+venv: .venv/bin/activate
 
 
 # Creates your virtual environment and installs the required dependencies.
-.virtualenv/bin/activate: requirements.txt
-    test -d .virtualenv || virtualenv .virtualenv
-    .virtualenv/bin/pip install -U -r requirements.txt
-    .virtualenv/bin/pip install -U pytest
-    touch .virtualenv/bin/activate
+.venv/bin/activate: requirements.txt
+    test -d .venv || python3 -m venv .venv
+    .venv/bin/pip install -U -r requirements.txt
+    .venv/bin/pip install -U pytest
+    touch .venv/bin/activate
 
 
 # Tells `make` which commands don't actaully produce any files.
@@ -284,7 +284,7 @@ $README_INPUT_COLUMNS
 
 - make
 - docker
-- virtualenv
+- python3
 
 
 ## Commands
