@@ -353,10 +353,14 @@ def health_check():
 
 @app.route('/describe', methods=['GET'])
 def describe():
+    classes = pipeline.predicts_classes
+    if classes is not None:
+        classes = classes.tolist()
+
     return flask.jsonify({
         'inputColumns': pipeline.input_columns,
         'predictsColumn': pipeline.predicts_column,
-        'predictsClasses': pipeline.predicts_classes.tolist(),
+        'predictsClasses': classes,
         'estimatorClass': type(pipeline.estimator).__name__,
         'estimator': repr(pipeline.estimator),
     })
