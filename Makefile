@@ -48,12 +48,19 @@ package-test: clean venv
 wine-test: clean venv
 	$(TEST) tests/blackbox-tests/test_wine_dataset.py
 
+clean:
+	rm -rf ./autom8/__pycache__/*.pyc ./tests/*/__pycache__/*.pyc
+
+
+# Documentation and distribution:
 
 html-docs:
 	$(BIN)/sphinx-build -M "html" docs docs/build
 
+publish: venv
+	$(PIP) install -U setuptools wheel twine
+	$(PYTHON) setup.py sdist bdist_wheel
+	$(BIN)/twine upload dist/*
 
-clean:
-	rm -rf ./autom8/__pycache__/*.pyc ./tests/*/__pycache__/*.pyc
 
-.PHONY: blackbox-tests boston-test clean coverage repl test unit-tests
+.PHONY: blackbox-tests boston-test clean coverage repl test unit-tests wheel distribute
