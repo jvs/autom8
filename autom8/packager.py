@@ -21,6 +21,7 @@ try:
 except ImportError:
     xgboost = None
 
+from . import __version__
 from .docstrings import render_docstring
 from .matrix import create_matrix
 
@@ -121,8 +122,6 @@ def _template_args(package_name, pipeline, example_input, extra_notes):
     }
 
     return {
-        # Use github for now, until autom8 is published to PyPI.
-        'AUTOM8_PACKAGE': 'git+git://github.com/jvs/autom8.git@925790feaf86f9b21ccbcb2715266a1961b5baeb#egg=autom8',
         'DOCKER_NAME': package_name,
         'ESTIMATOR_CLASS': type(pipeline.estimator).__name__,
         'EXTRA_NOTES': extra_notes or '',
@@ -324,7 +323,7 @@ $EXTRA_NOTES
 
 
 requirements = f'''
-$AUTOM8_PACKAGE
+autom8=={__version__}
 flask==1.*
 gunicorn==19.*
 numpy=={numpy.__version__}
