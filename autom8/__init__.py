@@ -28,7 +28,6 @@ from .preprocessors import (
     encode_text,
     logarithm_columns,
     multiply_columns,
-    planner,
     preprocessor,
     scale_columns,
     square_columns,
