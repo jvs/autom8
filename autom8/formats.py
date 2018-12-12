@@ -151,7 +151,15 @@ def parse_number(string):
 
     >>> parse_number('0XFE')
     254
+
+    >>> parse_number({})
+    Traceback (most recent call last):
+        ...
+    TypeError: parse_number() argument must be a string
     """
+
+    if not isinstance(string, str):
+        raise TypeError('parse_number() argument must be a string')
 
     string = string.replace(',', '').replace('_', '')
 
