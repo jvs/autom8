@@ -183,8 +183,7 @@ def drop_weak_columns(ctx, feature_selector=None):
         feature_selector = fs.SelectFwe(fs.f_classif)
 
     X, y = ctx.training_data()
-    X.coerce(float)
-    X = X.stack_columns()
+    X = X._float_array()
 
     feature_selector.fit(X, y)
     weak_cols = np.where(np.invert(feature_selector.get_support()))[0]

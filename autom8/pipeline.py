@@ -44,8 +44,7 @@ class Pipeline:
     def _predict(self, X):
         # TODO: Require a receiver, and notify it when the features need a lot
         # of coercion.
-        X.coerce(float)
-        X = X.stack_columns()
+        X = X._float_array()
 
         has_proba = hasattr(self.estimator, 'predict_proba')
         probabilities = [] if has_proba else None

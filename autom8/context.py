@@ -234,10 +234,7 @@ class RecordingContext:
 
     def fit(self, estimator):
         X, y = self.training_data()
-
-        X.coerce(float)
-        X = X.stack_columns()
-        X = scipy.sparse.csr_matrix(X)
+        X = scipy.sparse.csr_matrix(X._float_array())
 
         try:
             estimator.fit(X, y)

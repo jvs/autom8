@@ -165,6 +165,11 @@ class Matrix:
         for col in self.columns:
             col.coerce(to_type)
 
+    def _float_array(self):
+        """Warning: This method mutates the matrix object."""
+        self.coerce(float)
+        return self.stack_columns()
+
 
 class Column:
     def __init__(self, values, formula, role, is_original):
