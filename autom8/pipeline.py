@@ -57,18 +57,19 @@ class Pipeline:
 
             if has_proba:
                 y = self.estimator.predict_proba(window)
-                rows = [self._format_probabilities(row.tolist()) for row in y]
+                rows = [self._format_probabilities(row) for row in y]
                 predictions.extend(row[0][0] for row in rows)
                 probabilities.extend(rows)
             else:
                 y = self.estimator.predict(window)
                 if self.label_encoder is not None:
                     y = self.label_encoder.inverse_transform(y)
-                predictions.extend(y.tolist())
+                predictions.extend(y)
 
-        tolist = lambda x: x.tolist() if hasattr(x, 'tolist') else x
-        conv = lambda xs: None if xs is None else [tolist(x) for x in xs]
-        return PredictionReport(conv(predictions), conv(probabilities))
+        return PredictionReport(
+            _literalize(predictions),
+            _literalize(probabilities),
+        )
 
     def _format_probabilities(self, probs):
         classes = self.label_encoder.classes_
@@ -106,3 +107,16 @@ class PlaybackContext:
         self.matrix = matrix
         self.receiver = receiver
         self.is_recording = False
+
+
+def _literalize(obj):
+    if hasattr(obj, 'tolist'):
+        return obj.tolist()
+
+    if isinstance(obj, list):
+        return [_literalize(i) for i in obj]
+
+    if isinstance(obj, tuple):
+        return tuple(_literalize(i) for i in obj)
+
+    return obj

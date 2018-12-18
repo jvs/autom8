@@ -121,6 +121,9 @@ def _template_args(package_name, pipeline, example_input, extra_notes):
         'probabilities': example_result.probabilities,
     }
 
+    if hasattr(example_input, 'tolist'):
+        example_input = example_input.tolist()
+
     return {
         'DOCKER_NAME': package_name,
         'ESTIMATOR_CLASS': type(pipeline.estimator).__name__,
