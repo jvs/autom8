@@ -1,4 +1,4 @@
-__version__ = '0.0.3'
+__version__ = '0.0.4'
 
 from .cleaning import clean_dataset
 from .context import create_context, RecordingContext, Labels
