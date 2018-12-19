@@ -1,3 +1,4 @@
+import json
 import os
 import warnings
 import autom8
@@ -17,7 +18,19 @@ def run(name):
         warnings.simplefilter('ignore')
         autom8.run(dataset, receiver=acc)
 
+    check_for_numpy_values(acc)
     return acc
+
+
+def check_for_numpy_values(acc):
+    # Just make sure that json.dumps() doesn't raise exceptions on this stuff.
+    json.dumps(acc.test_indices)
+    for candidate in acc.candidates:
+        json.dumps(candidate.formulas)
+        for section in [candidate.train, candidate.test]:
+            json.dumps(section.predictions)
+            json.dumps(section.probabilities)
+            json.dumps(section.metrics)
 
 
 def check_classifier_candidates(acc, valid_labels):
@@ -50,6 +63,9 @@ def check_classifier_predictions(acc, valid_labels, vectors):
         tmp = autom8.Accumulator()
         pred = candidate.pipeline.run(vectors, receiver=tmp)
         assert not tmp.warnings
+
+        # Just make sure that we can json-encode the predictions.
+        json.dumps(pred)
 
         assert len(pred.predictions) == len(vectors) - 1
         for label in pred.predictions:

@@ -111,11 +111,11 @@ def precision_recall_fscore_support(actual, predicted, encoder):
     result = []
     for cls, precision, recall, f1, support in zip(encoder.classes_, *arrays):
         result.append({
-            'class': cls,
-            'precision': precision,
-            'recall': recall,
-            'f1': f1,
-            'support': support,
+            'class': _tolist(cls),
+            'precision': _tolist(precision),
+            'recall': _tolist(recall),
+            'f1': _tolist(f1),
+            'support': _tolist(support),
         })
     return result
 
