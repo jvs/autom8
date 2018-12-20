@@ -18,15 +18,18 @@ def run(name):
         warnings.simplefilter('ignore')
         autom8.run(dataset, receiver=acc)
 
-    check_for_numpy_values(acc)
+    try_json_encoding_everything(acc)
     return acc
 
 
-def check_for_numpy_values(acc):
-    # Just make sure that json.dumps() doesn't raise exceptions on this stuff.
+def try_json_encoding_everything(acc):
+    # Make sure json.dumps() doesn't raise exceptions for any of this stuff.
     json.dumps(acc.test_indices)
     for candidate in acc.candidates:
         json.dumps(candidate.formulas)
+        json.dumps(candidate.pipeline.input_columns)
+        json.dumps(candidate.pipeline.predicts_column)
+        json.dumps(candidate.pipeline.predicts_classes)
         for section in [candidate.train, candidate.test]:
             json.dumps(section.predictions)
             json.dumps(section.probabilities)
