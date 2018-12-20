@@ -21,7 +21,7 @@ class Pipeline:
 
     @property
     def predicts_classes(self):
-        return self.label_encoder.classes_ if self.label_encoder else None
+        return self.label_encoder.classes_.tolist() if self.label_encoder else None
 
     def run(self, features, receiver=None):
         if not isinstance(features, (list, Matrix)):

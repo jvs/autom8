@@ -305,7 +305,7 @@ class RecordingContext:
 class Labels(namedtuple('Labels', 'name, original, encoded, encoder')):
     @property
     def classes(self):
-        return self.encoder.classes_ if self.encoder else None
+        return self.encoder.classes_.tolist() if self.encoder else None
 
 
 
