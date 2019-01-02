@@ -64,4 +64,4 @@ publish: venv
 	$(BIN)/twine upload dist/*
 
 
-.PHONY: blackbox-tests boston-test clean coverage repl test unit-tests wheel distribute
+.PHONY: blackbox-tests boston-test clean coverage repl test unit-tests publish
