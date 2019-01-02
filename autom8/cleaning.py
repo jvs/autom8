@@ -152,10 +152,56 @@ def _coerce_column(ctx, index, to_type):
     col.coerce(to_type)
 
 
-_string_to_number_regex = re.compile(r'^\$*(\-?[0-9,\.]+)\%*$')
+_string_to_number_regex = re.compile(r'''
+    ^\s* # leading spaces
+    \$*  # any number of dollar sign characters
+    (
+        [\-\+]?  # optional sign
+        (
+            \.[0-9_]+      # decimal part without integral part
+            |              # OR
+            [0-9,_]+       # integral part
+            (\.[0-9_]*)?   # and optional decimal part
+        )
+    )
+    \%*  # any number of percent characters
+    \s*$ # trailing spaces
+''', re.VERBOSE)
 
 
 def _can_coerce_all_strings_to_numbers(values):
+    """Tests if each string in the collection can be coerced to a number.
+
+    >>> _can_coerce_all_strings_to_numbers(['1', '2', '3'])
+    True
+
+    >>> _can_coerce_all_strings_to_numbers(['1.0', '$2', '3%', '.4', '5.', '-6', '+7'])
+    True
+
+    >>> _can_coerce_all_strings_to_numbers(['0,000', '1_234_567', '$-8.%', '_9'])
+    True
+
+    >>> _can_coerce_all_strings_to_numbers([None, 1, 2, '3'])
+    True
+
+    >>> _can_coerce_all_strings_to_numbers([None, 1, 2, '3', 'foo'])
+    False
+
+    >>> _can_coerce_all_strings_to_numbers([])
+    True
+
+    >>> _can_coerce_all_strings_to_numbers([None, (), object()])
+    True
+
+    >>> _can_coerce_all_strings_to_numbers(['1.2.3'])
+    False
+
+    >>> _can_coerce_all_strings_to_numbers(['1.2,'])
+    False
+
+    >>> _can_coerce_all_strings_to_numbers(['1+2'])
+    False
+    """
     return all(_string_to_number_regex.match(i)
         for i in values if isinstance(i, str))
 
@@ -182,9 +228,15 @@ def _coerce_string_to_number(obj):
     try:
         return parse_number(obj)
     except Exception:
-        # Pull out the number part and try parsing it.
+        pass
+
+    # Pull out the number part and try parsing it.
+    try:
         m = _string_to_number_regex.match(obj)
         return parse_number(m.group(1)) if m else obj
+    except Exception:
+        # If we still can't parse it, then just admit defeat.
+        return obj
 
 
 @preprocessor

@@ -301,7 +301,6 @@ def test_column_with_some_blank_strings():
 
 
 def test_mixed_up_columns_with_strings_and_numbers():
-    # bool, float, int, str
     dataset = [
         ['A', 'B'],
         [True, 'foo'],
