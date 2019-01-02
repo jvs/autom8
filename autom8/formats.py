@@ -156,6 +156,11 @@ def parse_number(string):
     Traceback (most recent call last):
         ...
     TypeError: parse_number() argument must be a string
+
+    >>> parse_number('1.2.3')
+    Traceback (most recent call last):
+        ...
+    Exception: invalid number literal: '1.2.3'
     """
 
     if not isinstance(string, str):
@@ -179,7 +184,7 @@ def parse_number(string):
     except Exception:
         pass
 
-    raise Exception(f'invalid number literal: {repr(obj)}')
+    raise Exception(f'invalid number literal: {repr(string)}')
 
 
 def read_csv(path):
