@@ -8,6 +8,7 @@ import scipy.sparse
 
 from .candidate import create_candidate
 from .categories import LabelEncoder
+from .cleaning import clean_numeric_labels
 from .docstrings import render_docstring
 from .exceptions import expected, typename
 from .inference import _infer_role
@@ -99,6 +100,9 @@ def create_context(
     valid_problems = {'regression', 'classification'}
     if not isinstance(problem_type, str) or problem_type not in valid_problems:
         raise expected(f'problem_type in {valid_problems}', repr(problem_type))
+
+    if problem_type == 'regression':
+        label_values = clean_numeric_labels(label_name, label_values, receiver)
 
     if problem_type == 'regression':
         labels = Labels(label_name, label_values, label_values, None)

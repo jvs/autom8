@@ -349,5 +349,21 @@ def test_mixed_up_columns_with_strings_and_numbers():
     ]
 
 
+def test_clean_numeric_labels():
+    dataset = [
+        ['A', 'B', 'C'],
+        [1, 2, '3'],
+        [3, 4, '4'],
+        [5, 6, 5],
+        [7, 8, None],
+        [9, 9, ''],
+    ]
+    acc = autom8.Accumulator()
+    ctx = autom8.create_context(dataset, receiver=acc)
+
+    assert len(acc.warnings) == 1
+    assert ctx.labels.original.tolist() == [3, 4, 5, 0, 0]
+
+
 def _add_labels(dataset):
     return [i + ['<label>'] for i in dataset]

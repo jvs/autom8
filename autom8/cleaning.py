@@ -9,6 +9,34 @@ from .preprocessors import planner, preprocessor, _drop_weak_columns
 int_type = (int, np.int64)
 
 
+def clean_numeric_labels(name, values, receiver):
+    if values.dtype in (float, int, bool):
+        return values
+
+    NumType = (float, int, np.int64, np.float64)
+    if all(isinstance(i, NumType) for i in values):
+        return values
+
+    count = sum(1 for i in values if not isinstance(i, NumType))
+    suffix = '' if count == 1 else 's'
+    receiver.warn(
+        f'Converting {count} value{suffix} in the "{name}" column'
+        f' to number{suffix}.'
+    )
+
+    def conv(x):
+        if isinstance(x, NumType):
+            return x
+        if isinstance(x, str):
+            try:
+                return parse_number(x)
+            except Exception:
+                pass
+        return 0.0
+
+    return np.array([conv(x) for x in values])
+
+
 @planner
 def clean_dataset(ctx):
     """Cleans the context's dataset, and records the steps for later playback.
