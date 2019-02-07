@@ -1,13 +1,17 @@
 import warnings
+import random
 import numpy as np
 import autom8
 
 
-def test_fit():
+def _make_dataset():
     x = np.arange(0.0, 1, 0.01)
     y = np.sin(2 * np.pi * x)
+    return np.column_stack([x, y])
 
-    dataset = np.column_stack([x, y])
+
+def test_fit():
+    dataset = _make_dataset()
 
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
@@ -21,10 +25,7 @@ def test_fit():
 
 
 def test_run():
-    x = np.arange(0.0, 1, 0.01)
-    y = np.sin(2 * np.pi * x)
-
-    dataset = np.column_stack([x, y])
+    dataset = _make_dataset()
     acc = autom8.Accumulator()
 
     with warnings.catch_warnings():
@@ -46,3 +47,25 @@ def test_run():
     best_test = max(r.test.metrics['r2_score'] for r in acc.candidates)
     assert best_train > 0.5
     assert best_test > 0.5
+
+
+def test_ignoring_text_columns():
+    vocab = ['foo', 'bar', 'baz', 'zim', 'zam', 'fiz', 'buz', 'bim', 'bam',
+        'call', 'step', 'term', 'type', 'protocol', 'hand', 'head', 'foot']
+
+    random_range = lambda: range(random.randint(2, 12))
+    random_word = lambda: random.choice(vocab)
+    new_text = lambda: ' '.join(random_word() for _ in random_range())
+
+    dataset = [[row[0], new_text(), row[1]] for row in _make_dataset()]
+
+    acc = autom8.Accumulator()
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        autom8.run(dataset, receiver=acc)
+
+    did_ignore_text = any('drop_text_columns' in step.func.__name__
+        for candidate in acc.candidates
+        for step in candidate.pipeline.steps)
+
+    assert did_ignore_text

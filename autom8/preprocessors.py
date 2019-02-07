@@ -255,6 +255,19 @@ def _encode_text(ctx, encoder, indices):
 
 
 @planner
+def drop_text_columns(ctx):
+    indices = ctx.matrix.column_indices_where(lambda col: col.role == 'textual')
+    if indices:
+        _drop_text_columns(ctx, indices)
+
+
+@preprocessor
+def _drop_text_columns(ctx, indices):
+    """Removes text data from your dataset."""
+    ctx.matrix.drop_columns_by_index(indices)
+
+
+@planner
 def logarithm_columns(ctx):
     # Find the indices of the original numerical columns that only contain
     # positive values.

@@ -67,6 +67,7 @@ def run(*args, **kwargs):
     clean_dataset(ctx)
     infer_roles(ctx)
     then.coerce_columns(ctx)
+    then_ignore_text_columns(ctx)
     then.encode_text(ctx)
 
     with ctx.sandbox():
@@ -101,6 +102,18 @@ def run(*args, **kwargs):
 
         then_finish_up_preprocessing(ctx)
         then_fit_estimators(ctx, boosted_trees=False, classical=True)
+
+
+def then_ignore_text_columns(ctx):
+    has_text = any(col.role == 'textual' for col in ctx.matrix.columns)
+    all_text = all(col.role == 'textual' for col in ctx.matrix.columns)
+
+    if has_text and not all_text:
+        with ctx.sandbox():
+            then.drop_text_columns(ctx)
+            # Just try the boosted trees for now.
+            then.encode_categories(ctx, method='ordinal', only_strings=True)
+            then_fit_estimators(ctx, boosted_trees=True, classical=False)
 
 
 def then_finish_up_preprocessing(ctx):

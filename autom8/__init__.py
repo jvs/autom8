@@ -23,6 +23,7 @@ from .preprocessors import (
     coerce_columns,
     divide_columns,
     drop_duplicate_columns,
+    drop_text_columns,
     drop_weak_columns,
     encode_categories,
     encode_text,

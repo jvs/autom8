@@ -36,6 +36,9 @@ venv: .venv/bin/activate
 
 # Individual blackbox tests:
 
+badges-test: clean venv
+	$(TEST) tests/blackbox-tests/test_badges_dataset.py
+
 boston-test: clean venv
 	$(TEST) tests/blackbox-tests/test_boston_dataset.py
 
