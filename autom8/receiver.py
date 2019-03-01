@@ -5,6 +5,9 @@ class Receiver:
     def receive_context(self, context):
         pass
 
+    def receive_cleaned_context(self, context):
+        pass
+
     def receive_candidate(self, candidate):
         pass
 
