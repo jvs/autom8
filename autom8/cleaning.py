@@ -46,12 +46,12 @@ def clean_dataset(ctx):
     - Drops columns that contain unexpected values. A value is unexpected if is
       is not a boolean, a number, a string, or None.
     - Drops columns that only contain None values.
-    - Coerces columns to have numeric types whenever possible.
+    - Whenever possible, coerces columns to have numeric types.
     - In columns of strings, replaces None values with the empty string.
-    - In a column of numbers, if any numbers are missing, replace the missing
-      number with zero, and add a second column of booleans that indicates which
+    - In a column of numbers, if any numbers are missing, replaces the missing
+      number with zero, and adds a second column of booleans to indicate which
       values were missing.
-    - Replace a column of mixed strings and numbers with two columns: one for
+    - Replaces a column of mixed strings and numbers with two columns: one for
       the string values and another for the number values.
 
     After running these steps, each column in the dataset should have a uniform
@@ -176,6 +176,7 @@ def _clean_column(ctx, col):
 
 @preprocessor
 def _coerce_column(ctx, index, to_type):
+    """Converts all the items in a column to a specific data type."""
     col = ctx.matrix.columns[index]
     col.coerce(to_type)
 
@@ -236,6 +237,11 @@ def _can_coerce_all_strings_to_numbers(values):
 
 @preprocessor
 def _coerce_strings_to_numbers(ctx, index):
+    """
+    Converts textual data to numberical data whenever possible.
+
+    For example, this function converts text like "$5" to the number 5.
+    """
     col = ctx.matrix.columns[index]
     new_values = [_coerce_string_to_number(i)
         if isinstance(i, str) else i
@@ -269,6 +275,7 @@ def _coerce_string_to_number(obj):
 
 @preprocessor
 def _replace_none_values(ctx, index, replacement):
+    """Treats missing data as blank text fields."""
     col = ctx.matrix.columns[index]
     new_values = [replacement if i is None else i for i in col.values]
     col.values = create_array(new_values)
@@ -276,6 +283,7 @@ def _replace_none_values(ctx, index, replacement):
 
 @preprocessor
 def _coerce_ints_to_floats(ctx, index):
+    """Turns integer values into decimals, to make columns more uniform."""
     col = ctx.matrix.columns[index]
     new_values = [float(i) if isinstance(i, int_type) else i for i in col.values]
     col.values = create_array(new_values)
@@ -283,6 +291,7 @@ def _coerce_ints_to_floats(ctx, index):
 
 @preprocessor
 def _replace_blank_strings(ctx, index):
+    """Treats text that only contains space characters as blank fields."""
     col = ctx.matrix.columns[index]
     new_values = [
         '' if isinstance(i, str) and i.isspace() else i for i in col.values
@@ -292,6 +301,7 @@ def _replace_blank_strings(ctx, index):
 
 @preprocessor
 def _replace_empty_strings(ctx, index, replacement):
+    """Treats blank text fields as missing data."""
     col = ctx.matrix.columns[index]
     new_values = [
         replacement if isinstance(i, str) and i == '' else i
@@ -302,6 +312,10 @@ def _replace_empty_strings(ctx, index, replacement):
 
 @preprocessor
 def _flag_missing_values(ctx, index, replacement):
+    """
+    Takes a column that contains missing data, and adds a new column
+    of true/false values to indicate which rows contain missing data.
+    """
     col = ctx.matrix.columns[index]
     new_values = [replacement if i is None else i for i in col.values]
     ctx.matrix.drop_columns_by_index([index])
@@ -316,6 +330,11 @@ def _flag_missing_values(ctx, index, replacement):
 
 @preprocessor
 def _bipartition_strings(ctx, index):
+    """
+    Takes a column that contains both text and numbers and turns it into two
+    columns: one that contains only the text values, and another that contains
+    only the numbers.
+    """
     # For None values, just put a 0 in the number-column and an empty string
     # in the string-column.
     col = ctx.matrix.columns[index]
