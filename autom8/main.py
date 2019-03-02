@@ -66,7 +66,10 @@ def run(*args, **kwargs):
 
     clean_dataset(ctx)
     infer_roles(ctx)
-    ctx.receiver.receive_cleaned_context(ctx)
+
+    with ctx.sandbox():
+        then.encode_categories(ctx, method='ordinal', only_strings=True)
+        ctx.receiver.receive_cleaned_context(ctx)
 
     then.coerce_columns(ctx)
     then_ignore_text_columns(ctx)
