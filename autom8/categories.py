@@ -71,11 +71,6 @@ class LabelEncoder:
     def __repr__(self):
         return 'LabelEncoder'
 
-    def copy(self):
-        result = LabelEncoder()
-        result.mapping = self.mapping.copy()
-        return result
-
     @property
     def classes_(self):
         return self.mapping.index.values
