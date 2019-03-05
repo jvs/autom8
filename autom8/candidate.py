@@ -1,11 +1,29 @@
-from collections import namedtuple
 import numpy as np
 import sklearn.metrics
+
 from .exceptions import expected
+from .compare import better_candidate
 
 
-Candidate = namedtuple('Candidate', 'pipeline, formulas, train, test')
-MetricsReport = namedtuple('MetricsReport', 'predictions, probabilities, metrics')
+class Candidate:
+    def __init__(self, pipeline, formulas, train, test):
+        self.pipeline = pipeline
+        self.formulas = formulas
+        self.train = train
+        self.test = test
+
+    def is_better_than(self, other):
+        """
+        Indicates if autom8 thinks this candidate is better than the other one.
+        """
+        return better_candidate(self, other) is self
+
+
+class MetricsReport:
+    def __init__(self, predictions, probabilities, metrics):
+        self.predictions = predictions
+        self.probabilities = probabilities
+        self.metrics = metrics
 
 
 def create_candidate(ctx, pipeline):

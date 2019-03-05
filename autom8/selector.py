@@ -1,3 +1,4 @@
+from .compare import better_candidate
 from .docstrings import render_docstring
 from .receiver import Receiver
 
@@ -11,7 +12,7 @@ def create_selector(selector=None):
     """
 
     if selector is None:
-        return DefaultSelector()
+        return Comparator(lambda a, b: better_candidate(a, b))
 
     if isinstance(selector, str):
         return create_selector([selector])
@@ -39,24 +40,6 @@ class Comparator(Receiver):
             self.best = candidate
         else:
             self.best = self._compare(self.best, candidate)
-
-
-class DefaultSelector(Receiver):
-    def __init__(self):
-        self._selector = None
-
-    @property
-    def best(self):
-        return None if self._selector is None else self._selector.best
-
-    def receive_candidate(self, candidate):
-        self._selector.receive_candidate(candidate)
-
-    def receive_context(self, context):
-        is_cls = context.problem_type == 'classification'
-        metric = 'f1_score' if is_cls else 'r2_score'
-        self._selector = create_selector([metric, 'step_count', 'column_count'])
-        self._selector.receive_context(context)
 
 
 def _optimize_metrics(metrics, candidate1, candidate2):
