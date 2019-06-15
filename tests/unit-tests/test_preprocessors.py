@@ -401,7 +401,8 @@ def test_encode_text():
 
     assert len(ctx.steps) == 1
     for col in ctx.matrix.columns:
-        assert col.formula == ['encode-text', 'A', 'B']
+        assert col.formula[0].startswith('frequency[')
+        assert col.formula[1:] == ['A', 'B']
         assert col.role == 'encoded'
 
     # First, try playing it back on the original data.

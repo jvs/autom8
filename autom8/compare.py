@@ -68,8 +68,8 @@ def _count_features(candidate):
         if abs(weight) <= 0.0001:
             num_cols -= 1
 
-        # Only count "encode-text" columns as one column.
-        if isinstance(formula, list) and f[0] == 'encode-text':
+        # Only count "frequency" columns as one column.
+        if isinstance(formula, list) and f[0].starswith('frequency['):
             num_cols -= 1
             saw_text = True
 

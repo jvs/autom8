@@ -221,10 +221,17 @@ def _encode_categories(ctx, encoder, indices):
 def encode_text(ctx):
     indices = ctx.matrix.column_indices_where(lambda col: col.role == 'textual')
     if indices:
+        # Require terms to appear in at least 5% of the documents.
+        min_df = int(len(ctx.matrix) * 0.05)
+
+        # Don't create more features than 67% of the size of the test set.
+        num_test_rows = len(ctx.test_indices)
+        max_feat = int(num_test_rows * 0.67)
+
         encoder = sklearn.feature_extraction.text.TfidfVectorizer(
             stop_words='english',
-            min_df=5,
-            max_features=2500,
+            min_df=max(5, min_df),
+            max_features=max(10, max_feat),
             sublinear_tf=True
         )
         _encode_text(ctx, encoder, indices)
@@ -246,10 +253,12 @@ def _encode_text(ctx, encoder, indices):
         # TODO: Append the appropriate number of 0-columns when this fails.
         result = encoder.transform(combined).toarray()
 
+    term_index = {v: k for k, v in encoder.vocabulary_.items()}
     for i in range(result.shape[1]):
+        term = term_index.get(i, 'term')
         ctx.matrix.append_column(
             values=result[:, i],
-            formula=['encode-text'] + found.columns,
+            formula=[f'frequency[{term}]'] + found.columns,
             role='encoded',
         )
 
