@@ -65,11 +65,11 @@ def _count_features(candidate):
 
     for formula, weight in zip(candidate.formulas, weights):
         # Don't count any column whose importance is very close to zero.
-        if abs(w) <= 0.0001:
+        if abs(weight) <= 0.0001:
             num_cols -= 1
 
         # Only count "encode-text" columns as one column.
-        if isinstance(f, list) and f[0] == 'encode-text':
+        if isinstance(formula, list) and f[0] == 'encode-text':
             num_cols -= 1
             saw_text = True
 
